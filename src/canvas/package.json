@@ -1,0 +1,7 @@
+{
+  "name": "@mr/canvas",
+  "version": "1.0.0",
+  "dependencies": {
+    "@mr/ecs": "^1"
+  }
+}
