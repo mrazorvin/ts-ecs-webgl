@@ -21,10 +21,16 @@ interface WorldShape {
     components: [...T],
     reduce: (
       entity: Entity<
-        { [K in keyof T]: T[K] extends new () => infer A ? A : Component }
+        {
+          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+            ? A
+            : Component;
+        }
       >,
       ...args: {
-        [K in keyof T]: T[K] extends new () => infer A ? A : Component;
+        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+          ? A
+          : Component;
       }
     ) => void
   ): void;
@@ -59,10 +65,16 @@ export class SubWorld implements WorldShape {
     components: [...T],
     reduce: (
       entity: Entity<
-        { [K in keyof T]: T[K] extends new () => infer A ? A : Component }
+        {
+          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+            ? A
+            : Component;
+        }
       >,
       ...args: {
-        [K in keyof T]: T[K] extends new () => infer A ? A : Component;
+        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+          ? A
+          : Component;
       }
     ) => void
   ) {
@@ -86,6 +98,8 @@ export abstract class Component {
 
     return id;
   }
+
+  constructor(...args: any[]) {}
 }
 
 let global_id_seq = 0;
@@ -132,10 +146,16 @@ export class World implements WorldShape {
     components: [...T],
     fn: (
       entity: Entity<
-        { [K in keyof T]: T[K] extends new () => infer A ? A : Component }
+        {
+          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+            ? A
+            : Component;
+        }
       >,
       ...args: {
-        [K in keyof T]: T[K] extends new () => infer A ? A : Component;
+        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+          ? A
+          : Component;
       }
     ) => void
   ) {
@@ -233,10 +253,10 @@ export class RafScheduler extends Scheduler {
   current_fps = 0;
   info = new LoopInfo(0);
 
-  start() {
+  start = () => {
     this.world.resource(this.info);
     this.raf = requestAnimationFrame(this.execute);
-  }
+  };
 
   execute = () => {
     const ms_now = performance.now();

@@ -1,13 +1,13 @@
-export namespace ShaderGlobal {
+export namespace ShaderGlobals {
   export enum Attribute {
     Position = "a_Position",
-    Normal = "a_Norm",
     UV = "a_UV",
+    Normal = "a_Norm",
   }
 
   export const Location = {
     [Attribute.Position]: 0,
-    [Attribute.Normal]: 1,
-    [Attribute.UV]: 2,
+    [Attribute.UV]: 1,
+    [Attribute.Normal]: 2,
   };
 }

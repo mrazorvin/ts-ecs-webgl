@@ -1,0 +1,542 @@
+{
+    "fill_rate": 0.9067222476005554,
+    "grid_height": 42,
+    "grid_width": 58,
+    "height": 126,
+    "image": "Ogre.png",
+    "name": "atlas",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 27,
+            "name": "ogre-attack-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                522,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "ogre-attack-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                348,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "ogre-attack-02",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                348,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "ogre-attack-03",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                406,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "ogre-attack-04",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                406,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "ogre-attack-05",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                406,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "ogre-attack-06",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                464,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "ogre-die-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                464,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "ogre-die-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                464,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "ogre-die-02",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                348,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 28,
+            "name": "ogre-die-03",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                522,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 29,
+            "name": "ogre-die-04",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                522,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 30,
+            "name": "ogre-die-05",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                580,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 31,
+            "name": "ogre-die-06",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                638,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 32,
+            "name": "ogre-die-07",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                580,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 33,
+            "name": "ogre-die-08",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                580,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 34,
+            "name": "ogre-fall-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                638,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "ogre-fall-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                174,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "ogre-hurt-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                0,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "ogre-hurt-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                0,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "ogre-hurt-02",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                58,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "ogre-idle-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                58,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "ogre-idle-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                58,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "ogre-idle-02",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                116,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "ogre-idle-03",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                116,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "ogre-jump-loop-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                116,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "ogre-jump-loop-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                0,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "ogre-jump-ready-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                174,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "ogre-jump-ready-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                174,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "ogre-run-00",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                232,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "ogre-run-01",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                232,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 14,
+            "name": "ogre-run-02",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                232,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "ogre-run-03",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                290,
+                0,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "ogre-run-04",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                290,
+                42,
+                58,
+                42
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "ogre-run-05",
+            "origin": [
+                29,
+                21
+            ],
+            "rect": [
+                290,
+                84,
+                58,
+                42
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 35,
+    "rotations": false,
+    "using_grid": true,
+    "width": 696
+}

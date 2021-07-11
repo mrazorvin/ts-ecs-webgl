@@ -1,11 +1,11 @@
 import { Component } from "@mr/ecs/World";
-import { Mesh } from "./Render/Mesh";
+import { Mesh, MeshID } from "./Render/Mesh";
 import { WebGL } from "./Render/WebGL";
 
 export class Model extends Component {
-  meshes = new Map<typeof Mesh, string>();
+  meshes = new Map<typeof Mesh, MeshID>();
 
-  constructor(...meshes: Array<[typeof Mesh, string]>) {
+  constructor(...meshes: Array<[typeof Mesh, MeshID]>) {
     super();
     this.meshes = new Map(meshes);
   }

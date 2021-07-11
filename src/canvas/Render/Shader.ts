@@ -10,12 +10,7 @@ export class ShaderID {
 }
 
 export namespace Shader {
-  export function render_mesh(
-    gl: WebGL2RenderingContext,
-    shader: Shader,
-    mesh: Mesh
-  ) {
-    gl.useProgram(shader.program);
+  export function render_mesh(gl: WebGL2RenderingContext, mesh: Mesh) {
     gl.bindVertexArray(mesh.vao);
     if (mesh.index?.count) {
       gl.drawElements(mesh.mode, mesh.index.count, gl.UNSIGNED_SHORT, 0);
@@ -27,6 +22,5 @@ export namespace Shader {
       );
     }
     gl.bindVertexArray(null);
-    gl.useProgram(null);
   }
 }

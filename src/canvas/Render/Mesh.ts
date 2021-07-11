@@ -1,4 +1,4 @@
-import { ShaderGlobal } from "./ShaderGlobal";
+import { ShaderGlobals } from "./ShaderGlobal";
 
 export class Mesh {
   mode: WebGL2RenderingContext["TRIANGLES"];
@@ -62,21 +62,21 @@ export namespace Mesh {
       ? attribute_buffer(gl, {
           array: data.vertexes,
           component_length: 3,
-          attribute: ShaderGlobal.Attribute.Position,
+          attribute: ShaderGlobals.Attribute.Position,
         })
       : null;
     const normal = data.normal
       ? attribute_buffer(gl, {
           array: data.normal,
           component_length: 3,
-          attribute: ShaderGlobal.Attribute.Normal,
+          attribute: ShaderGlobals.Attribute.Normal,
         })
       : null;
     const uv = data.uv
       ? attribute_buffer(gl, {
           array: data.uv,
           component_length: 2,
-          attribute: ShaderGlobal.Attribute.UV,
+          attribute: ShaderGlobals.Attribute.UV,
         })
       : null;
     const index = data.index
@@ -86,7 +86,7 @@ export namespace Mesh {
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-    return new Mesh(gl.TRIANGLES, vao, {
+    return new Mesh(gl.TRIANGLE_STRIP, vao, {
       vertex,
       normal,
       uv,
@@ -97,7 +97,7 @@ export namespace Mesh {
   export function attribute_buffer(
     gl: WebGL2RenderingContext,
     data: {
-      attribute: ShaderGlobal.Attribute;
+      attribute: ShaderGlobals.Attribute;
       array: Float32Array;
       component_length: number;
     }
@@ -113,9 +113,9 @@ export namespace Mesh {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(ShaderGlobal.Location[data.attribute]);
+    gl.enableVertexAttribArray(ShaderGlobals.Location[data.attribute]);
     gl.vertexAttribPointer(
-      ShaderGlobal.Location[data.attribute],
+      ShaderGlobals.Location[data.attribute],
       data.component_length,
       gl.FLOAT,
       false,

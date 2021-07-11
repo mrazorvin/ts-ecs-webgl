@@ -1,0 +1,106 @@
+import { glMatrix, mat3 } from "gl-matrix";
+import { Component, EntityID, World } from "../../ecs/World";
+import { DependenciesUtils } from "../Utils/DependeciesUtils";
+
+const setView = DependenciesUtils.compileMemoizeFactory<
+  [TranslateVec2, Scale, Rotation, MatrixView, ParentView]
+>(5);
+
+type TranslateVec2 = Float32Array | undefined;
+type Scale = Float32Array | undefined;
+type Rotation = number | undefined;
+type MatrixView = Float32Array;
+type ParentView = Float32Array | undefined;
+
+export class Transform extends Component {
+  position: Float32Array | undefined;
+  scale: Float32Array | undefined;
+  rotation: number | undefined;
+
+  readonly height: number;
+  readonly width: number;
+  readonly to_center_offset: [number, number];
+  readonly to_origin_offset: [number, number];
+
+  _parent: EntityID | undefined;
+  _view: Float32Array;
+
+  // OPTIMIZATION: Generate matrix in single operation, instead of multiple functions call
+  getView = setView((translate, scale, rotation, view, parent) => {
+    let matrix = translate ? mat3.fromTranslation(view, translate) : undefined;
+    if (rotation || scale) {
+      matrix =
+        matrix === undefined
+          ? mat3.fromTranslation(view, this.to_center_offset)
+          : mat3.translate(matrix, matrix, this.to_center_offset);
+      matrix =
+        rotation === undefined
+          ? matrix
+          : matrix === undefined
+          ? mat3.fromRotation(view, glMatrix.toRadian(rotation))
+          : mat3.rotate(matrix, matrix, glMatrix.toRadian(rotation));
+      matrix =
+        scale === undefined
+          ? matrix
+          : matrix === undefined
+          ? mat3.fromScaling(view, scale)
+          : mat3.scale(matrix, matrix, scale);
+      matrix = mat3.translate(matrix, matrix, this.to_origin_offset);
+    }
+
+    if (matrix) {
+      return (parent === undefined
+        ? matrix
+        : mat3.multiply(matrix, parent, matrix)) as Float32Array;
+    } else {
+      return (parent === undefined
+        ? mat3.identity(view)
+        : parent) as Float32Array;
+    }
+  });
+
+  constructor(config: {
+    parent?: EntityID;
+    position?: Float32Array;
+    scale?: Float32Array;
+    rotation?: number;
+    height: number;
+    width: number;
+  }) {
+    super();
+
+    this._view = new Float32Array(9);
+    this._parent = config.parent;
+
+    this.height = config.height;
+    this.width = config.width;
+    this.to_center_offset = [this.width / 2, this.height / 2];
+    this.to_origin_offset = [-this.width / 2, -this.height / 2];
+
+    this.position = config.position;
+    this.scale = config.scale;
+    this.rotation = config.rotation;
+  }
+}
+
+export namespace Transform {
+  // OPTIMIZATION: Inject parent entities into Transform component
+  // TODO: World vs Camera position, how to reflect camera position instead of world
+  export function view(world: World, transform: Transform): Float32Array {
+    const parent = world.components
+      .get(Transform)
+      ?.get(world.entities.get(transform._parent!)?.components.get(Transform)!);
+
+    const result = transform.getView(
+      transform.position,
+      transform.scale,
+      transform.rotation,
+      transform._view,
+      parent?.component instanceof Transform
+        ? Transform.view(world, parent.component)
+        : undefined
+    );
+
+    return result;
+  }
+}

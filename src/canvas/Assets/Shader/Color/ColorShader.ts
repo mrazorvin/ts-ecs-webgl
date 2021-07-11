@@ -1,4 +1,4 @@
-import { Shader } from "../Render/Shader";
+import { Shader } from "../../../Render/Shader";
 // @ts-ignore
 import * as ColorVS from "./Color.vert";
 // @ts-ignore

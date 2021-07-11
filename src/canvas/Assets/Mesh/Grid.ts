@@ -1,5 +1,5 @@
-import { Mesh } from "../Mesh";
-import { ShaderGlobal } from "../ShaderGlobal";
+import { Mesh } from "../../Render/Mesh";
+import { ShaderGlobals } from "../../Render/ShaderGlobal";
 
 export class Grid extends Mesh {}
 export namespace Grid {
@@ -34,7 +34,8 @@ export namespace Grid {
     const data = lines.flat();
 
     const pos_attr_len = 3;
-    const pos_attr_loc = ShaderGlobal.Location[ShaderGlobal.Attribute.Position];
+    const pos_attr_loc =
+      ShaderGlobals.Location[ShaderGlobals.Attribute.Position];
     const color_attr_len = 1;
     const color_attr_loc = 4;
 

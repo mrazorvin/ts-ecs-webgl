@@ -1,4 +1,4 @@
-import { ShaderGlobal } from "./Render/ShaderGlobal";
+import { ShaderGlobals } from "./Render/ShaderGlobal";
 
 export namespace t {
   export function clear(
@@ -11,22 +11,46 @@ export namespace t {
     return gl;
   }
 
+  export function blend(gl: WebGL2RenderingContext) {
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+    return gl;
+  }
+
   export function size(
     gl: WebGL2RenderingContext,
-    width: number,
-    height: number
+    width: number | string,
+    height: number | string
   ) {
     const canvas = gl.canvas as HTMLCanvasElement;
 
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    if (typeof width === "number" && typeof height === "number") {
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
 
-    canvas.width = width;
-    canvas.height = height;
+      canvas.width = width;
+      canvas.height = height;
 
-    gl.viewport(0, 0, width, height);
+      gl.viewport(0, 0, width, height);
 
-    return gl;
+      return { width, height };
+    } else if (typeof width === "string" && typeof height === "string") {
+      canvas.style.width = width;
+      canvas.style.height = height;
+
+      const rect = canvas.getBoundingClientRect();
+
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      gl.viewport(0, 0, rect.width, rect.height);
+
+      return { width: canvas.width, height: canvas.height };
+    } else {
+      throw new Error(
+        `[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`
+      );
+    }
   }
 
   export function shader(
@@ -41,7 +65,7 @@ export namespace t {
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      const msg = `can't compile shader`;
+      const msg = `can't compile shader ${type}`;
       console.error(msg, src, gl.getShaderInfoLog(shader));
       throw new Error(msg);
     }
@@ -57,20 +81,20 @@ export namespace t {
 
     gl.bindAttribLocation(
       program,
-      ShaderGlobal.Location[ShaderGlobal.Attribute.Position],
-      ShaderGlobal.Attribute.Position
+      ShaderGlobals.Location[ShaderGlobals.Attribute.Position],
+      ShaderGlobals.Attribute.Position
     );
 
     gl.bindAttribLocation(
       program,
-      ShaderGlobal.Location[ShaderGlobal.Attribute.Normal],
-      ShaderGlobal.Attribute.Normal
+      ShaderGlobals.Location[ShaderGlobals.Attribute.Normal],
+      ShaderGlobals.Attribute.Normal
     );
 
     gl.bindAttribLocation(
       program,
-      ShaderGlobal.Location[ShaderGlobal.Attribute.UV],
-      ShaderGlobal.Attribute.UV
+      ShaderGlobals.Location[ShaderGlobals.Attribute.UV],
+      ShaderGlobals.Attribute.UV
     );
 
     gl.linkProgram(program);
@@ -95,9 +119,9 @@ export namespace t {
     program: WebGLProgram
   ) {
     return {
-      position: gl.getAttribLocation(program, ShaderGlobal.Attribute.Position),
-      normal: gl.getAttribLocation(program, ShaderGlobal.Attribute.Normal),
-      uv: gl.getAttribLocation(program, ShaderGlobal.Attribute.UV),
+      position: gl.getAttribLocation(program, ShaderGlobals.Attribute.Position),
+      normal: gl.getAttribLocation(program, ShaderGlobals.Attribute.Normal),
+      uv: gl.getAttribLocation(program, ShaderGlobals.Attribute.UV),
     };
   }
 
