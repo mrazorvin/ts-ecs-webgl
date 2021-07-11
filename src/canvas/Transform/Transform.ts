@@ -1,6 +1,6 @@
 import { glMatrix, mat3 } from "gl-matrix";
 import { Component, EntityID, World } from "../../ecs/World";
-import { DependenciesUtils } from "../Utils/DependeciesUtils";
+import { DependenciesUtils } from "../Utils/DependenciesUtils";
 
 const setView = DependenciesUtils.compileMemoizeFactory<
   [TranslateVec2, Scale, Rotation, MatrixView, ParentView]
