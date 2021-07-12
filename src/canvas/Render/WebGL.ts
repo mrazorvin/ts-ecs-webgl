@@ -3,10 +3,17 @@ import { Shader, ShaderID } from "./Shader";
 import { t } from "../WebGLUtils";
 import { Mesh, MeshID } from "./Mesh";
 import { Texture, TextureID } from "./Texture";
+import { Context, ContextID } from "./Context";
+import {
+  ScreenShader,
+  SCREEN_SHADER,
+} from "../Assets/View/Screen/Screen.shader";
+import { ScreenMesh, SCREEN_MESH } from "../Assets/View/Screen/Screen.mesh";
 
 export class WebGL extends Resource {
   meshes = new Map<MeshID, Mesh>();
   shaders = new Map<ShaderID, Shader>();
+  context = new Map<ContextID, Context>();
   textures = new Map<TextureID, Texture>();
 
   static setup(document: Document, selector: string) {
@@ -68,5 +75,32 @@ export class WebGL extends Resource {
     this.textures.set(texture.id, texture);
 
     return texture.id;
+  }
+
+  create_context(
+    id: ContextID,
+    options: Pick<Context, "width" | "height"> &
+      Partial<Pick<Context, "shader" | "mesh">>
+  ) {
+    if (!this.shaders.has(SCREEN_SHADER)) {
+      this.create_shader(
+        ScreenShader.fragment_shader,
+        ScreenShader.vertex_shader,
+        ScreenShader.create,
+        SCREEN_SHADER
+      );
+
+      this.create_mesh(ScreenMesh.create_screen, SCREEN_MESH);
+    }
+
+    const context = Context.create(this.gl, {
+      shader: options.shader ?? SCREEN_SHADER,
+      mesh: options.mesh ?? SCREEN_MESH,
+      ...options,
+    });
+    context.id = id;
+    this.context.set(id, context);
+
+    return context.id;
   }
 }

@@ -1,16 +1,14 @@
 import { Shader, ShaderID } from "../../../Render/Shader";
 
 // @ts-ignore
-import * as MaterialVS from "./Material.vert";
+import * as SpriteVS from "./Sprite.vert";
 
 // @ts-ignore
-import * as MaterialFS from "./Material.frag";
+import * as SpriteFS from "./Sprite.frag";
 
-console.log(MaterialFS);
+export const SPRITE_SHADER = new ShaderID();
 
-export const MATERIAL_SHADER = new ShaderID();
-
-export class MaterialShader extends Shader {
+export class SpriteShader extends Shader {
   constructor(
     program: WebGLProgram,
     public location: {
@@ -22,8 +20,8 @@ export class MaterialShader extends Shader {
     super(program);
   }
 
-  static vertex_shader = MaterialVS;
-  static fragment_shader = MaterialFS;
+  static vertex_shader = SpriteVS;
+  static fragment_shader = SpriteFS;
 
   static create(gl: WebGL2RenderingContext, program: WebGLProgram) {
     gl.useProgram(program);
@@ -34,7 +32,7 @@ export class MaterialShader extends Shader {
     gl.useProgram(null);
 
     if (Image && Transform && Frame) {
-      return new MaterialShader(program, { Image, Transform, Frame });
+      return new SpriteShader(program, { Image, Transform, Frame });
     } else {
       throw new Error(
         `[${this.name} -> create()] -> 

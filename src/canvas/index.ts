@@ -1,10 +1,10 @@
 import { glMatrix } from "gl-matrix";
 import { LoopInfo, RafScheduler, sys, World } from "@mr/ecs/World";
-import { Rectangle, RECTANGLE_MESH } from "./Assets/Mesh/Rectangle";
+import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import {
-  MaterialShader,
-  MATERIAL_SHADER,
-} from "./Assets/Shader/Material/MaterialShader";
+  SpriteShader,
+  SPRITE_SHADER,
+} from "./Assets/View/Sprite/Sprite.shader";
 import { WebGL } from "./Render/WebGL";
 import { Texture } from "./Render/Texture";
 import { Sprite } from "./Sprite";
@@ -13,11 +13,11 @@ import { Transform } from "./Transform/Transform";
 import { ROWS } from "./Globals";
 
 // @ts-ignore
-import * as bg from "url:./Assets/Images/Background.png";
+import * as river_sprite from "url:./Assets/Backgrounds/River.png";
 
 // @ts-ignore
-import * as ogre from "url:./Monsters/Ogre/Ogre.png";
-import * as atlas from "./Monsters/Ogre/Atlas.json";
+import * as ogre_sprite from "url:./Assets/Monsters/Ogre/Ogre.png";
+import * as atlas from "./Assets/Monsters/Ogre/Atlas.json";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -58,15 +58,15 @@ world.system_once(
     t.blend(ctx.gl);
 
     const sprite_shader = ctx.create_shader(
-      MaterialShader.fragment_shader,
-      MaterialShader.vertex_shader,
-      MaterialShader.create,
-      MATERIAL_SHADER
+      SpriteShader.fragment_shader,
+      SpriteShader.vertex_shader,
+      SpriteShader.create,
+      SPRITE_SHADER
     );
 
-    const bg_image = await Texture.load_image(bg);
+    const bg_image = await Texture.load_image(river_sprite);
     const bg_mesh = ctx.create_mesh((gl) =>
-      Rectangle.create_rect(gl, {
+      SpriteMesh.create_rect(gl, {
         o_width: bg_size,
         o_height: bg_size,
         width: bg_size,
@@ -75,9 +75,9 @@ world.system_once(
     );
     const bg_texture = ctx.create_texture(bg_image, Texture.create);
 
-    const ogre_image = await Texture.load_image(ogre);
+    const ogre_image = await Texture.load_image(ogre_sprite);
     const ogre_mesh = ctx.create_mesh((gl) =>
-      Rectangle.create_rect(gl, {
+      SpriteMesh.create_rect(gl, {
         o_width: ogre_image.width,
         o_height: ogre_image.height,
         width: atlas.grid_width,
@@ -86,14 +86,11 @@ world.system_once(
     );
     const ogre_texture = ctx.create_texture(ogre_image, Texture.create);
 
-    world.entity(
-      Sprite.create(sprite_shader, bg_mesh, bg_texture),
-      bg_transform
-    );
+    world.entity(new Sprite(sprite_shader, bg_mesh, bg_texture), bg_transform);
 
     // TODO: inject entities in SubWorld instead of World
     world.entity(
-      Sprite.create(sprite_shader, ogre_mesh, ogre_texture),
+      new Sprite(sprite_shader, ogre_mesh, ogre_texture),
       new Transform({
         parent: world_transform.id,
         position: new Float32Array([225, 110]),

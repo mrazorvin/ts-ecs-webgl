@@ -23,6 +23,7 @@ export namespace t {
     width: number | string,
     height: number | string
   ) {
+    // @ts-ignore
     const canvas = gl.canvas as HTMLCanvasElement;
 
     if (typeof width === "number" && typeof height === "number") {

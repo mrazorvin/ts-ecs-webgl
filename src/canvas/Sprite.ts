@@ -1,23 +1,18 @@
 import { Component } from "../ecs/World";
-import { Rectangle } from "./Assets/Mesh/Rectangle";
-import { MaterialShader } from "./Assets/Shader/Material/MaterialShader";
+import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
+import { SpriteShader } from "./Assets/View/Sprite/Sprite.shader";
 import { MeshID } from "./Render/Mesh";
 import { Shader, ShaderID } from "./Render/Shader";
 import { TextureID } from "./Render/Texture";
 import { WebGL } from "./Render/WebGL";
 
 export class Sprite extends Component {
-  public shader!: ShaderID;
-  public mesh!: MeshID;
-  public texture!: TextureID;
-
-  static create(shader: ShaderID, mesh: MeshID, texture: TextureID) {
-    const sprite = new Sprite();
-    sprite.shader = shader;
-    sprite.mesh = mesh;
-    sprite.texture = texture;
-
-    return sprite;
+  constructor(
+    public shader: ShaderID,
+    public mesh: MeshID,
+    public texture: TextureID
+  ) {
+    super();
   }
 
   static render(
@@ -32,8 +27,8 @@ export class Sprite extends Component {
     const texture = ctx.textures.get(sprite.texture);
 
     if (
-      mesh instanceof Rectangle &&
-      shader instanceof MaterialShader &&
+      mesh instanceof SpriteMesh &&
+      shader instanceof SpriteShader &&
       texture
     ) {
       const gl = ctx.gl;

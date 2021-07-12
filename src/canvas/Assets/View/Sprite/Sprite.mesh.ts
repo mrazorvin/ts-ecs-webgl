@@ -1,14 +1,12 @@
-import { Mesh, MeshID } from "../../Render/Mesh";
-import { ShaderGlobals } from "../../Render/ShaderGlobal";
+import { Mesh, MeshID } from "../../../Render/Mesh";
+import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
-export const RECTANGLE_MESH = new MeshID();
-
-export class Rectangle extends Mesh {
+export class SpriteMesh extends Mesh {
   uv_width = 0;
   uv_height = 0;
 }
 
-export namespace Rectangle {
+export namespace SpriteMesh {
   export function create_rect(
     gl: WebGL2RenderingContext,
     { x = 0, y = 0, width = 0, height = 0, o_width = 0, o_height = 0 }
@@ -58,7 +56,7 @@ export namespace Rectangle {
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-    const rect = new Rectangle(gl.TRIANGLE_STRIP, vao, {
+    const rect = new SpriteMesh(gl.TRIANGLE_STRIP, vao, {
       vertex,
       normal: null,
       uv,
