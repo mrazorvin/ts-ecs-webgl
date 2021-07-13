@@ -1,4 +1,5 @@
-import { ShaderGlobals } from "./Render/ShaderGlobal";
+import { ShaderGlobals } from "./ShaderGlobal";
+import { WebGL } from "./WebGL";
 
 export namespace t {
   export function clear(
@@ -16,6 +17,17 @@ export namespace t {
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     return gl;
+  }
+
+  export function buffer(
+    gl: WebGL2RenderingContext,
+    buffer: WebGLFramebuffer | null,
+    width: number,
+    height: number
+  ) {
+    gl.viewport(0, 0, width, height);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+    if (buffer) clear(gl);
   }
 
   export function size(

@@ -1,6 +1,6 @@
 import { Resource } from "@mr/ecs/World";
 import { Shader, ShaderID } from "./Shader";
-import { t } from "../WebGLUtils";
+import { t } from "./WebGLUtils";
 import { Mesh, MeshID } from "./Mesh";
 import { Texture, TextureID } from "./Texture";
 import { Context, ContextID } from "./Context";
@@ -80,8 +80,17 @@ export class WebGL extends Resource {
   create_context(
     id: ContextID,
     options: Pick<Context, "width" | "height"> &
-      Partial<Pick<Context, "shader" | "mesh">>
+      Partial<Pick<Context, "shader" | "mesh">>,
+    factory: (
+      gl: WebGL2RenderingContext,
+      params: Parameters<typeof Context.create>[1]
+    ) => Context
   ) {
+    const prev = this.context.get(id);
+    if (prev) {
+      prev.clear(this.gl);
+    }
+
     if (!this.shaders.has(SCREEN_SHADER)) {
       this.create_shader(
         ScreenShader.fragment_shader,
@@ -93,7 +102,7 @@ export class WebGL extends Resource {
       this.create_mesh(ScreenMesh.create_screen, SCREEN_MESH);
     }
 
-    const context = Context.create(this.gl, {
+    const context = factory(this.gl, {
       shader: options.shader ?? SCREEN_SHADER,
       mesh: options.mesh ?? SCREEN_MESH,
       ...options,

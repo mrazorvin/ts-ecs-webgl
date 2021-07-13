@@ -1,14 +1,14 @@
 import { Shader, ShaderID } from "../../../Render/Shader";
 
 // @ts-ignore
-import * as ScreenVS from "./Screen.vert";
+import * as PostPassVS from "./PostPass.vert";
 
 // @ts-ignore
-import * as ScreenFS from "./Screen.frag";
+import * as PostPassFS from "./PostPass.frag";
 
-export const SCREEN_SHADER = new ShaderID();
+export const POST_PASS_SHADER = new ShaderID();
 
-export class ScreenShader extends Shader {
+export class PostPassShader extends Shader {
   constructor(
     program: WebGLProgram,
     public location: { Image: WebGLUniformLocation }
@@ -16,8 +16,8 @@ export class ScreenShader extends Shader {
     super(program);
   }
 
-  static vertex_shader = ScreenVS;
-  static fragment_shader = ScreenFS;
+  static vertex_shader = PostPassVS;
+  static fragment_shader = PostPassFS;
 
   static create(gl: WebGL2RenderingContext, program: WebGLProgram) {
     gl.useProgram(program);
@@ -25,7 +25,7 @@ export class ScreenShader extends Shader {
     gl.useProgram(null);
 
     if (Image) {
-      return new ScreenShader(program, { Image });
+      return new PostPassShader(program, { Image });
     } else {
       throw new Error(
         `[${this.name} -> create()] -> 

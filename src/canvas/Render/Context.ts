@@ -1,5 +1,8 @@
-import { Mesh, MeshID } from "./Mesh";
-import { ShaderID } from "./Shader";
+import { ScreenMesh } from "../Assets/View/Screen/Screen.mesh";
+import { ScreenShader } from "../Assets/View/Screen/Screen.shader";
+import { MeshID } from "./Mesh";
+import { Shader, ShaderID } from "./Shader";
+import { WebGL } from "./WebGL";
 
 export class ContextID {
   #type = ContextID;
@@ -35,6 +38,12 @@ export class Context {
     this.render_buffer = params.render_buffer;
     this.frame_buffer = params.frame_buffer;
     this.texture = params.texture;
+  }
+
+  clear(gl: WebGL2RenderingContext) {
+    gl.deleteRenderbuffer(this.render_buffer);
+    gl.deleteFramebuffer(this.frame_buffer);
+    gl.deleteTexture(this.texture);
   }
 }
 
@@ -84,7 +93,7 @@ export namespace Context {
 
     gl.renderbufferStorage(
       gl.RENDERBUFFER,
-      gl.DEPTH_COMPONENT,
+      gl.DEPTH_COMPONENT16,
       options.width,
       options.height
     );
@@ -104,11 +113,35 @@ export namespace Context {
       render_buffer
     );
 
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
     return new Context({
       texture,
       render_buffer,
       frame_buffer,
       ...options,
     });
+  }
+
+  export function render(ctx: WebGL, context: Context) {
+    const shader = ctx.shaders.get(context.shader);
+    const mesh = ctx.meshes.get(context.mesh);
+
+    if (mesh instanceof ScreenMesh && shader instanceof ScreenShader) {
+      const gl = ctx.gl;
+
+      gl.useProgram(shader.program);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, context.texture);
+      gl.uniform1i(shader.location.Image, 0);
+      Shader.render_mesh(gl, mesh);
+      gl.useProgram(null);
+    } else {
+      throw new Error(
+        `[Screen -> render()] resource resolving problem, default context could render only Screen view`
+      );
+    }
   }
 }
