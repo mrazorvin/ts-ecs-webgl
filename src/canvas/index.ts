@@ -177,20 +177,20 @@ world.system(
     sub_world.query([Transform, Creature], (_, transform) => {
       if (input.world_click_x && input.world_click_y) {
         camera.set_position(
-          input.click_x - camera.transform.width / 2,
-          input.click_y - camera.transform.height / 2
+          input.world_click_x - camera.transform.width / 2,
+          input.world_click_y - camera.transform.height / 2
         );
+        if (camera.transform.position) {
+          input.camera_x = -camera.transform.position[0];
+          input.camera_y = -camera.transform.position[1];
+        }
+        transform.position = new Float32Array([
+          input.world_click_x - transform.width / 2,
+          input.world_click_y - transform.height / 2,
+        ]);
         input.world_click_x = 0;
         input.world_click_y = 0;
       }
-      if (camera.transform.position) {
-        input.camera_x = -camera.transform.position[0];
-        input.camera_y = -camera.transform.position[1];
-      }
-      transform.position = new Float32Array([
-        input.world_click_x - transform.width / 2,
-        input.world_click_y - transform.height / 2,
-      ]);
     });
   })
 );

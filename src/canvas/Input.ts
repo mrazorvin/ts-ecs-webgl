@@ -30,6 +30,8 @@ export class Input extends Resource {
 
   camera_x = 0;
   camera_y = 0;
+  camera_width = 0;
+  camera_height = 0;
 
   world_width = 0;
   world_height = 0;
@@ -70,6 +72,7 @@ export class Input extends Resource {
     this.click_x = click_x;
     this.click_y = click_y;
 
+    // world click = camera_position + delta (view size - camera_size / 2)
     this.world_click_x = click_x + this.camera_x;
     this.world_click_y = click_y + this.camera_y;
   };

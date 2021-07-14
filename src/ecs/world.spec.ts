@@ -17,9 +17,7 @@ test("[World.entity()]", (t) => {
   const entity = world.entity(component);
 
   t.is(
-    world.components
-      .get(TestComponent1)
-      ?.get(entity.components.get(TestComponent1)!)?.component,
+    world.entities.get(entity.id)?.components.get(TestComponent1),
     component
   );
 });
@@ -137,10 +135,20 @@ test("[World.resource()]", (t) => {
   const world = new World();
   const resource = new TestResource();
   world.resource(resource);
-  t.is(resource, world.resources.get(TestResource.id()));
+  t.is(
+    resource,
+    Object.values(world.resources)
+      .flatMap((storage) => Object.values(storage))
+      .find((_resource) => _resource === resource)
+  );
 
   world.resource(new TestResource());
-  t.not(resource, world.resources.get(TestResource.id()));
+  t.not(
+    resource,
+    Object.values(world.resources)
+      .flatMap((storage) => Object.values(storage))
+      .find((_resource) => _resource === resource)
+  );
 });
 
 test("[World -> System.dependencies] don't exec system until all dependencies will be ready", async (t) => {
