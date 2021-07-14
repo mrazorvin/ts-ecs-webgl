@@ -1,3 +1,4 @@
+import { Context } from "./Context";
 import { ShaderGlobals } from "./ShaderGlobal";
 import { WebGL } from "./WebGL";
 
@@ -21,13 +22,17 @@ export namespace t {
 
   export function buffer(
     gl: WebGL2RenderingContext,
-    buffer: WebGLFramebuffer | null,
-    width: number,
-    height: number
+    context: Context | undefined
   ) {
-    gl.viewport(0, 0, width, height);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
-    if (buffer) clear(gl);
+    if (context === undefined) {
+      return gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, context.frame_buffer);
+    if (context.need_clear) {
+      context.need_clear = false;
+      clear(gl, undefined);
+    }
   }
 
   export function size(

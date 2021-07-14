@@ -28,10 +28,13 @@ export class WebGL extends Resource {
 
     target?.appendChild(canvas);
 
-    return new WebGL(gl);
+    return new WebGL(gl, canvas);
   }
 
-  constructor(public gl: WebGL2RenderingContext) {
+  constructor(
+    public gl: WebGL2RenderingContext,
+    public canvas: HTMLCanvasElement
+  ) {
     super();
   }
 

@@ -3,13 +3,12 @@ import { Component, EntityID, World } from "../../ecs/World";
 import { DependenciesUtils } from "../Utils/DependenciesUtils";
 
 const setView = DependenciesUtils.compileMemoizeFactory<
-  [TranslateVec2, Scale, Rotation, MatrixView, ParentView]
+  [TranslateVec2, Scale, Rotation, ParentView]
 >(5);
 
 type TranslateVec2 = Float32Array | undefined;
 type Scale = Float32Array | undefined;
 type Rotation = number | undefined;
-type MatrixView = Float32Array;
 type ParentView = Float32Array | undefined;
 
 export class Transform extends Component {
@@ -17,16 +16,21 @@ export class Transform extends Component {
   scale: Float32Array | undefined;
   rotation: number | undefined;
 
-  readonly height: number;
-  readonly width: number;
+  height: number;
+  width: number;
   readonly to_center_offset: [number, number];
   readonly to_origin_offset: [number, number];
 
   _parent: EntityID | undefined;
-  _view: Float32Array;
+  _current_view: Float32Array;
+  _previous_view: Float32Array;
 
   // OPTIMIZATION: Generate matrix in single operation, instead of multiple functions call
-  getView = setView((translate, scale, rotation, view, parent) => {
+  getView = setView((translate, scale, rotation, parent) => {
+    const view = this._previous_view;
+    this._previous_view = this._current_view;
+    this._current_view = view;
+
     let matrix = translate ? mat3.fromTranslation(view, translate) : undefined;
     if (rotation || scale) {
       matrix =
@@ -69,7 +73,8 @@ export class Transform extends Component {
   }) {
     super();
 
-    this._view = new Float32Array(9);
+    this._current_view = new Float32Array(9);
+    this._previous_view = new Float32Array(9);
     this._parent = config.parent;
 
     this.height = config.height;
@@ -95,7 +100,6 @@ export namespace Transform {
       transform.position,
       transform.scale,
       transform.rotation,
-      transform._view,
       parent?.component instanceof Transform
         ? Transform.view(world, parent.component)
         : undefined

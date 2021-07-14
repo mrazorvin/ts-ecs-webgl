@@ -24,6 +24,10 @@ import {
   POST_PASS_SHADER,
 } from "./Assets/View/PostPass/PostPass.shader";
 import { PostPass, POST_PASS_CONTEXT } from "./Assets/View/PostPass/PostPass";
+import { Input } from "./Input";
+import { Creature } from "./Creature";
+import { Static } from "./Static";
+import { Camera } from "./Camera";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -34,10 +38,7 @@ const MONSTER_CONTEXT = new ContextID();
 const world = new World();
 const scheduler = new RafScheduler(world);
 const gl = WebGL.setup(document, "app");
-
-world.resource(new Screen());
-world.resource(gl);
-const bg_size = ROWS * 2;
+const input = Input.create(gl.canvas);
 
 const world_transform_component = new Transform({
   position: new Float32Array([-1, 1]),
@@ -45,18 +46,33 @@ const world_transform_component = new Transform({
   height: 0,
   width: 0,
 });
-
 const world_transform = world.entity(world_transform_component);
-const bg_transform = new Transform({
+
+const camera_transform = new Transform({
   parent: world_transform.id,
+  height: 0,
+  width: 0,
+});
+const camera_entity = world.entity(camera_transform);
+const camera = new Camera(camera_transform, camera_entity.id);
+
+const bg_size = ROWS * 2;
+const bg_transform = new Transform({
+  parent: camera_entity.id,
   position: new Float32Array([160, 0]),
   height: bg_size,
   width: bg_size,
 });
 
-const resize_system = sys([WebGL, Screen], (_, ctx, screen) => {
+world.resource(input);
+world.resource(new Screen());
+world.resource(gl);
+world.resource(camera);
+
+const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   const { width, height } = t.size(ctx.gl, "100%", "100%");
   const width_ratio = width / (height / ROWS);
+
   world_transform_component.scale = new Float32Array([
     1 / width_ratio,
     -1 / ROWS,
@@ -65,7 +81,22 @@ const resize_system = sys([WebGL, Screen], (_, ctx, screen) => {
   screen.width = width;
   ctx.create_context(BACKGROUND_CONTEXT, { width, height }, Context.create);
   ctx.create_context(MONSTER_CONTEXT, { width, height }, Context.create);
-  ctx.create_context(POST_PASS_CONTEXT, { width, height }, PostPass.create);
+  ctx.create_context(
+    POST_PASS_CONTEXT,
+    { width, height, shader: POST_PASS_SHADER },
+    PostPass.create
+  );
+
+  input.container_offset_x = gl.canvas.offsetLeft;
+  input.container_offset_y = gl.canvas.offsetTop;
+  input.container_width = width;
+  input.container_height = height;
+  input.world_height = ROWS * 2;
+  input.world_width = width_ratio * 2;
+
+  camera.transform.width = width_ratio * 2;
+  camera.transform.height = ROWS * 2;
+  camera.transform.position = new Float32Array([0, 0]);
 });
 
 window.onresize = () => world.system_once(resize_system);
@@ -112,17 +143,22 @@ world.system_once(
     );
     const ogre_texture = ctx.create_texture(ogre_image, Texture.create);
 
-    world.entity(new Sprite(sprite_shader, bg_mesh, bg_texture), bg_transform);
+    world.entity(
+      new Sprite(sprite_shader, bg_mesh, bg_texture),
+      bg_transform,
+      new Static()
+    );
 
     // TODO: inject entities in SubWorld instead of World
     world.entity(
       new Sprite(sprite_shader, ogre_mesh, ogre_texture),
       new Transform({
-        parent: world_transform.id,
-        position: new Float32Array([225, 110]),
-        height: atlas.grid_width,
+        parent: camera_entity.id,
+        position: new Float32Array([0, 0]),
+        height: atlas.grid_height,
         width: atlas.grid_width,
-      })
+      }),
+      new Creature()
     );
   })
 );
@@ -135,54 +171,81 @@ const run_frames = atlas.regions.filter((region) =>
 let sec = 0;
 let current_frame = 0;
 const time_per_frame = 1 / run_frames.length;
+
 world.system(
-  sys([WebGL, LoopInfo, Screen], (sub_world, ctx, loop) => {
-    t.clear(ctx.gl, undefined);
-
-    sec += loop.time_delta;
-    if (sec >= 1) sec = 0;
-    current_frame = Math.round(sec / time_per_frame) % run_frames.length;
-    const frame = run_frames[current_frame];
-
-    const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
-    const m_ctx = ctx.context.get(MONSTER_CONTEXT);
-
-    // TODO: Access to entities in SubWorld instead of World
-    if (!bg_ctx || !m_ctx) return;
-    sub_world.query([Sprite, Transform], (_, sprite, transform) => {
-      if (transform === bg_transform) {
-        t.buffer(ctx.gl, bg_ctx.frame_buffer, bg_ctx.width, bg_ctx.height);
-        Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
-      } else {
-        t.buffer(ctx.gl, m_ctx.frame_buffer, m_ctx.width, m_ctx.height);
-        Sprite.render(
-          ctx,
-          sprite,
-          Transform.view(world, transform),
-          frame.rect[0] / atlas.grid_width,
-          frame.rect[1] / atlas.grid_height
+  sys([Input, Camera], (sub_world, input, camera) => {
+    sub_world.query([Transform, Creature], (_, transform) => {
+      if (input.world_click_x && input.world_click_y) {
+        camera.set_position(
+          input.click_x - camera.transform.width / 2,
+          input.click_y - camera.transform.height / 2
         );
+        input.world_click_x = 0;
+        input.world_click_y = 0;
       }
+      if (camera.transform.position) {
+        input.camera_x = -camera.transform.position[0];
+        input.camera_y = -camera.transform.position[1];
+      }
+      transform.position = new Float32Array([
+        input.world_click_x - transform.width / 2,
+        input.world_click_y - transform.height / 2,
+      ]);
     });
   })
 );
 
 world.system(
-  sys([WebGL, Screen], (_, ctx, screen) => {
+  sys([WebGL], (sub_world, ctx) => {
+    const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
+    if (bg_ctx === undefined) return;
+    else t.buffer(ctx.gl, bg_ctx);
+
+    sub_world.query([Sprite, Transform, Static], (_, sprite, transform) => {
+      Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+    });
+  })
+);
+
+world.system(
+  sys([WebGL, LoopInfo, Input], (sub_world, ctx, loop, input) => {
+    sec += loop.time_delta;
+    if (sec >= 1) sec = 0;
+    current_frame = Math.round(sec / time_per_frame) % run_frames.length;
+    const frame = run_frames[current_frame];
+
+    const m_ctx = ctx.context.get(MONSTER_CONTEXT);
+    if (m_ctx === undefined) return;
+    else t.buffer(ctx.gl, m_ctx);
+
+    sub_world.query([Sprite, Transform, Creature], (_, sprite, transform) => {
+      Sprite.render(
+        ctx,
+        sprite,
+        Transform.view(world, transform),
+        frame.rect[0] / atlas.grid_width,
+        frame.rect[1] / atlas.grid_height
+      );
+    });
+  })
+);
+
+world.system(
+  sys([WebGL], (_, ctx) => {
     const pp_ctx = ctx.context.get(POST_PASS_CONTEXT);
     const bg_context = ctx.context.get(BACKGROUND_CONTEXT);
     const monster_context = ctx.context.get(MONSTER_CONTEXT);
 
-    // console.log({ pp_ctx });
-
     if (pp_ctx instanceof PostPass && bg_context && monster_context) {
-      t.buffer(ctx.gl, null, screen.width, screen.height);
-
-      // t.buffer(ctx.gl, pp_ctx, pp_ctx.width, pp_ctx.height);
+      t.buffer(ctx.gl, pp_ctx);
       Context.render(ctx, bg_context);
       Context.render(ctx, monster_context);
-      // t.buffer(ctx.gl, null, screen.width, screen.height);
-      // PostPass.render(ctx, pp_ctx);
+      t.buffer(ctx.gl, undefined);
+      PostPass.render(ctx, pp_ctx);
+
+      bg_context.need_clear = true;
+      monster_context.need_clear = true;
+      pp_ctx.need_clear = true;
     }
   })
 );

@@ -18,6 +18,7 @@ export class Context {
   height: number;
 
   id = new ContextID();
+  need_clear = false;
 
   constructor(
     params: Pick<

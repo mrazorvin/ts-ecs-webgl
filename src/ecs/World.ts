@@ -219,6 +219,7 @@ export abstract class BaseScheduler {
       }
       this.world.on_tick_end = [];
     }
+    // console.timeEnd("system-run");
   }
 }
 
