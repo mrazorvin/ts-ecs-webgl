@@ -16,10 +16,7 @@ test("[World.entity()]", (t) => {
   const component = new TestComponent1();
   const entity = world.entity(component);
 
-  t.is(
-    world.entities.get(entity.id)?.components.get(TestComponent1),
-    component
-  );
+  t.is(TestComponent1.get(world.entities.get(entity.id)!), component);
 });
 
 class TestComponent2 extends Component {}
@@ -129,26 +126,20 @@ test("[World.system_once()]", async (t) => {
   });
 });
 
-class TestResource extends Resource {}
+class TestResource extends Resource {
+  constructor() {
+    super();
+  }
+}
 
 test("[World.resource()]", (t) => {
   const world = new World();
   const resource = new TestResource();
   world.resource(resource);
-  t.is(
-    resource,
-    Object.values(world.resources)
-      .flatMap((storage) => Object.values(storage))
-      .find((_resource) => _resource === resource)
-  );
+  t.is(resource, TestResource.get(world));
 
   world.resource(new TestResource());
-  t.not(
-    resource,
-    Object.values(world.resources)
-      .flatMap((storage) => Object.values(storage))
-      .find((_resource) => _resource === resource)
-  );
+  t.not(resource, TestResource.get(world));
 });
 
 test("[World -> System.dependencies] don't exec system until all dependencies will be ready", async (t) => {

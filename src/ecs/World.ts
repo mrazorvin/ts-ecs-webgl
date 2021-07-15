@@ -6,12 +6,17 @@ export class EntityID {
   #type = EntityID;
 }
 
+let ID_SEQ_START = -1;
+let global_id_seq = 0;
+
 export enum ResourceID {}
 export enum ComponentTypeID {}
 
 export class Entity<T extends Component[] = []> {
   id = new EntityID();
-  components = new Map<typeof Component, Component>();
+  // components = new Map<typeof Component, Component>();
+  // components = [];
+  components = {};
 }
 
 interface WorldShape {
@@ -86,6 +91,8 @@ export class SubWorld implements WorldShape {
   }
 }
 
+let global_component_row_id = ID_SEQ_START;
+let global_component_column_id = ID_SEQ_START;
 export abstract class Component {
   id = new ComponentID();
 
@@ -100,10 +107,55 @@ export abstract class Component {
   }
 
   constructor(...args: any[]) {}
+
+  static get<T>(
+    this: (new (...args: any[]) => T) & typeof Component,
+    entity: Entity
+  ): T | undefined {
+    // return entity.components.get(this) as T | undefined;
+    return undefined;
+  }
+
+  static global_component_column_id = ID_SEQ_START;
+  static global_component_row_id = ID_SEQ_START;
+  static set(entity: Entity, resource: Component) {
+    // entity.components.set(this, resource);
+    // return;
+
+    if (
+      this.global_component_column_id === ID_SEQ_START &&
+      this.global_component_row_id === ID_SEQ_START
+    ) {
+      if (
+        this.global_component_column_id === global_component_column_id ||
+        global_component_column_id >= CONTAINER_SIZE
+      ) {
+        global_component_row_id += 1;
+        global_component_column_id = 0;
+      } else {
+        global_component_column_id += 1;
+      }
+
+      this.global_component_row_id = global_component_row_id;
+      this.global_component_column_id = global_component_column_id;
+      this.get = new Function(
+        "entity",
+        `return entity.components._${this.global_component_row_id} && entity.components._${this.global_component_row_id}._${this.global_component_column_id}`
+      ) as any;
+    }
+
+    const container =
+      entity.components[`_${this.global_component_row_id}`] ??
+      (entity.components[`_${this.global_component_row_id}`] = {});
+    container[`_${this.global_component_column_id}`] = resource;
+
+    return resource;
+  }
 }
 
-let global_id_seq = 0;
-let current_system_count = 0;
+let global_resource_row_id = ID_SEQ_START;
+let global_resource_column_id = ID_SEQ_START;
+const CONTAINER_SIZE = 32;
 
 export abstract class Resource {
   static id(): ResourceID {
@@ -116,40 +168,48 @@ export abstract class Resource {
     return id;
   }
 
-  static get(world: World, resource: Resource) {
-    const raw_world = world as any;
-    const id = `_${this.id()}`;
-    let path = `_${raw_world.storage_count ?? 0}`;
+  constructor(...args: any[]) {}
 
+  static get<T>(
+    this: (new (...args: any[]) => T) & typeof Resource,
+    world: World
+  ): T | undefined {
+    return undefined as T | undefined;
+  }
+
+  static global_resource_column_id = ID_SEQ_START;
+  static global_resource_row_id = ID_SEQ_START;
+  static set(world: World, resource: Resource) {
     if (
-      raw_world.current_system_count === undefined ||
-      raw_world.current_system_count >= 8
+      this.global_resource_column_id === ID_SEQ_START &&
+      this.global_resource_row_id === ID_SEQ_START
     ) {
-      raw_world.current_system_count = 0;
-      raw_world.storage_count =
-        raw_world.storage_count !== undefined ? raw_world.storage_count + 1 : 0;
-      path = `_${raw_world.storage_count}`;
-      raw_world.resources[path] = new (class ResourceStorage {})();
-      if (!raw_world.resources.constructor.prototype[path]) {
-        raw_world.resources.constructor.prototype[path] = {};
+      if (
+        this.global_resource_column_id === global_resource_column_id ||
+        global_resource_column_id >= CONTAINER_SIZE
+      ) {
+        global_resource_row_id += 1;
+        global_resource_column_id = 0;
+      } else {
+        global_resource_column_id += 1;
       }
-    }
-    raw_world.current_system_count += 1;
 
-    // @ts-ignore
-    this._get = new Function("world", `return world.${id}()`) as any;
-
-    // @ts-ignore
-    World.prototype[`${id}`] = new Function(
-      "",
-      `return this.resources.${path}.${id}`
-    );
-
-    if (resource) {
-      raw_world.resources[`${path}`][`${id}`] = resource;
+      this.global_resource_row_id = global_resource_row_id;
+      this.global_resource_column_id = global_resource_column_id;
+      this.get = new Function(
+        "world",
+        `return world.resources[${this.global_resource_row_id}] && world.resources[${this.global_resource_row_id}][${this.global_resource_column_id}]`
+      ) as any;
     }
 
-    return raw_world.resources[`${path}`][`${id}`];
+    const container =
+      world.resources[this.global_resource_row_id!] ??
+      (world.resources[this.global_resource_row_id!] = Array(
+        CONTAINER_SIZE
+      ).fill(null));
+    container[this.global_resource_column_id!] = resource;
+
+    return resource;
   }
 
   name() {}
@@ -161,12 +221,10 @@ export abstract class System<R extends Resource[] = Resource[]> {
   world: WorldShape | undefined;
 }
 
-class Resources {}
-
 export class World implements WorldShape {
   entities = new Map<EntityID, Entity>();
   components = new Map<typeof Component, Set<Entity>>();
-  resources = new Resources();
+  resources: Array<Resource[]> = [];
   systems: System[] = [];
   systems_once: System[] = [];
   on_tick_end: Array<() => void> = [];
@@ -208,7 +266,7 @@ export class World implements WorldShape {
 
   resource(resource: Resource) {
     const Constructor = (resource.constructor as unknown) as typeof Resource;
-    Constructor.get(this, resource);
+    Constructor.set(this, resource);
   }
 
   entity<T extends Component[]>(...components: [...T]): Entity<T> {
@@ -216,13 +274,13 @@ export class World implements WorldShape {
     this.entities.set(entity.id, entity);
 
     for (const component of components) {
-      const constructor = component.constructor as typeof Component;
-      entity.components.set(constructor, component);
+      const Constructor = component.constructor as typeof Component;
+      Constructor.set(entity, component);
 
-      let set = this.components.get(constructor);
+      let set = this.components.get(Constructor);
       if (!set) {
         set = new Set();
-        this.components.set(constructor, set);
+        this.components.set(Constructor, set);
       }
 
       set.add(entity);
@@ -310,102 +368,6 @@ export class RafScheduler extends Scheduler {
   }
 }
 
-type KeyShape = { [id: string]: KeyShape | undefined } & {
-  SubKey: new () => KeyShape;
-  get(id: ResourceID | ComponentTypeID): KeyShape;
-  fn?: (...args: any[]) => any;
-};
-
-class Key implements KeyShape {
-  [id: string]: KeyShape | undefined;
-
-  // @ts-ignore
-  SubKey = class SubKey extends Key {} as new () => KeyShape;
-
-  // @ts-ignore
-  get(id: ResourceID | ComponentTypeID): KeyShape {
-    return this[id] || (this[id] = new this.SubKey());
-  }
-
-  // @ts-ignore
-  fn?: (...args: any[]) => any;
-}
-
-const entity_injectors_cache = new Key();
-const resources_injectors_cache = new Key();
-
-function get_cache(
-  cache: Key,
-  deps: Array<{ id(): ResourceID | ComponentTypeID }>
-) {
-  switch (deps.length) {
-    case 0:
-      return cache;
-    case 1:
-      return cache.get(deps[0].id());
-    case 2:
-      return cache.get(deps[0].id()).get(deps[1].id());
-    case 3:
-      return cache.get(deps[0].id()).get(deps[1].id()).get(deps[2].id());
-    case 4:
-      return cache
-        .get(deps[0].id())
-        .get(deps[1].id())
-        .get(deps[2].id())
-        .get(deps[3].id());
-    case 5:
-      return cache
-        .get(deps[0].id())
-        .get(deps[1].id())
-        .get(deps[2].id())
-        .get(deps[3].id())
-        .get(deps[4].id());
-    case 6:
-      return cache
-        .get(deps[0].id())
-        .get(deps[1].id())
-        .get(deps[2].id())
-        .get(deps[3].id())
-        .get(deps[4].id())
-        .get(deps[5].id());
-    case 7:
-      return cache
-        .get(deps[0].id())
-        .get(deps[1].id())
-        .get(deps[2].id())
-        .get(deps[3].id())
-        .get(deps[4].id())
-        .get(deps[5].id())
-        .get(deps[6].id());
-
-    case 8:
-      return cache
-        .get(deps[0].id())
-        .get(deps[1].id())
-        .get(deps[2].id())
-        .get(deps[3].id())
-        .get(deps[4].id())
-        .get(deps[5].id())
-        .get(deps[6].id())
-        .get(deps[7].id());
-    case 9:
-      return cache
-        .get(deps[0].id())
-        .get(deps[1].id())
-        .get(deps[2].id())
-        .get(deps[3].id())
-        .get(deps[4].id())
-        .get(deps[5].id())
-        .get(deps[6].id())
-        .get(deps[7].id())
-        .get(deps[8].id());
-  }
-
-  throw new Error(
-    `[Injector -> FastID] more than 9 dependencies don't supported`
-  );
-}
-
 const resource_injector_variables = Array(9)
   .fill(0)
   .map((_, i) => `_${i}`);
@@ -420,8 +382,9 @@ const resource_injector = new Function(`return (SubWorld) => {
            ${resource_injector_variables
              .slice(0, i)
              .map(
-               (v, i) => ` const ${v} = system.dependencies[${i}]._get(world);
-                          if (!${v}) return false;`
+               (v, i) => ` 
+                const ${v} = system.dependencies[${i}].get(world);
+                if (!${v}) return false;`
              )
              .join("\n")}
 
@@ -445,57 +408,83 @@ function inject_resources_and_sub_world(world: World, system: System) {
 
 const DEFAULT_COLLECTION = new Map();
 
+let component_injector = new Function(
+  "default_collection",
+  `
+  ${resource_injector_variables
+    .map((_, i) => {
+      return `
+        function inject${i}(world, fn, components) {
+          ${resource_injector_variables
+            .slice(0, i)
+            .map((v, i) => {
+              return `
+                 var _c${v} = components[${i}].get;
+                 var _${v} = world.components.get(components[${i}]);
+              `;
+            })
+            .join("\n")}
+          var size = Infinity;
+          var components_collection = ${
+            i > 0 ? `_${resource_injector_variables[0]}` : `default_collection`
+          } ?? default_collection;
+          ${resource_injector_variables
+            .slice(0, i)
+            .map((v) => {
+              return `
+                if (_${v}?.size < size) {
+                  components_collection = _${v};
+                  size = _${v}.size;
+                }`;
+            })
+            .join("\n")}
+
+
+            for (const entity of components_collection) {
+              ${resource_injector_variables
+                .slice(0, i)
+                .map(
+                  (v, i) =>
+                    `
+                      const ${v} = _c${v}(entity);
+                      if (!${v}) continue;
+                    `
+                )
+                .join("\n")}
+        
+              fn(${["entity"]
+                .concat(resource_injector_variables.slice(0, i))
+                .join(",")});
+            }
+
+        }`;
+    })
+    .join("\n")}
+
+  return (world, fn, components) => {
+    switch (components.length) {
+      ${resource_injector_variables
+        .map((_, i) => {
+          return `
+            case ${i}: {
+              return inject${i}(world, fn, components);
+            }`;
+        })
+        .join("\n")}
+      default: {
+        "[Injector -> FastID] more than 9 dependencies don't supported";
+      }
+    }
+  }
+  `
+)(DEFAULT_COLLECTION);
+
 function inject_entity_and_component(
   world: World,
   components: Array<typeof Component>,
   fn: (entity: Entity, ...components: Component[]) => void
 ) {
-  const cache = get_cache(entity_injectors_cache, components);
-
-  if (cache.fn === undefined) {
-    if (components.length === 0) return;
-
-    const variables1 = components.map((_, i) => `d${i}`);
-    const variables2 = components.map((_, i) => `c${i}`);
-    const injector_factory = new Function(`return (components, default_collection) => {
-      return (world, fn) => {
-        ${variables1
-          .map((v, i) => `var ${v} = world.components.get(components[${i}])`)
-          .join(";\n")}
-        var size = Infinity;
-        var components_collection = ${variables1[0]} ?? default_collection;
-        ${variables1
-          .map(
-            (variable) => `
-            if (${variable}?.size < size) {
-                components_collection = ${variable};
-                size = ${variable}.size;
-            }
-          `
-          )
-          .join("\n")}
-        
-        for (const entity of components_collection) {
-          if (!entity) continue;
-          ${variables2
-            .map(
-              (variable, i) =>
-                `
-                  var ${variable} = entity.components.get(components[${i}]);
-                  if (!${variable}) continue;
-                `
-            )
-            .join("\n")}
-
-           fn(entity, ${variables2.join(",")});
-        }
-      }
-    }`)();
-
-    cache.fn = injector_factory(components, DEFAULT_COLLECTION);
-  }
-
-  return cache.fn!(world, fn);
+  return component_injector(world, fn, components);
 }
 
 export class DynamicSystem extends System {
@@ -510,10 +499,14 @@ export class DynamicSystem extends System {
   }
 }
 
-type IgnoreMethod = any;
+type IgnoreMethodSignature = any;
 export function sys<
   T extends Array<
-    (new (...args: any[]) => Resource) & { id(): ResourceID; get: IgnoreMethod }
+    (new (...args: any[]) => Resource) & {
+      id(): ResourceID;
+      set: IgnoreMethodSignature;
+      get: IgnoreMethodSignature;
+    }
   >
 >(
   args: [...T],
@@ -524,5 +517,5 @@ export function sys<
     }
   ) => void
 ) {
-  return new DynamicSystem(args, fn);
+  return new DynamicSystem(args as any, fn);
 }

@@ -92,15 +92,16 @@ export namespace Transform {
   // OPTIMIZATION: Inject parent entities into Transform component
   // TODO: World vs Camera position, how to reflect camera position instead of world
   export function view(world: World, transform: Transform): Float32Array {
-    const parent = world.entities
-      .get(transform._parent!)
-      ?.components.get(Transform);
+    const parent = world.entities.get(transform._parent!);
+    const parent_transform = parent ? Transform.get(parent) : undefined;
 
     const result = transform.getView(
       transform.position,
       transform.scale,
       transform.rotation,
-      parent instanceof Transform ? Transform.view(world, parent) : undefined
+      parent_transform !== undefined
+        ? Transform.view(world, parent_transform)
+        : undefined
     );
 
     return result;

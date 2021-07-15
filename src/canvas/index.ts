@@ -1,5 +1,5 @@
 import { glMatrix } from "gl-matrix";
-import { LoopInfo, RafScheduler, sys, World } from "@mr/ecs/World";
+import { Component, LoopInfo, RafScheduler, sys, World } from "@mr/ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import {
   SpriteShader,
@@ -39,6 +39,10 @@ const world = new World();
 const scheduler = new RafScheduler(world);
 const gl = WebGL.setup(document, "app");
 const input = Input.create(gl.canvas);
+
+for (let i = 0; i < 4000; i++) {
+  world.entity(new (class _c extends Component {})());
+}
 
 const world_transform_component = new Transform({
   position: new Float32Array([-1, 1]),
