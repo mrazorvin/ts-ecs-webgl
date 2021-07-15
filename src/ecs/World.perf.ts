@@ -1,7 +1,7 @@
 import { Component, World } from "./World";
 
 const world = new World();
-for (let i = 0; i < 500; i++) {
+for (let i = 0; i < 5000; i++) {
   world.entity(new (class _c extends Component {})());
 }
 class TestComponent extends Component {}
@@ -32,10 +32,10 @@ const query = [
   TestComponent1,
   TestComponent2,
   TestComponent3,
-  // TestComponent4,
-  // TestComponent5,
-  // TestComponent6,
-  // TestComponent7,
+  TestComponent4,
+  TestComponent5,
+  TestComponent6,
+  TestComponent7,
 ];
 
 query: {
@@ -52,7 +52,7 @@ query: {
     });
   }
 
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 1000; i++) {
     x();
   }
 
