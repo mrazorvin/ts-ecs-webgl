@@ -1,4 +1,4 @@
-import { glMatrix } from "gl-matrix";
+import { glMatrix, vec2 } from "gl-matrix";
 import { Component, LoopInfo, RafScheduler, sys, World } from "@mr/ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import {
@@ -28,6 +28,7 @@ import { Input } from "./Input";
 import { Creature } from "./Creature";
 import { Static } from "./Static";
 import { Camera } from "./Camera";
+import { Modification } from "./Modification";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -97,9 +98,8 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   input.container_height = height;
   input.world_height = ROWS * 2;
   input.world_width = width_ratio * 2;
-
-  camera.transform.width = width_ratio * 2;
-  camera.transform.height = ROWS * 2;
+  input.camera_width = camera.transform.width = width_ratio * 2;
+  input.camera_height = camera.transform.height = ROWS * 2;
   camera.transform.position = new Float32Array([0, 0]);
 });
 
@@ -162,40 +162,48 @@ world.system_once(
         height: atlas.grid_height,
         width: atlas.grid_width,
       }),
-      new Creature()
+      new Creature(),
+      new Modification()
     );
   })
 );
 
-const run_frames = atlas.regions.filter((region) =>
-  region.name.includes("idle")
-);
+const animation = {
+  run: atlas.regions.filter((region) => region.name.includes("run")),
+  idle: atlas.regions.filter((region) => region.name.includes("idle")),
+};
+let selected_animation = "run";
 
 // TODO: implement animation automat, move animation to ... ? Sprite or Animation component
 let sec = 0;
 let current_frame = 0;
-const time_per_frame = 1 / run_frames.length;
 
 world.system(
   sys([Input, Camera], (sub_world, input, camera) => {
-    sub_world.query([Transform, Creature], (_, transform) => {
-      if (input.world_click_x && input.world_click_y) {
-        camera.set_position(
-          input.world_click_x - camera.transform.width / 2,
-          input.world_click_y - camera.transform.height / 2
-        );
-        if (camera.transform.position) {
-          input.camera_x = -camera.transform.position[0];
-          input.camera_y = -camera.transform.position[1];
+    sub_world.query(
+      [Transform, Modification, Creature],
+      (_, transform, modification) => {
+        if (input.click_x && input.click_y) {
+          camera.set_position(
+            input.click_x - camera.transform.width / 2,
+            input.click_y - camera.transform.height / 2
+          );
+          if (camera.transform.position) {
+            input.camera_x = -camera.transform.position[0];
+            input.camera_y = -camera.transform.position[1];
+          }
+          input.click_x = 0;
+          input.click_y = 0;
         }
-        transform.position = new Float32Array([
-          input.world_click_x - transform.width / 2,
-          input.world_click_y - transform.height / 2,
-        ]);
-        input.world_click_x = 0;
-        input.world_click_y = 0;
+
+        const target_x = input.current_x - transform.width / 2;
+        const target_y = input.current_y - transform.height / 2;
+        const direction_x = transform.position[0] - target_x;
+        const direction_y = transform.position[1] - target_y;
+        modification.movement_target[0] = direction_x;
+        modification.movement_target[1] = direction_y;
       }
-    });
+    );
   })
 );
 
@@ -212,7 +220,48 @@ world.system(
 );
 
 world.system(
+  sys([], (sub_world) => {
+    sub_world.query(
+      [Transform, Modification, Creature],
+      (_, transform, modification) => {
+        if (
+          !(
+            modification.movement_target[0] > -0.5 &&
+            modification.movement_target[0] < 0.5 &&
+            modification.movement_target[1] > -0.5 &&
+            modification.movement_target[1] < 0.5
+          )
+        ) {
+          const pos = new Float32Array(2);
+          vec2.normalize(pos, modification.movement_target as [number, number]);
+          const direction = pos[0];
+          transform.position = vec2.subtract(
+            pos,
+            transform.position,
+            pos
+          ) as Float32Array;
+          transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
+          if (selected_animation === "idle") {
+            selected_animation = "run";
+            sec = 0;
+          }
+        } else {
+          if (selected_animation === "run" && current_frame === 4) {
+            console.log({ current_frame });
+            selected_animation = "idle";
+            sec = 0;
+          }
+        }
+      }
+    );
+  })
+);
+
+world.system(
   sys([WebGL, LoopInfo, Input], (sub_world, ctx, loop, input) => {
+    const run_frames = animation[selected_animation as "run"];
+    const time_per_frame = 1 / run_frames.length;
+
     sec += loop.time_delta;
     if (sec >= 1) sec = 0;
     current_frame = Math.round(sec / time_per_frame) % run_frames.length;

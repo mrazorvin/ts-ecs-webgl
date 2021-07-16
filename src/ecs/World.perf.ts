@@ -1,8 +1,10 @@
 import { Component, World } from "./World";
 
 const world = new World();
+const clases = [];
 for (let i = 0; i < 5000; i++) {
-  world.entity(new (class _c extends Component {})());
+  clases.push(class _c extends Component {});
+  world.entity(new clases[clases.length - 1]());
 }
 class TestComponent extends Component {}
 class TestComponent1 extends Component {}
@@ -23,7 +25,10 @@ for (let i = 0; i < 4000; i++) {
     new TestComponent4(),
     new TestComponent5(),
     new TestComponent6(),
-    new TestComponent7()
+    new TestComponent7(),
+    ...Array(10)
+      .fill(10)
+      .map((x, i) => new clases[x * i]())
   );
 }
 
@@ -41,13 +46,12 @@ const query = [
 query: {
   console.time("query");
   let y = [] as any;
-
   function x() {
     world.query(query, (entity, t1, t2, t3, t4) => {
       y[0] = t1;
       y[1] = t2;
       y[2] = t3;
-      y[3] = t4;
+      y[3] = entity;
       y[4] = y[4] != null ? y[4] + 1 : 0;
     });
   }
@@ -57,6 +61,7 @@ query: {
   }
 
   console.log(y.map((x: any) => (x instanceof Object ? {} : x)));
+  console.log(Object.keys(y[3].components).length);
   console.timeEnd("query");
 }
 
@@ -157,7 +162,7 @@ iteration: {
     y[4] = y[4] != null ? y[4] + 1 : 0;
   }
 
-  for (let i = 0; i < 400000; i++) {
+  for (let i = 0; i < 4000; i++) {
     x();
   }
 

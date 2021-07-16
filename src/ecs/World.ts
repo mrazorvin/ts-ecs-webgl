@@ -93,6 +93,7 @@ export class SubWorld implements WorldShape {
 
 let global_component_row_id = ID_SEQ_START;
 let global_component_column_id = ID_SEQ_START;
+let classStorage = {} as any;
 export abstract class Component {
   id = new ComponentID();
 
@@ -116,6 +117,9 @@ export abstract class Component {
     return undefined;
   }
 
+  // TODO: instead of treating sequence of 32 as single Storage
+  // Use chess formation i.e first 4 for first second 4 for second ..
+  // from 32 .. 36 again belongs to first
   static global_component_column_id = ID_SEQ_START;
   static global_component_row_id = ID_SEQ_START;
   static set(entity: Entity, resource: Component) {
@@ -132,6 +136,7 @@ export abstract class Component {
       ) {
         global_component_row_id += 1;
         global_component_column_id = 0;
+        classStorage[`_${global_component_row_id}`] = class Storage {};
       } else {
         global_component_column_id += 1;
       }
@@ -146,7 +151,9 @@ export abstract class Component {
 
     const container =
       entity.components[`_${this.global_component_row_id}`] ??
-      (entity.components[`_${this.global_component_row_id}`] = {});
+      (entity.components[`_${this.global_component_row_id}`] = new classStorage[
+        `_${this.global_component_row_id}`
+      ]());
     container[`_${this.global_component_column_id}`] = resource;
 
     return resource;
@@ -419,8 +426,8 @@ let component_injector = new Function(
             .slice(0, i)
             .map((v, i) => {
               return `
-                 var _c${v} = components[${i}].get;
-                 var _${v} = world.components.get(components[${i}]);
+                 var _t${v} = components[${i}];
+                 var _${v} = world.components.get( _t${v});
               `;
             })
             .join("\n")}
@@ -439,14 +446,13 @@ let component_injector = new Function(
             })
             .join("\n")}
 
-
             for (const entity of components_collection) {
               ${resource_injector_variables
                 .slice(0, i)
                 .map(
                   (v, i) =>
                     `
-                      const ${v} = _c${v}(entity);
+                      const ${v} = _t${v}.get(entity);
                       if (!${v}) continue;
                     `
                 )

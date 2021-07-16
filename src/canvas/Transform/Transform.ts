@@ -12,7 +12,7 @@ type Rotation = number | undefined;
 type ParentView = Float32Array | undefined;
 
 export class Transform extends Component {
-  position: Float32Array | undefined;
+  position = new Float32Array([0, 0]);
   scale: Float32Array | undefined;
   rotation: number | undefined;
 
@@ -26,6 +26,8 @@ export class Transform extends Component {
   _previous_view: Float32Array;
 
   // OPTIMIZATION: Generate matrix in single operation, instead of multiple functions call
+  // TODO: scale must be scalar inside the class
+  // TRANSLATE: Should be split on x and y, otherwise matrix mutation doesn't reflected
   getView = setView((translate, scale, rotation, parent) => {
     const view = this._previous_view;
     this._previous_view = this._current_view;
@@ -90,7 +92,6 @@ export class Transform extends Component {
 
 export namespace Transform {
   // OPTIMIZATION: Inject parent entities into Transform component
-  // TODO: World vs Camera position, how to reflect camera position instead of world
   export function view(world: World, transform: Transform): Float32Array {
     const parent = world.entities.get(transform._parent!);
     const parent_transform = parent ? Transform.get(parent) : undefined;

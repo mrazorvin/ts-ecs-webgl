@@ -42,9 +42,6 @@ export class Input extends Resource {
   click_x = 0;
   click_y = 0;
 
-  world_click_x = 0;
-  world_click_y = 0;
-
   left_button = false;
   right_button = false;
 
@@ -53,6 +50,9 @@ export class Input extends Resource {
   }
 
   on_touch_start = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     if (event.button === 0) {
       this.left_button = true;
       this.right_button = false;
@@ -69,25 +69,37 @@ export class Input extends Resource {
     const click_y =
       ((event.pageY - this.container_offset_y) / this.container_height) *
       this.world_height;
-    this.click_x = click_x;
-    this.click_y = click_y;
-
-    // world click = camera_position + delta (view size - camera_size / 2)
-    this.world_click_x = click_x + this.camera_x;
-    this.world_click_y = click_y + this.camera_y;
+    this.current_x = this.click_x =
+      this.camera_x + (click_x - this.world_width / 2) + this.camera_width / 2;
+    this.current_y = this.click_y =
+      this.camera_y +
+      (click_y - this.world_height / 2) +
+      this.camera_height / 2;
   };
 
   on_touch_end = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
     this.left_button = false;
     this.right_button = false;
   };
 
   on_touch_move = (event: MouseEvent) => {
-    this.current_x =
+    event.preventDefault();
+    event.stopPropagation();
+
+    const click_x =
       ((event.pageX - this.container_offset_x) / this.container_width) *
       this.world_width;
-    this.current_y =
+    const click_y =
       ((event.pageY - this.container_offset_y) / this.container_height) *
       this.world_height;
+    this.current_x =
+      this.camera_x + (click_x - this.world_width / 2) + this.camera_width / 2;
+    this.current_y =
+      this.camera_y +
+      (click_y - this.world_height / 2) +
+      this.camera_height / 2;
   };
 }
