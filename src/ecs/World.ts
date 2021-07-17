@@ -9,11 +9,13 @@ export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
   components: { [key: string]: { [key: string]: Component } };
+  pool: Pool | undefined;
   ref: EntityRef;
 
   constructor(...args: any[]) {
     this.components = {};
     this.ref = new EntityRef(this);
+    this.pool = undefined;
   }
 }
 
@@ -21,6 +23,18 @@ export class EntityRef {
   entity: Entity | undefined;
   constructor(entity?: Entity) {
     this.entity = entity;
+  }
+}
+
+class Pool {
+  entities: Entity[];
+  constructor() {
+    this.entities = [];
+  }
+
+  push(entity: Entity) {
+    entity.ref = new EntityRef(entity);
+    this.entities.push(entity);
   }
 }
 
@@ -175,16 +189,19 @@ interface WorldShape {
 }
 
 export class ComponentsCollection {
-  entities: EntityRef[];
+  refs: EntityRef[];
+  size: number;
+  holes: number;
 
   constructor() {
-    this.entities = [];
+    this.refs = [];
+    this.size = 0;
+    this.holes = 0;
   }
 }
 
 export class World implements WorldShape {
   // IMPORTANT: Don't add > 12 properties V8 otherwise, V8 will use dictionary
-  entities = new Set<EntityRef>();
   components: Map<typeof Component, ComponentsCollection>;
   resources: { [key: string]: { [key: string]: Resource } };
   systems: System[];
@@ -192,7 +209,6 @@ export class World implements WorldShape {
   on_tick_end: Array<() => void>;
 
   constructor() {
-    this.entities = new Set();
     this.components = new Map();
     this.resources = {};
     this.systems = [];
@@ -242,7 +258,6 @@ export class World implements WorldShape {
 
   entity<T extends Component[]>(components: [...T]): Entity<T> {
     const entity = new Entity();
-    this.entities.add(entity.ref);
 
     for (const component of components) {
       const Constructor = component.constructor as typeof Component;
@@ -254,10 +269,16 @@ export class World implements WorldShape {
         this.components.set(Constructor, collection);
       }
 
-      collection.entities.push(entity.ref);
+      collection.size += 1;
+      collection.refs.push(entity.ref);
     }
 
     return entity;
+  }
+
+  delete_entity(entity: Entity) {
+    entity.ref.entity = undefined;
+    if (entity.pool) entity.pool.push(entity);
   }
 }
 
@@ -447,7 +468,7 @@ let component_injector = new Function(
             .map((v, i) => {
               return `
                  var _t${v} = components[${i}];
-                 var _${v} = world.components.get(_t${v})?.entities;
+                 var _${v} = world.components.get(_t${v})?.refs;
               `;
             })
             .join("\n")}
@@ -468,9 +489,22 @@ let component_injector = new Function(
 
             if (!components_collection) return;
 
-            for (const ref of components_collection) {
-              const entity = ref.entity;
-              if (!entity) return;
+            let tail = components_collection.length;
+            const length = components_collection.length;
+            main: for (let head = 0; head < length; head++) {
+              let ref = components_collection[head];
+              let entity = ref.entity;
+              if (!entity) { 
+                for (;;) {
+                  tail -= 1;
+                  if (tail === head) break main;
+                  ref = components_collection[tail];
+                  entity = ref.entity;
+                  if (entity) components_collection[head] = ref;
+                  else continue
+                }
+              }
+
               ${resource_injector_variables
                 .slice(0, i)
                 .map(
@@ -486,7 +520,7 @@ let component_injector = new Function(
                 .concat(resource_injector_variables.slice(0, i))
                 .join(",")});
             }
-
+            components_collection.length = tail;
         }`;
     })
     .join("\n")}
