@@ -8,7 +8,7 @@ export enum EntityID {}
 export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
-  components: { [key: string]: { [key: string]: Component } };
+  components: { [key: string]: Container };
   pool: Pool | undefined;
   ref: EntityRef;
 
@@ -39,6 +39,11 @@ class Pool {
 }
 
 let global_id = 0;
+
+interface Container {
+  components(fn: (component: Component) => void): void;
+  [key: string]: Component;
+}
 
 export abstract class Component {
   static id: number;
@@ -75,11 +80,28 @@ export abstract class Component {
       if (Component.last_container_column_id >= CONTAINER_SIZE) {
         Component.last_container_row_id += 1;
         Component.last_container_column_id = 0;
+        class ComponentsContainer {
+          [key: string]: Component;
+        }
         Component.container_class_cache[
           `_${Component.last_container_row_id}`
-        ] = class ComponentsContainer {
-          [key: string]: Component;
-        };
+        ] = ComponentsContainer;
+        const vars = Array(CONTAINER_SIZE)
+          .fill(null)
+          .map((_, i) => `c${i}`);
+        ComponentsContainer.prototype.components = new Function(
+          "fn",
+          `
+          ${vars
+            .map(
+              (v, i) => `
+            const ${v} = this._${i};
+            if (${v}) fn(${v});
+          `
+            )
+            .join("\n")}
+        `
+        );
       } else {
         Component.last_container_column_id += 1;
       }
@@ -203,12 +225,10 @@ interface WorldShape {
 export class ComponentsCollection {
   refs: EntityRef[];
   size: number;
-  holes: number;
 
   constructor() {
     this.refs = [];
     this.size = 0;
-    this.holes = 0;
   }
 }
 
@@ -291,6 +311,17 @@ export class World implements WorldShape {
   delete_entity(entity: Entity) {
     entity.ref.entity = undefined;
     if (entity.pool) entity.pool.push(entity);
+    for (const key in entity.components) {
+      const container = entity.components[key];
+      container.components((component) => {
+        const collection = this.components.get(
+          component.constructor as typeof Component
+        );
+        if (collection) {
+          collection.size -= 1;
+        }
+      });
+    }
   }
 }
 
@@ -512,8 +543,6 @@ class Cacher {
         `
       );
 
-      console.log(fn.toString());
-
       this.storage.set(id, fn);
     }
 
@@ -532,8 +561,8 @@ let component_injector = new Function(
             .slice(0, i)
             .map((v, i) => {
               return `
-                 var _t${v} = components[${i}];
-                 var _${v} = world.components.get(_t${v})?.refs;
+                 var _t${v} = world.components.get(components[${i}]);
+                 var _${v} = _t${v}?.refs;
               `;
             })
             .join("\n")}
@@ -545,9 +574,9 @@ let component_injector = new Function(
             .slice(0, i)
             .map((v) => {
               return `
-                if (_${v}?.length < size) {
+                if (_t${v}?.size < size) {
                   components_collection = _${v};
-                  size = _${v}.length;
+                  size = _t${v}.size;
                 }`;
             })
             .join("\n")}
@@ -566,8 +595,10 @@ let component_injector = new Function(
                   if (tail === head) break main;
                   ref = components_collection[tail];
                   entity = ref.entity;
-                  if (entity) components_collection[head] = ref;
-                  else continue
+                  if (entity) {
+                    components_collection[head] = ref;
+                    break;
+                  } else continue
                 }
               }
 
