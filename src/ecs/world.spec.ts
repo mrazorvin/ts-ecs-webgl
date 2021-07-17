@@ -65,10 +65,14 @@ test("[World.resource()] cache", (t) => {
 test("[World.entity()]", (t) => {
   const world = new World();
   const component = new TestComponent1();
-  const entity = world.entity([component]);
+  const expected_entity = world.entity([component]);
 
-  t.assert(world.entities.has(entity.ref));
-  t.is(TestComponent1.get(entity), component);
+  t.assert(
+    world.components
+      .get(TestComponent1)!
+      .refs.find(({ entity }) => entity === expected_entity)
+  );
+  t.is(TestComponent1.get(expected_entity), component);
 });
 
 class TestComponent2 extends Component {}
