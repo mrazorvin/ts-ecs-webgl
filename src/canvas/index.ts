@@ -41,29 +41,25 @@ const scheduler = new RafScheduler(world);
 const gl = WebGL.setup(document, "app");
 const input = Input.create(gl.canvas);
 
-for (let i = 0; i < 4000; i++) {
-  world.entity(new (class _c extends Component {})());
-}
-
 const world_transform_component = new Transform({
   position: new Float32Array([-1, 1]),
   scale: new Float32Array([1, -1]),
   height: 0,
   width: 0,
 });
-const world_transform = world.entity(world_transform_component);
+const world_transform = world.entity([world_transform_component]);
 
 const camera_transform = new Transform({
-  parent: world_transform.id,
+  parent: world_transform.ref,
   height: 0,
   width: 0,
 });
-const camera_entity = world.entity(camera_transform);
-const camera = new Camera(camera_transform, camera_entity.id);
+const camera_entity = world.entity([camera_transform]);
+const camera = new Camera(camera_transform, camera_entity.ref);
 
 const bg_size = ROWS * 2;
 const bg_transform = new Transform({
-  parent: camera_entity.id,
+  parent: camera_entity.ref,
   position: new Float32Array([160, 0]),
   height: bg_size,
   width: bg_size,
@@ -147,24 +143,24 @@ world.system_once(
     );
     const ogre_texture = ctx.create_texture(ogre_image, Texture.create);
 
-    world.entity(
+    world.entity([
       new Sprite(sprite_shader, bg_mesh, bg_texture),
       bg_transform,
-      new Static()
-    );
+      new Static(),
+    ]);
 
     // TODO: inject entities in SubWorld instead of World
-    world.entity(
+    world.entity([
       new Sprite(sprite_shader, ogre_mesh, ogre_texture),
       new Transform({
-        parent: camera_entity.id,
+        parent: camera_entity.ref,
         position: new Float32Array([0, 0]),
         height: atlas.grid_height,
         width: atlas.grid_width,
       }),
       new Creature(),
-      new Modification()
-    );
+      new Modification(),
+    ]);
   })
 );
 

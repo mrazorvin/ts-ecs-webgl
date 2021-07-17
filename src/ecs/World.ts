@@ -1,5 +1,5 @@
 const ID_SEQ_START = -1;
-const CONTAINER_SIZE = 10; // TODO: set to 32 after normalizing container locations
+const CONTAINER_SIZE = 8; // TODO: set to 32 after normalizing container locations
 
 export enum ResourceID {}
 export enum ComponentTypeID {}
@@ -38,7 +38,11 @@ class Pool {
   }
 }
 
+let global_id = 0;
+
 export abstract class Component {
+  static id: number;
+
   constructor(...args: any[]) {}
 
   static get<T>(
@@ -57,10 +61,17 @@ export abstract class Component {
   }
 
   static set(entity: Entity, component: Component) {
+    this.init();
+    return this._set(entity, component);
+  }
+
+  static init() {
     if (
       this.container_column_id === ID_SEQ_START ||
       this.storage_row_id === ID_SEQ_START
     ) {
+      this.id = global_id++;
+
       if (Component.last_container_column_id >= CONTAINER_SIZE) {
         Component.last_container_row_id += 1;
         Component.last_container_column_id = 0;
@@ -89,8 +100,6 @@ export abstract class Component {
         }`
       )(Component) as typeof this.set;
     }
-
-    return this._set(entity, component);
   }
 }
 
@@ -119,6 +128,11 @@ export abstract class Resource {
   static storage_row_id = ID_SEQ_START;
   static container_column_id = ID_SEQ_START;
   static set(world: World, resource: Resource) {
+    this.init();
+    return this._set(world, resource);
+  }
+
+  static init() {
     if (
       this.container_column_id === ID_SEQ_START ||
       this.storage_row_id === ID_SEQ_START
@@ -151,8 +165,6 @@ export abstract class Resource {
         }`
       )(Resource) as typeof this.set;
     }
-
-    return this._set(world, resource);
   }
 
   name() {}
@@ -456,8 +468,61 @@ function inject_resources_and_sub_world(world: World, system: System) {
 
 const DEFAULT_COLLECTION = new Map();
 
+class Cacher {
+  static storage = new Map<string, Function>();
+  static get_func(components: Array<typeof Component>) {
+    const id = components
+      .sort((c1, c2) => {
+        const comp = c2.storage_row_id - c1.storage_row_id;
+        return comp;
+      })
+      .map((component) => {
+        if (component.id === undefined) {
+          component.init();
+        }
+        return component.id;
+      })
+      .join("_");
+    let fn = this.storage.get(id);
+    if (!fn) {
+      fn = new Function(
+        "entity",
+        "fn",
+        `
+        ${[...new Set(components.map((v) => v.storage_row_id))]
+          .map(
+            (id) => `
+            const __${id} = entity.components._${id}
+            ${components
+              .filter((v) => v.storage_row_id === id)
+              .map(
+                (v) =>
+                  `const _${v.id} = __${v.storage_row_id}?._${v.container_column_id};
+                  if (_${v.id} === undefined) return;`
+              )
+              .join("\n")}
+            `
+          )
+          .join(";")}
+       
+          
+          fn(${["entity"]
+            .concat(components.map(({ id }) => `_${id}`))
+            .join(",")});
+        `
+      );
+
+      console.log(fn.toString());
+
+      this.storage.set(id, fn);
+    }
+
+    return fn;
+  }
+}
+
 let component_injector = new Function(
-  "",
+  "cacher",
   `
   ${resource_injector_variables
     .map((_, i) => {
@@ -489,6 +554,7 @@ let component_injector = new Function(
 
             if (!components_collection) return;
 
+            const inject = cacher.get_func(components);
             let tail = components_collection.length;
             const length = components_collection.length;
             main: for (let head = 0; head < length; head++) {
@@ -505,20 +571,7 @@ let component_injector = new Function(
                 }
               }
 
-              ${resource_injector_variables
-                .slice(0, i)
-                .map(
-                  (v, i) =>
-                    `
-                      const ${v} = _t${v}.get(entity);
-                      if (!${v}) continue;
-                    `
-                )
-                .join("\n")}
-        
-              fn(${["entity"]
-                .concat(resource_injector_variables.slice(0, i))
-                .join(",")});
+              inject(entity, fn);
             }
             components_collection.length = tail;
         }`;
@@ -541,7 +594,7 @@ let component_injector = new Function(
     }
   }
   `
-)();
+)(Cacher);
 
 function inject_entity_and_component(
   world: World,

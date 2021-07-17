@@ -1,5 +1,5 @@
 import { glMatrix, mat3 } from "gl-matrix";
-import { Component, EntityID, World } from "../../ecs/World";
+import { Component, EntityRef, World } from "../../ecs/World";
 import { DependenciesUtils } from "../Utils/DependenciesUtils";
 
 const setView = DependenciesUtils.compileMemoizeFactory<
@@ -12,7 +12,7 @@ type Rotation = number | undefined;
 type ParentView = Float32Array | undefined;
 
 export class Transform extends Component {
-  position = new Float32Array([0, 0]);
+  position: Float32Array | undefined;
   scale: Float32Array | undefined;
   rotation: number | undefined;
 
@@ -21,7 +21,7 @@ export class Transform extends Component {
   readonly to_center_offset: [number, number];
   readonly to_origin_offset: [number, number];
 
-  _parent: EntityID | undefined;
+  _parent: EntityRef | undefined;
   _current_view: Float32Array;
   _previous_view: Float32Array;
 
@@ -66,7 +66,7 @@ export class Transform extends Component {
   });
 
   constructor(config: {
-    parent?: EntityID;
+    parent?: EntityRef | undefined;
     position?: Float32Array;
     scale?: Float32Array;
     rotation?: number;
@@ -93,7 +93,7 @@ export class Transform extends Component {
 export namespace Transform {
   // OPTIMIZATION: Inject parent entities into Transform component
   export function view(world: World, transform: Transform): Float32Array {
-    const parent = world.entities.get(transform._parent!);
+    const parent = transform._parent?.entity;
     const parent_transform = parent ? Transform.get(parent) : undefined;
 
     const result = transform.getView(

@@ -1,8 +1,8 @@
-import { EntityID, Resource } from "@mr/ecs/World";
+import { EntityID, EntityRef, Resource } from "@mr/ecs/World";
 import { Transform } from "./Transform/Transform";
 
 export class Camera extends Resource {
-  constructor(public transform: Transform, public entity: EntityID) {
+  constructor(public transform: Transform, public entity: EntityRef) {
     super();
   }
 

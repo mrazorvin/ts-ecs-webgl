@@ -52,14 +52,14 @@ test("[World.resource()] cache", (t) => {
   world.resource(new R8());
   t.is(world.resources._0._8.constructor, R8);
 
-  world.resource(new R9());
-  t.is(world.resources._0._9.constructor, R9);
+  // world.resource(new R9());
+  // t.is(world.resources._0._9.constructor, R9);
 
-  world.resource(new R10());
-  t.is(world.resources._0._10.constructor, R10);
+  // world.resource(new R10());
+  // t.is(world.resources._0._10.constructor, R10);
 
-  world.resource(new R11());
-  t.is(world.resources._1._0.constructor, R11);
+  // world.resource(new R11());
+  // t.is(world.resources._1._0.constructor, R11);
 });
 
 test("[World.entity()]", (t) => {

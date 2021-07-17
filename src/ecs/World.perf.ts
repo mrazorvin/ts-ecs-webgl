@@ -16,20 +16,21 @@ class TestComponent6 extends Component {}
 class TestComponent7 extends Component {}
 class TestComponent8 extends Component {}
 
-for (let i = 0; i < 4000; i++) {
-  world.entity([
-    new TestComponent(),
-    new TestComponent1(),
-    new TestComponent2(),
-    new TestComponent3(),
-    new TestComponent4(),
-    new TestComponent5(),
-    new TestComponent6(),
-    new TestComponent7(),
-    ...Array(10)
-      .fill(10)
-      .map((x, i) => new clases[x * i]()),
-  ]);
+for (let i = 0; i < 40; i++) {
+  for (let z = 0; z < 100; z++)
+    world.entity([
+      new TestComponent(),
+      new TestComponent1(),
+      new TestComponent2(),
+      new TestComponent3(),
+      new TestComponent4(),
+      new TestComponent5(),
+      new TestComponent6(),
+      new TestComponent7(),
+      ...Array(8)
+        .fill(10)
+        .map((x, y) => new clases[y * x + i + z]()),
+    ]);
 }
 
 const query = [
@@ -56,12 +57,12 @@ query: {
     });
   }
 
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 10; i++) {
     x();
   }
 
   console.log(y.map((x: any) => (x instanceof Object ? {} : x)));
-  console.log(Object.keys(y[3].components).length);
+  console.log(console.log(y[3].components));
   console.timeEnd("query");
 }
 
@@ -75,6 +76,10 @@ function x() {
       y[1] = TestComponent2.get(ref.entity);
       y[2] = TestComponent3.get(ref.entity);
       y[3] = TestComponent4.get(ref.entity);
+      TestComponent5.get(ref.entity);
+      TestComponent6.get(ref.entity);
+      TestComponent7.get(ref.entity);
+      TestComponent8.get(ref.entity);
       y[4] = y[4] != null ? y[4] + 1 : 0;
       if (!y[4]) continue;
     }
@@ -164,7 +169,7 @@ iteration: {
     y[4] = y[4] != null ? y[4] + 1 : 0;
   }
 
-  for (let i = 0; i < 4000; i++) {
+  for (let i = 0; i < 40000; i++) {
     x();
   }
 
