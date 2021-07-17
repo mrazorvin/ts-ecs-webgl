@@ -65,9 +65,10 @@ test("[World.resource()] cache", (t) => {
 test("[World.entity()]", (t) => {
   const world = new World();
   const component = new TestComponent1();
-  const entity = world.entity(component);
+  const entity = world.entity([component]);
 
-  t.is(TestComponent1.get(world.entities.get(entity.id)!), component);
+  t.assert(world.entities.has(entity.ref));
+  t.is(TestComponent1.get(entity), component);
 });
 
 class TestComponent2 extends Component {}
@@ -78,7 +79,7 @@ test("[World.query()]", (t) => {
   const world = new World();
   const component1 = new TestComponent1();
   const component3 = new TestComponent3();
-  const entity = world.entity(component1, component3);
+  const entity = world.entity([component1, component3]);
 
   world.query([TestComponent1], (e, component) => {
     t.is(entity, e);
@@ -119,8 +120,8 @@ test("[World.query()] multiple entities", (t) => {
 
   world.query([TestComponent1], () => t.fail());
 
-  world.entity(new TestComponent1(), new TestComponent3());
-  world.entity(new TestComponent1(), new TestComponent3());
+  world.entity([new TestComponent1(), new TestComponent3()]);
+  world.entity([new TestComponent1(), new TestComponent3()]);
 
   world.query([TestComponent3], (_, component) => {
     t.true(component instanceof TestComponent3);

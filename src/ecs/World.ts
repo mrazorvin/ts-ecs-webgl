@@ -8,22 +8,22 @@ export enum EntityID {}
 export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
-  id: EntityID;
   components: { [key: string]: { [key: string]: Component } };
+  ref: EntityRef;
 
   constructor(...args: any[]) {
-    this.id = Entity.id_seq++;
     this.components = {};
+    this.ref = new EntityRef(this);
   }
 }
 
-export namespace Entity {
-  export let id_seq: EntityID = 0;
+export class EntityRef {
+  entity: Entity | undefined;
+  constructor(entity?: Entity) {
+    this.entity = entity;
+  }
 }
 
-let global_component_row_id = ID_SEQ_START;
-let global_component_column_id = ID_SEQ_START;
-let components_class_storage = {} as { [key: string]: new () => {} };
 export abstract class Component {
   constructor(...args: any[]) {}
 
@@ -35,43 +35,57 @@ export abstract class Component {
   }
 
   // TODO: normalize container locations
-  static global_component_column_id = ID_SEQ_START;
-  static global_component_row_id = ID_SEQ_START;
-  static set(entity: Entity, resource: Component) {
+  static storage_row_id = ID_SEQ_START;
+  static container_column_id = ID_SEQ_START;
+
+  private static _set(entity: Entity, component: Component): Component {
+    return component;
+  }
+
+  static set(entity: Entity, component: Component) {
     if (
-      this.global_component_column_id === ID_SEQ_START &&
-      this.global_component_row_id === ID_SEQ_START
+      this.container_column_id === ID_SEQ_START ||
+      this.storage_row_id === ID_SEQ_START
     ) {
-      if (
-        this.global_component_column_id === global_component_column_id ||
-        global_component_column_id >= CONTAINER_SIZE
-      ) {
-        global_component_row_id += 1;
-        global_component_column_id = 0;
-        components_class_storage[
-          `_${global_component_row_id}`
-        ] = class Storage {};
+      if (Component.last_container_column_id >= CONTAINER_SIZE) {
+        Component.last_container_row_id += 1;
+        Component.last_container_column_id = 0;
+        Component.container_class_cache[
+          `_${Component.last_container_row_id}`
+        ] = class ComponentsContainer {
+          [key: string]: Component;
+        };
       } else {
-        global_component_column_id += 1;
+        Component.last_container_column_id += 1;
       }
 
-      this.global_component_row_id = global_component_row_id;
-      this.global_component_column_id = global_component_column_id;
+      this.storage_row_id = Component.last_container_row_id;
+      this.container_column_id = Component.last_container_column_id;
+
       this.get = new Function(
         "entity",
-        `return entity.components._${this.global_component_row_id} && entity.components._${this.global_component_row_id}._${this.global_component_column_id}`
-      ) as any;
+        `return entity.components._${this.storage_row_id} && entity.components._${this.storage_row_id}._${this.container_column_id}`
+      ) as typeof this.get;
+      this._set = new Function(
+        "Component",
+        `return (entity, component) => {
+          return (entity.components._${this.storage_row_id} || 
+            (entity.components._${this.storage_row_id} = new Component.container_class_cache._${this.storage_row_id}()) 
+          )._${this.container_column_id} = component
+        }`
+      )(Component) as typeof this.set;
     }
 
-    const container =
-      entity.components[`_${this.global_component_row_id}`] ??
-      (entity.components[
-        `_${this.global_component_row_id}`
-      ] = new components_class_storage[`_${this.global_component_row_id}`]());
-    container[`_${this.global_component_column_id}`] = resource;
-
-    return resource;
+    return this._set(entity, component);
   }
+}
+
+export namespace Component {
+  export let last_container_row_id = ID_SEQ_START;
+  export let last_container_column_id = CONTAINER_SIZE;
+  export const container_class_cache: {
+    [key: string]: new (...args: any) => { [key: string]: Component };
+  } = {};
 }
 
 export abstract class Resource {
@@ -88,37 +102,37 @@ export abstract class Resource {
     return resource;
   }
 
+  static storage_row_id = ID_SEQ_START;
   static container_column_id = ID_SEQ_START;
-  static container_row_id = ID_SEQ_START;
   static set(world: World, resource: Resource) {
     if (
       this.container_column_id === ID_SEQ_START ||
-      this.container_row_id === ID_SEQ_START
+      this.storage_row_id === ID_SEQ_START
     ) {
       if (Resource.last_container_column_id >= CONTAINER_SIZE) {
         Resource.last_container_row_id += 1;
         Resource.last_container_column_id = 0;
-        Resource.container_class_storage[
+        Resource.container_class_cache[
           `_${Resource.last_container_row_id}`
-        ] = class ResourceStorage {
+        ] = class ResourceContainer {
           [key: string]: Resource;
         };
       } else {
         Resource.last_container_column_id += 1;
       }
 
-      this.container_row_id = Resource.last_container_row_id;
+      this.storage_row_id = Resource.last_container_row_id;
       this.container_column_id = Resource.last_container_column_id;
 
       this.get = new Function(
         "world",
-        `return world.resources._${this.container_row_id} && world.resources._${this.container_row_id}._${this.container_column_id}`
+        `return world.resources._${this.storage_row_id} && world.resources._${this.storage_row_id}._${this.container_column_id}`
       ) as typeof this.get;
       this._set = new Function(
         "Resource",
         `return (world, resource) => {
-          return (world.resources._${this.container_row_id} || 
-            (world.resources._${this.container_row_id} = new Resource.container_class_storage._${this.container_row_id}()) 
+          return (world.resources._${this.storage_row_id} || 
+            (world.resources._${this.storage_row_id} = new Resource.container_class_cache._${this.storage_row_id}()) 
           )._${this.container_column_id} = resource
         }`
       )(Resource) as typeof this.set;
@@ -131,10 +145,9 @@ export abstract class Resource {
 }
 
 export namespace Resource {
-  export let id_seq = ID_SEQ_START;
   export let last_container_row_id = ID_SEQ_START;
   export let last_container_column_id = CONTAINER_SIZE;
-  export const container_class_storage: {
+  export const container_class_cache: {
     [key: string]: new (...args: any) => { [key: string]: Resource };
   } = {};
 }
@@ -161,14 +174,31 @@ interface WorldShape {
   ): void;
 }
 
+export class ComponentsCollection {
+  entities: EntityRef[];
+
+  constructor() {
+    this.entities = [];
+  }
+}
+
 export class World implements WorldShape {
   // IMPORTANT: Don't add > 12 properties V8 otherwise, V8 will use dictionary
-  entities = new Map<EntityID, Entity>();
-  components = new Map<typeof Component, Set<Entity>>();
-  resources: { [key: string]: { [key: string]: Resource } } = {};
-  systems: System[] = [];
-  systems_once: System[] = [];
-  on_tick_end: Array<() => void> = [];
+  entities = new Set<EntityRef>();
+  components: Map<typeof Component, ComponentsCollection>;
+  resources: { [key: string]: { [key: string]: Resource } };
+  systems: System[];
+  systems_once: System[];
+  on_tick_end: Array<() => void>;
+
+  constructor() {
+    this.entities = new Set();
+    this.components = new Map();
+    this.resources = {};
+    this.systems = [];
+    this.systems_once = [];
+    this.on_tick_end = [];
+  }
 
   /**
    * it's possible to optimize engine even more:
@@ -210,21 +240,21 @@ export class World implements WorldShape {
     Constructor.set(this, resource);
   }
 
-  entity<T extends Component[]>(...components: [...T]): Entity<T> {
+  entity<T extends Component[]>(components: [...T]): Entity<T> {
     const entity = new Entity();
-    this.entities.set(entity.id, entity);
+    this.entities.add(entity.ref);
 
     for (const component of components) {
       const Constructor = component.constructor as typeof Component;
       Constructor.set(entity, component);
 
-      let set = this.components.get(Constructor);
-      if (!set) {
-        set = new Set();
-        this.components.set(Constructor, set);
+      let collection = this.components.get(Constructor);
+      if (!collection) {
+        collection = new ComponentsCollection();
+        this.components.set(Constructor, collection);
       }
 
-      set.add(entity);
+      collection.entities.push(entity.ref);
     }
 
     return entity;
@@ -406,7 +436,7 @@ function inject_resources_and_sub_world(world: World, system: System) {
 const DEFAULT_COLLECTION = new Map();
 
 let component_injector = new Function(
-  "default_collection",
+  "",
   `
   ${resource_injector_variables
     .map((_, i) => {
@@ -417,26 +447,30 @@ let component_injector = new Function(
             .map((v, i) => {
               return `
                  var _t${v} = components[${i}];
-                 var _${v} = world.components.get( _t${v});
+                 var _${v} = world.components.get(_t${v})?.entities;
               `;
             })
             .join("\n")}
           var size = Infinity;
           var components_collection = ${
-            i > 0 ? `_${resource_injector_variables[0]}` : `default_collection`
-          } ?? default_collection;
+            i > 0 ? `_${resource_injector_variables[0]}` : `undefined`
+          };
           ${resource_injector_variables
             .slice(0, i)
             .map((v) => {
               return `
-                if (_${v}?.size < size) {
+                if (_${v}?.length < size) {
                   components_collection = _${v};
-                  size = _${v}.size;
+                  size = _${v}.length;
                 }`;
             })
             .join("\n")}
 
-            for (const entity of components_collection) {
+            if (!components_collection) return;
+
+            for (const ref of components_collection) {
+              const entity = ref.entity;
+              if (!entity) return;
               ${resource_injector_variables
                 .slice(0, i)
                 .map(
@@ -473,7 +507,7 @@ let component_injector = new Function(
     }
   }
   `
-)(DEFAULT_COLLECTION);
+)();
 
 function inject_entity_and_component(
   world: World,
