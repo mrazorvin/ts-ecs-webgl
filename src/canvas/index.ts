@@ -247,7 +247,6 @@ world.system(
           }
         } else {
           if (selected_animation === "run" && current_frame === 4) {
-            console.log({ current_frame });
             selected_animation = "idle";
             sec = 0;
           }

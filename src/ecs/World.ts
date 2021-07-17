@@ -1,22 +1,142 @@
-export class ComponentID {
-  #type = ComponentID;
-}
-
-export class EntityID {
-  #type = EntityID;
-}
-
-let ID_SEQ_START = -1;
-let global_id_seq = 0;
+const ID_SEQ_START = -1;
+const CONTAINER_SIZE = 10; // TODO: set to 32 after normalizing container locations
 
 export enum ResourceID {}
 export enum ComponentTypeID {}
+export enum EntityID {}
 
 export class Entity<T extends Component[] = []> {
-  id = new EntityID();
-  // components = new Map<typeof Component, Component>();
-  // components = [];
-  components = {};
+  // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
+  //            this also mean that you not allow to add more properties to entity instance
+  id: EntityID;
+  components: { [key: string]: { [key: string]: Component } };
+
+  constructor(...args: any[]) {
+    this.id = Entity.id_seq++;
+    this.components = {};
+  }
+}
+
+export namespace Entity {
+  export let id_seq: EntityID = 0;
+}
+
+let global_component_row_id = ID_SEQ_START;
+let global_component_column_id = ID_SEQ_START;
+let components_class_storage = {} as { [key: string]: new () => {} };
+export abstract class Component {
+  constructor(...args: any[]) {}
+
+  static get<T>(
+    this: (new (...args: any[]) => T) & typeof Component,
+    entity: Entity
+  ): T | undefined {
+    return undefined;
+  }
+
+  // TODO: normalize container locations
+  static global_component_column_id = ID_SEQ_START;
+  static global_component_row_id = ID_SEQ_START;
+  static set(entity: Entity, resource: Component) {
+    if (
+      this.global_component_column_id === ID_SEQ_START &&
+      this.global_component_row_id === ID_SEQ_START
+    ) {
+      if (
+        this.global_component_column_id === global_component_column_id ||
+        global_component_column_id >= CONTAINER_SIZE
+      ) {
+        global_component_row_id += 1;
+        global_component_column_id = 0;
+        components_class_storage[
+          `_${global_component_row_id}`
+        ] = class Storage {};
+      } else {
+        global_component_column_id += 1;
+      }
+
+      this.global_component_row_id = global_component_row_id;
+      this.global_component_column_id = global_component_column_id;
+      this.get = new Function(
+        "entity",
+        `return entity.components._${this.global_component_row_id} && entity.components._${this.global_component_row_id}._${this.global_component_column_id}`
+      ) as any;
+    }
+
+    const container =
+      entity.components[`_${this.global_component_row_id}`] ??
+      (entity.components[
+        `_${this.global_component_row_id}`
+      ] = new components_class_storage[`_${this.global_component_row_id}`]());
+    container[`_${this.global_component_column_id}`] = resource;
+
+    return resource;
+  }
+}
+
+export abstract class Resource {
+  constructor(...args: any[]) {}
+
+  static get<T>(
+    this: (new (...args: any[]) => T) & typeof Resource,
+    world: World
+  ): T | undefined {
+    return undefined as T | undefined;
+  }
+
+  private static _set(world: World, resource: Resource): Resource {
+    return resource;
+  }
+
+  static container_column_id = ID_SEQ_START;
+  static container_row_id = ID_SEQ_START;
+  static set(world: World, resource: Resource) {
+    if (
+      this.container_column_id === ID_SEQ_START ||
+      this.container_row_id === ID_SEQ_START
+    ) {
+      if (Resource.last_container_column_id >= CONTAINER_SIZE) {
+        Resource.last_container_row_id += 1;
+        Resource.last_container_column_id = 0;
+        Resource.container_class_storage[
+          `_${Resource.last_container_row_id}`
+        ] = class ResourceStorage {
+          [key: string]: Resource;
+        };
+      } else {
+        Resource.last_container_column_id += 1;
+      }
+
+      this.container_row_id = Resource.last_container_row_id;
+      this.container_column_id = Resource.last_container_column_id;
+
+      this.get = new Function(
+        "world",
+        `return world.resources._${this.container_row_id} && world.resources._${this.container_row_id}._${this.container_column_id}`
+      ) as typeof this.get;
+      this._set = new Function(
+        "Resource",
+        `return (world, resource) => {
+          return (world.resources._${this.container_row_id} || 
+            (world.resources._${this.container_row_id} = new Resource.container_class_storage._${this.container_row_id}()) 
+          )._${this.container_column_id} = resource
+        }`
+      )(Resource) as typeof this.set;
+    }
+
+    return this._set(world, resource);
+  }
+
+  name() {}
+}
+
+export namespace Resource {
+  export let id_seq = ID_SEQ_START;
+  export let last_container_row_id = ID_SEQ_START;
+  export let last_container_column_id = CONTAINER_SIZE;
+  export const container_class_storage: {
+    [key: string]: new (...args: any) => { [key: string]: Resource };
+  } = {};
 }
 
 interface WorldShape {
@@ -41,197 +161,11 @@ interface WorldShape {
   ): void;
 }
 
-export class SubWorld implements WorldShape {
-  private world: WorldShape;
-  private finished: boolean;
-
-  constructor(world: WorldShape) {
-    this.finished = false;
-    this.world = world;
-  }
-
-  system(system: System) {
-    if (this.finished === true) return;
-    if (system.world === undefined) system.world = this;
-
-    this.world.system(system);
-  }
-
-  system_once(system: System) {
-    if (this.finished === true) return;
-    if (system.world === undefined) {
-      system.world = this;
-    }
-
-    this.world.system_once(system);
-  }
-
-  query<T extends Array<typeof Component>>(
-    components: [...T],
-    reduce: (
-      entity: Entity<
-        {
-          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-            ? A
-            : Component;
-        }
-      >,
-      ...args: {
-        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-          ? A
-          : Component;
-      }
-    ) => void
-  ) {
-    return this.world.query(components, reduce);
-  }
-
-  finish() {
-    this.finished = true;
-  }
-}
-
-let global_component_row_id = ID_SEQ_START;
-let global_component_column_id = ID_SEQ_START;
-let classStorage = {} as any;
-export abstract class Component {
-  id = new ComponentID();
-
-  static id(): ComponentTypeID {
-    let id: undefined | ComponentTypeID;
-    if (id === undefined) {
-      id = (`${global_id_seq++}` as unknown) as ComponentTypeID;
-      this.id = () => id!;
-    }
-
-    return id;
-  }
-
-  constructor(...args: any[]) {}
-
-  static get<T>(
-    this: (new (...args: any[]) => T) & typeof Component,
-    entity: Entity
-  ): T | undefined {
-    // return entity.components.get(this) as T | undefined;
-    return undefined;
-  }
-
-  // TODO: instead of treating sequence of 32 as single Storage
-  // Use chess formation i.e first 4 for first second 4 for second ..
-  // from 32 .. 36 again belongs to first
-  static global_component_column_id = ID_SEQ_START;
-  static global_component_row_id = ID_SEQ_START;
-  static set(entity: Entity, resource: Component) {
-    // entity.components.set(this, resource);
-    // return;
-
-    if (
-      this.global_component_column_id === ID_SEQ_START &&
-      this.global_component_row_id === ID_SEQ_START
-    ) {
-      if (
-        this.global_component_column_id === global_component_column_id ||
-        global_component_column_id >= CONTAINER_SIZE
-      ) {
-        global_component_row_id += 1;
-        global_component_column_id = 0;
-        classStorage[`_${global_component_row_id}`] = class Storage {};
-      } else {
-        global_component_column_id += 1;
-      }
-
-      this.global_component_row_id = global_component_row_id;
-      this.global_component_column_id = global_component_column_id;
-      this.get = new Function(
-        "entity",
-        `return entity.components._${this.global_component_row_id} && entity.components._${this.global_component_row_id}._${this.global_component_column_id}`
-      ) as any;
-    }
-
-    const container =
-      entity.components[`_${this.global_component_row_id}`] ??
-      (entity.components[`_${this.global_component_row_id}`] = new classStorage[
-        `_${this.global_component_row_id}`
-      ]());
-    container[`_${this.global_component_column_id}`] = resource;
-
-    return resource;
-  }
-}
-
-let global_resource_row_id = ID_SEQ_START;
-let global_resource_column_id = ID_SEQ_START;
-const CONTAINER_SIZE = 32;
-
-export abstract class Resource {
-  static id(): ResourceID {
-    let id: undefined | ResourceID;
-    if (id === undefined) {
-      id = (`${global_id_seq++}` as unknown) as ResourceID;
-      this.id = () => id!;
-    }
-
-    return id;
-  }
-
-  constructor(...args: any[]) {}
-
-  static get<T>(
-    this: (new (...args: any[]) => T) & typeof Resource,
-    world: World
-  ): T | undefined {
-    return undefined as T | undefined;
-  }
-
-  static global_resource_column_id = ID_SEQ_START;
-  static global_resource_row_id = ID_SEQ_START;
-  static set(world: World, resource: Resource) {
-    if (
-      this.global_resource_column_id === ID_SEQ_START &&
-      this.global_resource_row_id === ID_SEQ_START
-    ) {
-      if (
-        this.global_resource_column_id === global_resource_column_id ||
-        global_resource_column_id >= CONTAINER_SIZE
-      ) {
-        global_resource_row_id += 1;
-        global_resource_column_id = 0;
-      } else {
-        global_resource_column_id += 1;
-      }
-
-      this.global_resource_row_id = global_resource_row_id;
-      this.global_resource_column_id = global_resource_column_id;
-      this.get = new Function(
-        "world",
-        `return world.resources[${this.global_resource_row_id}] && world.resources[${this.global_resource_row_id}][${this.global_resource_column_id}]`
-      ) as any;
-    }
-
-    const container =
-      world.resources[this.global_resource_row_id!] ??
-      (world.resources[this.global_resource_row_id!] = Array(
-        CONTAINER_SIZE
-      ).fill(null));
-    container[this.global_resource_column_id!] = resource;
-
-    return resource;
-  }
-
-  name() {}
-}
-
-export abstract class System<R extends Resource[] = Resource[]> {
-  abstract dependencies: { [K in keyof R]: (new () => R[K]) & typeof Resource };
-  abstract exec(world: SubWorld, ...resources: R): void;
-  world: WorldShape | undefined;
-}
-
 export class World implements WorldShape {
+  // IMPORTANT: Don't add > 12 properties V8 otherwise, V8 will use dictionary
   entities = new Map<EntityID, Entity>();
   components = new Map<typeof Component, Set<Entity>>();
-  resources: Array<Resource[]> = [];
+  resources: { [key: string]: { [key: string]: Resource } } = {};
   systems: System[] = [];
   systems_once: System[] = [];
   on_tick_end: Array<() => void> = [];
@@ -295,6 +229,62 @@ export class World implements WorldShape {
 
     return entity;
   }
+}
+
+export class SubWorld implements WorldShape {
+  private world: WorldShape;
+  private finished: boolean;
+
+  constructor(world: WorldShape) {
+    this.finished = false;
+    this.world = world;
+  }
+
+  system(system: System) {
+    if (this.finished === true) return;
+    if (system.world === undefined) system.world = this;
+
+    this.world.system(system);
+  }
+
+  system_once(system: System) {
+    if (this.finished === true) return;
+    if (system.world === undefined) {
+      system.world = this;
+    }
+
+    this.world.system_once(system);
+  }
+
+  query<T extends Array<typeof Component>>(
+    components: [...T],
+    reduce: (
+      entity: Entity<
+        {
+          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+            ? A
+            : Component;
+        }
+      >,
+      ...args: {
+        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+          ? A
+          : Component;
+      }
+    ) => void
+  ) {
+    return this.world.query(components, reduce);
+  }
+
+  finish() {
+    this.finished = true;
+  }
+}
+
+export abstract class System<R extends Resource[] = Resource[]> {
+  abstract dependencies: { [K in keyof R]: (new () => R[K]) & typeof Resource };
+  abstract exec(world: SubWorld, ...resources: R): void;
+  world: WorldShape | undefined;
 }
 
 export abstract class BaseScheduler {
@@ -506,15 +496,7 @@ export class DynamicSystem extends System {
 }
 
 type IgnoreMethodSignature = any;
-export function sys<
-  T extends Array<
-    (new (...args: any[]) => Resource) & {
-      id(): ResourceID;
-      set: IgnoreMethodSignature;
-      get: IgnoreMethodSignature;
-    }
-  >
->(
+export function sys<T extends Array<new (...args: any[]) => Resource>>(
   args: [...T],
   fn: (
     world: SubWorld,
