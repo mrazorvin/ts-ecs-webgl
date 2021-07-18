@@ -9,7 +9,7 @@ export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
   components: { [key: string]: ComponentsContainer };
-  pool: Pool<T> | undefined;
+  pool: EntityPool<[]> | undefined;
   ref: EntityRef;
 
   constructor(...args: any[]) {
@@ -26,20 +26,208 @@ export class EntityRef {
   }
 }
 
-class Pool<T extends Component[]> {
-  entities: Entity<T>[];
+type PoolInstances<T extends Array<typeof Component>> = {
+  [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : never;
+};
+type PoolInstancesUndef<T extends Array<typeof Component>> = {
+  [K in keyof T]: T[K] extends new (...args: any[]) => infer A
+    ? A | undefined
+    : never;
+};
 
-  constructor() {
+export class EntityPool<T extends Array<typeof Component>> {
+  entities: Entity<T>[];
+  components: T;
+  create?: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>;
+  reuse?: (
+    world: World,
+    entity: Entity<PoolInstances<T>>,
+    reset: (
+      create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
+      ...args: PoolInstancesUndef<T>
+    ) => Entity<PoolInstances<T>>
+  ) => Entity<PoolInstances<T>>;
+  instantiate?: (
+    world: World,
+    instantiate: (
+      create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
+    ) => Entity<PoolInstances<T>>
+  ) => Entity<PoolInstances<T>>;
+
+  constructor(components: [...T]) {
     this.entities = [];
+    this.components = components;
+    this.create = undefined;
   }
 
-  pop(): Entity<T> {
-    throw new Error("un-implemented");
+  pop(): Entity<T> | undefined {
+    if (this.create === undefined) {
+      this.init();
+    }
+
+    return this.entities.pop();
+  }
+
+  init() {
+    for (const Component of this.components) {
+      if (Component.id === undefined) {
+        Component.init();
+      }
+    }
+    const vars = this.components.map(({ id }) => `c${id}`);
+    const storages = Array.from(
+      new Set(this.components.map((c) => c.storage_row_id))
+    );
+
+    this.create = new Function(
+      ...["Entity", "pool", "components"],
+      ` 
+        return (${vars.join(",")}) => {
+          const entity = new Entity();
+          ${storages
+            .map(
+              (storage_id) => `
+              var s${storage_id} = new components[${this.components.findIndex(
+                (c) => c.storage_row_id === storage_id
+              )}].container_class();
+              ${this.components
+                .filter((c) => c.storage_row_id === storage_id)
+                .map(
+                  (c) => `s${storage_id}._${c.container_column_id} = c${c.id}`
+                )
+                .join("\n")}
+              `
+            )
+            .join("\n")}
+          
+          entity.pool = pool;
+          entity.components = {
+            ${storages
+              .map((storage_id) => {
+                return `
+                  _${storage_id}: s${storage_id}, 
+                `;
+              })
+              .join("\n")}
+          }
+
+          return entity;
+        }
+      `
+    )(Entity, this, this.components) as EntityPool<T>["create"];
+
+    this.reuse = new Function(
+      ...["create", "components", "ComponentsCollection"],
+      `
+        return (world, entity, reset) => {
+          ${storages
+            .map(
+              (storage_id) => `
+              var s${storage_id} = entity.components._${storage_id};
+              ${this.components
+                .filter((c) => c.storage_row_id === storage_id)
+                .map(
+                  (c) =>
+                    `var c${c.id} = s${storage_id}?._${c.container_column_id};`
+                )
+                .join("\n")}
+              `
+            )
+            .join("\n")}
+
+          const new_entity = reset(create, ${vars.join(",")});
+          
+          ${this.components
+            .map(
+              (_, i) => `
+              const Constructor${i} = components[${i}];
+              let collection${i} = world.components.get(Constructor${i});
+              if (collection${i} === undefined) {
+                collection${i} = new ComponentsCollection();
+                world.components.set(Constructor${i}, collection${i});
+              }
+              collection${i}.size += 1;
+              collection${i}.refs.push(new_entity.ref);
+          `
+            )
+            .join("\n")}
+
+
+          return new_entity;
+        }
+      `
+    )(
+      this.create,
+      this.components,
+      ComponentsCollection
+    ) as EntityPool<T>["reuse"];
+
+    this.instantiate = new Function(
+      ...["create", "components", "ComponentsCollection"],
+      `
+        return (world, instantiate) => {
+          const new_entity = instantiate(create);
+          
+          ${this.components
+            .map(
+              (_, i) => `
+              const Constructor${i} = components[${i}];
+              let collection${i} = world.components.get(Constructor${i});
+              if (collection${i} === undefined) {
+                collection${i} = new ComponentsCollection();
+                world.components.set(Constructor${i}, collection${i});
+              }
+              collection${i}.size += 1;
+              collection${i}.refs.push(new_entity.ref);
+          `
+            )
+            .join("\n")}
+
+          return new_entity;
+        }
+      `
+    )(
+      this.create,
+      this.components,
+      ComponentsCollection
+    ) as EntityPool<T>["instantiate"];
   }
 
   push(entity: Entity) {
-    entity.ref = new EntityRef(entity);
     this.entities.push(entity);
+  }
+}
+
+export class Pool<T extends Array<typeof Component>> {
+  instantiate: (
+    create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
+  ) => Entity<PoolInstances<T>>;
+
+  reuse: (
+    create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
+    ...args: PoolInstancesUndef<T>
+  ) => Entity<PoolInstances<T>>;
+
+  pool: EntityPool<T>;
+
+  constructor(
+    pool: EntityPool<T>,
+    instantiate: Pool<T>["instantiate"],
+    reuse: Pool<T>["reuse"]
+  ) {
+    this.pool = pool;
+    this.reuse = reuse;
+    this.instantiate = instantiate;
+  }
+
+  get(world: World) {
+    const _entity = this.pool.pop();
+    const entity =
+      _entity === undefined
+        ? this.pool.instantiate!(world, this.instantiate)
+        : this.pool.reuse!(world, _entity, this.reuse);
+
+    return entity;
   }
 }
 
@@ -74,6 +262,7 @@ export abstract class Component {
   }
 
   // TODO: normalize container locations
+  static container_class: undefined | ComponentsContainer;
   static storage_row_id = ID_SEQ_START;
   static container_column_id = ID_SEQ_START;
   static init() {
@@ -91,7 +280,7 @@ export abstract class Component {
         }
         Component.container_class_cache[
           `_${Component.last_container_row_id}`
-        ] = ComponentsContainer;
+        ] = ComponentsContainer as any;
         const vars = Array(CONTAINER_SIZE)
           .fill(null)
           .map((_, i) => `c${i}`);
@@ -114,6 +303,8 @@ export abstract class Component {
 
       this.storage_row_id = Component.last_container_row_id;
       this.container_column_id = Component.last_container_column_id;
+      this.container_class =
+        Component.container_class_cache[`_${this.storage_row_id}`];
 
       this.get = new Function(
         "entity",
@@ -121,13 +312,13 @@ export abstract class Component {
       ) as typeof this.get;
 
       this._set = new Function(
-        "Component",
+        ...["Component", "ContainerClass"],
         `return (entity, component) => {
           return (entity.components._${this.storage_row_id} || 
-            (entity.components._${this.storage_row_id} = new Component.container_class_cache._${this.storage_row_id}()) 
+            (entity.components._${this.storage_row_id} = new ContainerClass()) 
           )._${this.container_column_id} = component
         }`
-      )(Component) as typeof this.set;
+      )(Component, this.container_class) as typeof this.set;
     }
   }
 }
@@ -136,7 +327,7 @@ export namespace Component {
   export let last_container_row_id = ID_SEQ_START;
   export let last_container_column_id = CONTAINER_SIZE;
   export const container_class_cache: {
-    [key: string]: new (...args: any) => { [key: string]: Component };
+    [key: string]: ComponentsContainer;
   } = {};
 }
 
@@ -526,25 +717,19 @@ function inject_resources_and_sub_world(world: World, system: System) {
   return resource_injector(world, system);
 }
 
-// TODO: refactor names
+const noop = () => void 0;
+
+// TODO: refactor names]
 class Cacher {
   static storage = new Map<string, Function>();
   static get_func(components: Array<typeof Component>) {
-    // check sort performance, sort also by id to use same function for any components combination
-    const id = components
-      .sort((c1, c2) => {
-        const comp = c2.storage_row_id - c1.storage_row_id;
-        return comp;
-      })
-      .map((component) => {
-        if (component.id === undefined) {
-          component.init();
-        }
-        return component.id;
-      })
-      .join("_");
+    let id = "";
+    for (const component of components) {
+      if (component.id === undefined) return noop;
+      id += `_${component.id}`;
+    }
     let fn = this.storage.get(id);
-    if (!fn) {
+    if (fn === undefined) {
       fn = new Function(
         "entity",
         "fn",
@@ -661,6 +846,11 @@ let component_injector = new Function(
 // TODO: think about logging / statistic in development mode
 //       for actions like add / remove resource, entity
 //       without browser blocking
+//       we could grab some statics like total entity/ resource iteration
+//       tunning time time, unsed systems simple counters, which could be eliminated in production mode
+//        on other side we want to log as possible user actions
+//        like user do -thin and user do that
+//        move this info to trello
 
 function inject_entity_and_component(
   world: World,

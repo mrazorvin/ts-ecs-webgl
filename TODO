@@ -1,0 +1,11 @@
+[X] - finish entities pool 
+[ ] - render world map
+  [ ] - create simple map in tiled
+  [ ] - load tiles info from tiled JSON 
+  [ ] - load map from tiled JSON
+  [ ] - create SDC world & entities
+  [ ] - on each iteration add /remove visibility
+  [ ] - render visibly tiles
+ 
+[ ] SDC types
+[ ] Walls collisions 

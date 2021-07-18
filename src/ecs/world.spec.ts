@@ -119,7 +119,7 @@ test("[World.query()]", (t) => {
 });
 
 test("[World.query()] multiple entities", (t) => {
-  t.plan(8);
+  t.plan(12);
   const world = new World();
 
   world.query([TestComponent1], () => t.fail());
@@ -133,6 +133,11 @@ test("[World.query()] multiple entities", (t) => {
 
   world.query([TestComponent1], (_, component) => {
     t.true(component instanceof TestComponent1);
+  });
+
+  world.query([TestComponent3, TestComponent1], (_, component2, component1) => {
+    t.true(component1 instanceof TestComponent1);
+    t.true(component2 instanceof TestComponent3);
   });
 
   world.query([TestComponent1, TestComponent3], (_, component1, component2) => {
