@@ -32,6 +32,7 @@ import { Modification } from "./Modification";
 
 glMatrix.setMatrixArrayType(Array);
 
+// this value must somehow refer to 32x32 grid size, for simplification reason
 const ROWS = 120;
 const BACKGROUND_CONTEXT = new ContextID();
 const MONSTER_CONTEXT = new ContextID();
@@ -47,6 +48,7 @@ const world_transform_component = new Transform({
   height: 0,
   width: 0,
 });
+// should be available globally
 const world_transform = world.entity([world_transform_component]);
 
 const camera_transform = new Transform({
@@ -73,6 +75,12 @@ world.resource(camera);
 const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   const { width, height } = t.size(ctx.gl, "100%", "100%");
   const width_ratio = width / (height / ROWS);
+
+  // all following code must be part of different contracts
+  // there should be some kind of marker for RESIZE contract call
+  // like behavior_start("RESIZE") && behavior_end("RESIZE");
+  // in development mode on the end of systems, we will iterate over all contracts and check of they still valid
+  // in production mode contracts will be no-op
 
   world_transform_component.scale = new Float32Array([
     1 / width_ratio,
@@ -141,6 +149,8 @@ world.system_once(
         height: atlas.grid_height,
       })
     );
+
+    // entities initialization should be some how implemented from the JSON in separate system
     const ogre_texture = ctx.create_texture(ogre_image, Texture.create);
 
     world.entity([
@@ -180,18 +190,23 @@ world.system(
       [Transform, Modification, Creature],
       (_, transform, modification) => {
         if (input.click_x && input.click_y) {
+          // part of contract even if we don't move camera, we still need to call function at least once
           camera.set_position(
             input.click_x - camera.transform.width / 2,
             input.click_y - camera.transform.height / 2
           );
+
+          // part of contract camera position synchronization
           if (camera.transform.position) {
             input.camera_x = -camera.transform.position[0];
             input.camera_y = -camera.transform.position[1];
           }
+
           input.click_x = 0;
           input.click_y = 0;
         }
 
+        // make a static method from Modification class
         const target_x = input.current_x - transform.width / 2;
         const target_y = input.current_y - transform.height / 2;
         const direction_x = transform.position[0] - target_x;
@@ -220,6 +235,8 @@ world.system(
     sub_world.query(
       [Transform, Modification, Creature],
       (_, transform, modification) => {
+        // those code some how connected to animation chain + movement behavior
+        // think a better way to organize it
         if (
           !(
             modification.movement_target[0] > -0.5 &&
@@ -228,6 +245,7 @@ world.system(
             modification.movement_target[1] < 0.5
           )
         ) {
+          // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
           const pos = new Float32Array(2);
           vec2.normalize(pos, modification.movement_target as [number, number]);
           const direction = pos[0];
@@ -285,12 +303,14 @@ world.system(
     const monster_context = ctx.context.get(MONSTER_CONTEXT);
 
     if (pp_ctx instanceof PostPass && bg_context && monster_context) {
+      // part of contact
       t.buffer(ctx.gl, pp_ctx);
       Context.render(ctx, bg_context);
       Context.render(ctx, monster_context);
       t.buffer(ctx.gl, undefined);
       PostPass.render(ctx, pp_ctx);
 
+      // part of contract
       bg_context.need_clear = true;
       monster_context.need_clear = true;
       pp_ctx.need_clear = true;
@@ -298,4 +318,7 @@ world.system(
   })
 );
 
-window.requestAnimationFrame(scheduler.start);
+// TOOO: think about a way how to test code ?
+// TODO: think about logging ?
+
+scheduler.start();

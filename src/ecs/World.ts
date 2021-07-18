@@ -8,8 +8,8 @@ export enum EntityID {}
 export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
-  components: { [key: string]: Container };
-  pool: Pool | undefined;
+  components: { [key: string]: ComponentsContainer };
+  pool: Pool<T> | undefined;
   ref: EntityRef;
 
   constructor(...args: any[]) {
@@ -26,10 +26,15 @@ export class EntityRef {
   }
 }
 
-class Pool {
-  entities: Entity[];
+class Pool<T extends Component[]> {
+  entities: Entity<T>[];
+
   constructor() {
     this.entities = [];
+  }
+
+  pop(): Entity<T> {
+    throw new Error("un-implemented");
   }
 
   push(entity: Entity) {
@@ -38,18 +43,19 @@ class Pool {
   }
 }
 
-let global_id = 0;
-
-interface Container {
+interface ComponentsContainer {
   components(fn: (component: Component) => void): void;
   [key: string]: Component;
 }
 
+// move to member of static class
+let global_id = 0;
 export abstract class Component {
   static id: number;
 
   constructor(...args: any[]) {}
 
+  // real code will be injected after initialization
   static get<T>(
     this: (new (...args: any[]) => T) & typeof Component,
     entity: Entity
@@ -57,10 +63,7 @@ export abstract class Component {
     return undefined;
   }
 
-  // TODO: normalize container locations
-  static storage_row_id = ID_SEQ_START;
-  static container_column_id = ID_SEQ_START;
-
+  // real code will be injected after initialization
   private static _set(entity: Entity, component: Component): Component {
     return component;
   }
@@ -70,6 +73,9 @@ export abstract class Component {
     return this._set(entity, component);
   }
 
+  // TODO: normalize container locations
+  static storage_row_id = ID_SEQ_START;
+  static container_column_id = ID_SEQ_START;
   static init() {
     if (
       this.container_column_id === ID_SEQ_START ||
@@ -92,15 +98,15 @@ export abstract class Component {
         ComponentsContainer.prototype.components = new Function(
           "fn",
           `
-          ${vars
-            .map(
-              (v, i) => `
-            const ${v} = this._${i};
-            if (${v}) fn(${v});
+            ${vars
+              .map(
+                (v, i) => `
+                  const ${v} = this._${i};
+                  if (${v}) fn(${v});
+                `
+              )
+              .join("\n")}
           `
-            )
-            .join("\n")}
-        `
         );
       } else {
         Component.last_container_column_id += 1;
@@ -113,6 +119,7 @@ export abstract class Component {
         "entity",
         `return entity.components._${this.storage_row_id} && entity.components._${this.storage_row_id}._${this.container_column_id}`
       ) as typeof this.get;
+
       this._set = new Function(
         "Component",
         `return (entity, component) => {
@@ -136,6 +143,7 @@ export namespace Component {
 export abstract class Resource {
   constructor(...args: any[]) {}
 
+  // real code will be injected after initialization
   static get<T>(
     this: (new (...args: any[]) => T) & typeof Resource,
     world: World
@@ -143,17 +151,21 @@ export abstract class Resource {
     return undefined as T | undefined;
   }
 
+  // real code will be injected after initialization
   private static _set(world: World, resource: Resource): Resource {
     return resource;
   }
 
-  static storage_row_id = ID_SEQ_START;
-  static container_column_id = ID_SEQ_START;
   static set(world: World, resource: Resource) {
     this.init();
     return this._set(world, resource);
   }
 
+  // it' possible that we also need normalization here
+  // but because there less resources than components
+  // we could just switch to array [{resource id}, {resource id}]
+  static storage_row_id = ID_SEQ_START;
+  static container_column_id = ID_SEQ_START;
   static init() {
     if (
       this.container_column_id === ID_SEQ_START ||
@@ -178,6 +190,7 @@ export abstract class Resource {
         "world",
         `return world.resources._${this.storage_row_id} && world.resources._${this.storage_row_id}._${this.container_column_id}`
       ) as typeof this.get;
+
       this._set = new Function(
         "Resource",
         `return (world, resource) => {
@@ -189,6 +202,7 @@ export abstract class Resource {
     }
   }
 
+  // this property exists, to disable using other classes instead of resource in type interference
   name() {}
 }
 
@@ -200,6 +214,7 @@ export namespace Resource {
   } = {};
 }
 
+// TODO: add_entity, delete_entity, add_component, delete_component, add_resource, delete_resource
 interface WorldShape {
   system(system: System): void;
   system_once(system: System): void;
@@ -233,7 +248,14 @@ export class ComponentsCollection {
 }
 
 export class World implements WorldShape {
-  // IMPORTANT: Don't add > 12 properties V8 otherwise, V8 will use dictionary
+  // IMPORTANT: Don't add more than 12 properties otherwise, V8 will use dictionary mode fot this object
+  // IMPORTANT: Try to keep as less as possible methods in world, and it namespace
+  //            because prototype chain also subject for dictionary mode optimization
+  //            for example: generate functions for adding entities and components
+  //                         add_entity1(world, ...), add_entity2(world, ...)
+  //                         add_component1(world, entity, ...), add_component2(world, entity, ...)
+  //            i.e it's mean that world should left only method that needed for hierarchy calls
+  //                system, system_once ...
   components: Map<typeof Component, ComponentsCollection>;
   resources: { [key: string]: { [key: string]: Resource } };
   systems: System[];
@@ -325,6 +347,7 @@ export class World implements WorldShape {
   }
 }
 
+// TODO: inject world directly into SubWorld, and allow us to call his methods
 export class SubWorld implements WorldShape {
   private world: WorldShape;
   private finished: boolean;
@@ -448,6 +471,10 @@ export class RafScheduler extends Scheduler {
 
     this.current_fps = Math.floor(1 / ms_delta);
     this.ms_last_frame = ms_now;
+
+    // loop info actualization must be part of behavior contract
+    // we could pas 1 / {ms_delta} to show user how fractional of second left
+    // from the previous second
     this.info.time_delta = ms_delta;
 
     this.tick();
@@ -462,6 +489,8 @@ export class RafScheduler extends Scheduler {
 const resource_injector_variables = Array(9)
   .fill(0)
   .map((_, i) => `_${i}`);
+
+// it's possible to generate more optimized code
 const resource_injector = new Function(`return (SubWorld) => {
   return (world, system) => {
     const sub_world = new SubWorld(system.world ?? world);
@@ -497,11 +526,11 @@ function inject_resources_and_sub_world(world: World, system: System) {
   return resource_injector(world, system);
 }
 
-const DEFAULT_COLLECTION = new Map();
-
+// TODO: refactor names
 class Cacher {
   static storage = new Map<string, Function>();
   static get_func(components: Array<typeof Component>) {
+    // check sort performance, sort also by id to use same function for any components combination
     const id = components
       .sort((c1, c2) => {
         const comp = c2.storage_row_id - c1.storage_row_id;
@@ -550,6 +579,8 @@ class Cacher {
   }
 }
 
+// TOOD: refactor names
+// TOOD: we need more test for this function
 let component_injector = new Function(
   "cacher",
   `
@@ -626,6 +657,10 @@ let component_injector = new Function(
   }
   `
 )(Cacher);
+
+// TODO: think about logging / statistic in development mode
+//       for actions like add / remove resource, entity
+//       without browser blocking
 
 function inject_entity_and_component(
   world: World,
