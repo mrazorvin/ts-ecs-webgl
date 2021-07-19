@@ -4,13 +4,15 @@
  */
 
 // a 2d vector
-SSCD.Vector = function (x, y) {
-  this.x = x;
-  this.y = y;
-};
+export class SSCDVector {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
 
 // set vector functions
-SSCD.Vector.prototype = {
+SSCDVector.prototype = {
   // for debug and prints
   get_name: function () {
     return "vector";
@@ -18,7 +20,7 @@ SSCD.Vector.prototype = {
 
   // clone vector
   clone: function () {
-    return new SSCD.Vector(this.x, this.y);
+    return new SSCDVector(this.x, this.y);
   },
 
   // set value from another vector
@@ -29,7 +31,7 @@ SSCD.Vector.prototype = {
 
   // flip between x and y (return without changing self)
   flip: function () {
-    return new SSCD.Vector(this.y, this.x);
+    return new SSCDVector(this.y, this.x);
   },
 
   // flip between x and y (change self values)
@@ -51,12 +53,12 @@ SSCD.Vector.prototype = {
 
   // get distance from another vector
   distance_from: function (other) {
-    return SSCD.Math.distance(this, other);
+    return SSCDMath.distance(this, other);
   },
 
   // get angle from another vector
   angle_from: function (other) {
-    return SSCD.Math.angle(this, other);
+    return SSCDMath.angle(this, other);
   },
 
   // move the position of this vector (same as add_self)
@@ -194,7 +196,7 @@ SSCD.Vector.prototype = {
 
   // create vector from radian
   from_angle: function (angle) {
-    return this.from_radian(SSCD.Math.to_radians(angle));
+    return this.from_radian(SSCDMath.to_radians(angle));
   },
 
   // apply a function on x and y components on self
@@ -215,13 +217,13 @@ SSCD.Vector.prototype = {
   },
 };
 
-SSCD.Vector.ZERO = new SSCD.Vector(0, 0);
-SSCD.Vector.ONE = new SSCD.Vector(1, 1);
-SSCD.Vector.UP = new SSCD.Vector(0, -1);
-SSCD.Vector.DOWN = new SSCD.Vector(0, 1);
-SSCD.Vector.LEFT = new SSCD.Vector(-1, 0);
-SSCD.Vector.RIGHT = new SSCD.Vector(1, 0);
-SSCD.Vector.UP_LEFT = new SSCD.Vector(-1, -1);
-SSCD.Vector.DOWN_LEFT = new SSCD.Vector(-1, 1);
-SSCD.Vector.UP_RIGHT = new SSCD.Vector(1, -1);
-SSCD.Vector.DOWN_RIGHT = new SSCD.Vector(1, 1);
+SSCDVector.ZERO = new SSCDVector(0, 0);
+SSCDVector.ONE = new SSCDVector(1, 1);
+SSCDVector.UP = new SSCDVector(0, -1);
+SSCDVector.DOWN = new SSCDVector(0, 1);
+SSCDVector.LEFT = new SSCDVector(-1, 0);
+SSCDVector.RIGHT = new SSCDVector(1, 0);
+SSCDVector.UP_LEFT = new SSCDVector(-1, -1);
+SSCDVector.DOWN_LEFT = new SSCDVector(-1, 1);
+SSCDVector.UP_RIGHT = new SSCDVector(1, -1);
+SSCDVector.DOWN_RIGHT = new SSCDVector(1, 1);

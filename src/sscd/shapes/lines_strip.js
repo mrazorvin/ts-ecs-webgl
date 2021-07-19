@@ -16,7 +16,7 @@ SSCD.LineStrip = function (position, points, closed) {
 
   // if not enough points assert
   if (points.length <= 1) {
-    throw new SSCD.IllegalActionError(
+    throw new SSCDIllegalActionError(
       "Not enough vectors for LineStrip (got to have at least two vectors)"
     );
   }
@@ -112,7 +112,7 @@ SSCD.LineStrip.prototype = {
 
   // return axis-aligned-bounding-box
   build_aabb: function () {
-    var ret = new SSCD.AABB(SSCD.Vector.ZERO, SSCD.Vector.ZERO);
+    var ret = new SSCDAabb(SSCDVector.ZERO, SSCDVector.ZERO);
     for (var i = 0; i < this.__points.length; ++i) {
       ret.add_vector(this.__points[i]);
     }

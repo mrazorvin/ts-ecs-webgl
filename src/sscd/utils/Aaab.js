@@ -6,13 +6,14 @@
 // Axis-aligned-bounding-box class
 // position: top-left corner (vector)
 // size: width and height (vector)
-SSCD.AABB = function (position, size) {
-  this.position = position.clone();
-  this.size = size.clone();
-};
+export class SSCDAabb {
+  constructor(position, size) {
+    this.position = position.clone();
+    this.size = size.clone();
+  }
+}
 
-// some aabb methods
-SSCD.AABB.prototype = {
+SSCDAabb.prototype = {
   // expand this bounding-box by other bounding box
   expand: function (other) {
     // get new bounds
@@ -65,6 +66,6 @@ SSCD.AABB.prototype = {
 
   // clone this aabb
   clone: function () {
-    return new SSCD.AABB(this.position, this.size);
+    return new SSCDAabb(this.position, this.size);
   },
 };

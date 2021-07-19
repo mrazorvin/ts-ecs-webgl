@@ -26,12 +26,12 @@ SSCD.Shape.prototype = {
 
   // default type flags: everything
   __collision_tags: [],
-  __collision_tags_val: SSCD.World.prototype._ALL_TAGS_VAL,
+  __collision_tags_val: SSCDWorld.prototype._ALL_TAGS_VAL,
 
   // init the general shape
   __init__: function () {
     // create position and set default type
-    this.__position = new SSCD.Vector();
+    this.__position = new SSCDVector();
 
     // for collision-world internal usage
     this.__grid_chunks = []; // list with world chunks this shape is in
@@ -62,7 +62,7 @@ SSCD.Shape.prototype = {
   set_collision_tags: function (tags) {
     // can't set tags without world instance
     if (this.__world === null) {
-      throw new SSCD.IllegalActionError(
+      throw new SSCDIllegalActionError(
         "Can't set tags for a shape that is not inside a collision world!"
       );
     }
@@ -70,7 +70,7 @@ SSCD.Shape.prototype = {
     // special case - if tags is null, reset tags
     if (tags === null) {
       this.__collision_tags = [];
-      this.__collision_tags_val = SSCD.World.prototype._ALL_TAGS_VAL;
+      this.__collision_tags_val = SSCDWorld.prototype._ALL_TAGS_VAL;
     }
     // else, set tags
     else {
@@ -109,7 +109,7 @@ SSCD.Shape.prototype = {
     if (isNaN(tags)) {
       // if don't have collision world raise error
       if (this.__world === null) {
-        throw new SSCD.IllegalActionError(
+        throw new SSCDIllegalActionError(
           "If you provide tags as string(s) the shape must be inside a collision world to convert them!"
         );
       }
@@ -123,7 +123,7 @@ SSCD.Shape.prototype = {
   // check collision with other object
   // @param obj - any other shape or vector.
   test_collide_with: function (obj) {
-    return SSCD.CollisionManager.test_collision(this, obj);
+    return SSCDCollisionManager.test_collision(this, obj);
   },
 
   // repeal an object from this object.
@@ -152,7 +152,7 @@ SSCD.Shape.prototype = {
       push_vector_self = push_vector.multiply_scalar(factor_self * -1);
 
     // for return value
-    var ret = SSCD.Vector.ZERO.clone();
+    var ret = SSCDVector.ZERO.clone();
 
     // now do the repeling
     var collide = true;
@@ -180,7 +180,7 @@ SSCD.Shape.prototype = {
 
     // get center of other object / vector
     var other_center;
-    if (obj instanceof SSCD.Vector) {
+    if (obj instanceof SSCDVector) {
       other_center = obj;
     } else {
       other_center = obj.get_abs_center();
@@ -345,12 +345,12 @@ SSCD.Shape.prototype = {
   // @param ctx - 2d context of a canvas.
   // @param camera_pos - optional camera position to transform the render position.
   render: function (ctx, camera_pos) {
-    throw new SSCD.NotImplementedError();
+    throw new SSCDNotImplementedError();
   },
 
   // build the shape's axis-aligned bounding box.
   build_aabb: function () {
-    throw new SSCD.NotImplementedError();
+    throw new SSCDNotImplementedError();
   },
 
   // return the axis-aligned-bounding-box of this shape.

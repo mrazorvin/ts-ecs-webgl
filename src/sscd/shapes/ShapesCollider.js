@@ -1,14 +1,9 @@
-/*
- * here we define all the collision-detection functions for all possible shape combinations
- * Author: Ronen Ness, 2015
- */
-
-SSCD.CollisionManager = {
+export const SSCDCollisionManager = {
   // test collision between two objects, a and b.
   // @param a, b - instances to check collision. can be any shape or vector.
   test_collision: function (a, b) {
     // vector-vector collision
-    if (a instanceof SSCD.Vector && b instanceof SSCD.Vector) {
+    if (a instanceof SSCDVector && b instanceof SSCDVector) {
       return this._test_collision_vector_vector(a, b);
     }
 
@@ -21,10 +16,10 @@ SSCD.CollisionManager = {
     }
 
     // circle-vector collision
-    if (a instanceof SSCD.Vector && b.__collision_type == "circle") {
+    if (a instanceof SSCDVector && b.__collision_type == "circle") {
       return this._test_collision_circle_vector(b, a);
     }
-    if (a.__collision_type == "circle" && b instanceof SSCD.Vector) {
+    if (a.__collision_type == "circle" && b instanceof SSCDVector) {
       return this._test_collision_circle_vector(a, b);
     }
 
@@ -66,10 +61,10 @@ SSCD.CollisionManager = {
     }
 
     // rect-vector collision
-    if (a instanceof SSCD.Vector && b.__collision_type == "rectangle") {
+    if (a instanceof SSCDVector && b.__collision_type == "rectangle") {
       return this._test_collision_rect_vector(b, a);
     }
-    if (a.__collision_type == "rectangle" && b instanceof SSCD.Vector) {
+    if (a.__collision_type == "rectangle" && b instanceof SSCDVector) {
       return this._test_collision_rect_vector(a, b);
     }
 
@@ -117,18 +112,18 @@ SSCD.CollisionManager = {
     }
 
     // vector-line collision
-    if (a.__collision_type == "line" && b instanceof SSCD.Vector) {
+    if (a.__collision_type == "line" && b instanceof SSCDVector) {
       return this._test_collision_vector_line(b, a);
     }
-    if (a instanceof SSCD.Vector && b.__collision_type == "line") {
+    if (a instanceof SSCDVector && b.__collision_type == "line") {
       return this._test_collision_vector_line(a, b);
     }
 
     // vector-linestrip collision
-    if (a.__collision_type == "line-strip" && b instanceof SSCD.Vector) {
+    if (a.__collision_type == "line-strip" && b instanceof SSCDVector) {
       return this._test_collision_vector_linestrip(b, a);
     }
-    if (a instanceof SSCD.Vector && b.__collision_type == "line-strip") {
+    if (a instanceof SSCDVector && b.__collision_type == "line-strip") {
       return this._test_collision_vector_linestrip(a, b);
     }
 
@@ -143,13 +138,13 @@ SSCD.CollisionManager = {
 
   // test collision between circle and vector
   _test_collision_circle_vector: function (circle, vector) {
-    return SSCD.Math.distance(circle.__position, vector) <= circle.__radius;
+    return SSCDMath.distance(circle.__position, vector) <= circle.__radius;
   },
 
   // test collision between circle and another circle
   _test_collision_circle_circle: function (a, b) {
     return (
-      SSCD.Math.distance(a.__position, b.__position) <= a.__radius + b.__radius
+      SSCDMath.distance(a.__position, b.__position) <= a.__radius + b.__radius
     );
   },
 
@@ -165,14 +160,14 @@ SSCD.CollisionManager = {
 
   // test collision vector with line
   _test_collision_vector_line: function (v, line) {
-    return SSCD.Math.is_on_line(v, line.get_p1(), line.get_p2());
+    return SSCDMath.is_on_line(v, line.get_p1(), line.get_p2());
   },
 
   // test collision vector with linestrip
   _test_collision_vector_linestrip: function (v, linestrip) {
     var lines = linestrip.get_abs_lines();
     for (var i = 0; i < lines.length; ++i) {
-      if (SSCD.Math.is_on_line(v, lines[i][0], lines[i][1])) {
+      if (SSCDMath.is_on_line(v, lines[i][0], lines[i][1])) {
         return true;
       }
     }
@@ -182,7 +177,7 @@ SSCD.CollisionManager = {
   // test collision between circle and line
   _test_collision_circle_line: function (circle, line) {
     return (
-      SSCD.Math.distance_to_line(
+      SSCDMath.distance_to_line(
         circle.__position,
         line.get_p1(),
         line.get_p2()
@@ -195,7 +190,7 @@ SSCD.CollisionManager = {
     var lines = linestrip.get_abs_lines();
     for (var i = 0; i < lines.length; ++i) {
       if (
-        SSCD.Math.distance_to_line(
+        SSCDMath.distance_to_line(
           circle.__position,
           lines[i][0],
           lines[i][1]
@@ -213,7 +208,7 @@ SSCD.CollisionManager = {
     var p1 = line.get_p1(),
       p2 = line.get_p2();
     for (var i = 0; i < lines.length; ++i) {
-      if (SSCD.Math.line_intersects(p1, p2, lines[i][0], lines[i][1])) {
+      if (SSCDMath.line_intersects(p1, p2, lines[i][0], lines[i][1])) {
         return true;
       }
     }
@@ -222,7 +217,7 @@ SSCD.CollisionManager = {
 
   // check collision line with line
   _test_collision_line_line: function (a, b) {
-    return SSCD.Math.line_intersects(
+    return SSCDMath.line_intersects(
       a.get_p1(),
       a.get_p2(),
       b.get_p1(),
@@ -238,8 +233,8 @@ SSCD.CollisionManager = {
 
     // first check if one of the line points is contained inside the rectangle
     if (
-      SSCD.CollisionManager._test_collision_rect_vector(rect, p1) ||
-      SSCD.CollisionManager._test_collision_rect_vector(rect, p2)
+      SSCDCollisionManager._test_collision_rect_vector(rect, p1) ||
+      SSCDCollisionManager._test_collision_rect_vector(rect, p2)
     ) {
       return true;
     }
@@ -249,24 +244,24 @@ SSCD.CollisionManager = {
     // left side
     var r1 = rect.get_top_left();
     var r2 = rect.get_bottom_left();
-    if (SSCD.Math.line_intersects(p1, p2, r1, r2)) {
+    if (SSCDMath.line_intersects(p1, p2, r1, r2)) {
       return true;
     }
 
     // right side
     var r3 = rect.get_top_right();
     var r4 = rect.get_bottom_right();
-    if (SSCD.Math.line_intersects(p1, p2, r3, r4)) {
+    if (SSCDMath.line_intersects(p1, p2, r3, r4)) {
       return true;
     }
 
     // top side
-    if (SSCD.Math.line_intersects(p1, p2, r1, r3)) {
+    if (SSCDMath.line_intersects(p1, p2, r1, r3)) {
       return true;
     }
 
     // bottom side
-    if (SSCD.Math.line_intersects(p1, p2, r2, r4)) {
+    if (SSCDMath.line_intersects(p1, p2, r2, r4)) {
       return true;
     }
 
@@ -297,22 +292,22 @@ SSCD.CollisionManager = {
       var p2 = lines[i][1];
 
       // left side
-      if (SSCD.Math.line_intersects(p1, p2, r1, r2)) {
+      if (SSCDMath.line_intersects(p1, p2, r1, r2)) {
         return true;
       }
 
       // right side
-      if (SSCD.Math.line_intersects(p1, p2, r3, r4)) {
+      if (SSCDMath.line_intersects(p1, p2, r3, r4)) {
         return true;
       }
 
       // top side
-      if (SSCD.Math.line_intersects(p1, p2, r1, r3)) {
+      if (SSCDMath.line_intersects(p1, p2, r1, r3)) {
         return true;
       }
 
       // bottom side
-      if (SSCD.Math.line_intersects(p1, p2, r2, r4)) {
+      if (SSCDMath.line_intersects(p1, p2, r2, r4)) {
         return true;
       }
     }
@@ -328,7 +323,7 @@ SSCD.CollisionManager = {
     for (var i = 0; i < lines1.length; ++i) {
       for (var j = 0; j < lines2.length; ++j) {
         if (
-          SSCD.Math.line_intersects(
+          SSCDMath.line_intersects(
             lines1[i][0],
             lines1[i][1],
             lines2[j][0],
@@ -353,10 +348,7 @@ SSCD.CollisionManager = {
       for (var i = 0; i < comp_shapes.length; ++i) {
         for (var j = 0; j < other_shapes.length; ++j) {
           if (
-            SSCD.CollisionManager.test_collision(
-              comp_shapes[i],
-              other_shapes[j]
-            )
+            SSCDCollisionManager.test_collision(comp_shapes[i], other_shapes[j])
           ) {
             return true;
           }
@@ -366,7 +358,7 @@ SSCD.CollisionManager = {
     // normal case - other shape is a normal shape
     else {
       for (var i = 0; i < comp_shapes.length; ++i) {
-        if (SSCD.CollisionManager.test_collision(comp_shapes[i], other)) {
+        if (SSCDCollisionManager.test_collision(comp_shapes[i], other)) {
           return true;
         }
       }
@@ -382,7 +374,7 @@ SSCD.CollisionManager = {
     var circle_pos = circle.__position;
 
     // first check if circle center is inside the rectangle - easy case
-    var collide = SSCD.CollisionManager._test_collision_rect_vector(
+    var collide = SSCDCollisionManager._test_collision_rect_vector(
       rect,
       circle_pos
     );
@@ -394,7 +386,7 @@ SSCD.CollisionManager = {
     var rect_center = rect.get_abs_center();
 
     // now check other simple case - collision between rect center and circle
-    var collide = SSCD.CollisionManager._test_collision_circle_vector(
+    var collide = SSCDCollisionManager._test_collision_circle_vector(
       circle,
       rect_center
     );
@@ -417,7 +409,7 @@ SSCD.CollisionManager = {
 
     // now check intersection between circle and each of the rectangle lines
     for (var i = 0; i < lines.length; ++i) {
-      var dist_to_line = SSCD.Math.distance_to_line(
+      var dist_to_line = SSCDMath.distance_to_line(
         circle_pos,
         lines[i][0],
         lines[i][1]

@@ -11,12 +11,14 @@
 //			grid_error: 	max amount of pixels a shape can move before updating the collision grid. default to 2.
 //								you can increase this number to make moving objects more efficient for the price of sometimes
 //								less accurate collision around the edges. set to 0 if you want to always update grid (useful if all your moving objects move fast)
-SSCD.World = function (params) {
-  this.__init_world(params);
-};
+export class SSCDWorld {
+  constructor(params) {
+    this.__init_world(params);
+  }
+}
 
 // collision world prototype
-SSCD.World.prototype = {
+SSCDWorld.prototype = {
   // init the world
   __init_world: function (params) {
     // set defaults
@@ -40,7 +42,7 @@ SSCD.World.prototype = {
   __create_collision_tag: function (name) {
     // if already exist throw exception
     if (this.__collision_tags[name]) {
-      throw new SSCD.IllegalActionError(
+      throw new SSCDIllegalActionError(
         "Collision tag named '" + name + "' already exist!"
       );
     }
@@ -137,7 +139,7 @@ SSCD.World.prototype = {
   add: function (obj) {
     // if object already in world throw exception
     if (obj.__world) {
-      throw new SSCD.IllegalActionError(
+      throw new SSCDIllegalActionError(
         "Object to add is already in a collision world!"
       );
     }
@@ -190,7 +192,7 @@ SSCD.World.prototype = {
   remove: function (obj) {
     // if object is not in this world throw exception
     if (obj.__world !== this) {
-      throw new SSCD.IllegalActionError(
+      throw new SSCDIllegalActionError(
         "Object to remove is not in this collision world!"
       );
     }
@@ -262,7 +264,7 @@ SSCD.World.prototype = {
     collision_tags = this.__get_tags_value(collision_tags);
 
     // handle vector
-    if (obj instanceof SSCD.Vector) {
+    if (obj instanceof SSCDVector) {
       return this.__test_collision_point(
         obj,
         collision_tags,
@@ -312,7 +314,7 @@ SSCD.World.prototype = {
     for (var i = out_list.length - 1; i >= 0; --i) {
       // get angle between source position and the body
       var angle = position.angle_from(out_list[i].__position);
-      if (SSCD.Math.angles_dis(direction, angle) > fov_angle) {
+      if (SSCDMath.angles_dis(direction, angle) > fov_angle) {
         out_list.splice(i, 1);
       }
     }
@@ -377,14 +379,12 @@ SSCD.World.prototype = {
     return found > 0;
   },
 
+  __tested_object_cache: new Map(),
+  __search_id: 0,
+
   // test collision with other shape
   // see test_collision comment for more info
-  __test_collision_shape: function (
-    obj,
-    collision_tags_val,
-    out_list,
-    ret_objs_count
-  ) {
+  __test_collision_shape: function (obj, collision_tags_val, cb) {
     var grid;
 
     // if shape is in this world, use its grid range from cache
@@ -400,7 +400,8 @@ SSCD.World.prototype = {
     var found = 0;
 
     // so we won't test same objects multiple times
-    var already_tests = {};
+    const already_tests = this.__tested_object_cache;
+    const current_search = this.__search_id++;
 
     // iterate over grid this shape touches
     for (var i = grid.min_x; i <= grid.max_x; ++i) {
@@ -429,10 +430,11 @@ SSCD.World.prototype = {
           }
 
           // check if this object was already tested
-          if (already_tests[curr_obj.get_id()]) {
+          if (already_tests.get(curr_obj) === current_search) {
             continue;
+          } else {
+            already_tests.set(curr_obj, current_search);
           }
-          already_tests[curr_obj.get_id()] = true;
 
           // if collision tags don't match skip this object
           if (!curr_obj.collision_tags_match(collision_tags_val)) {
@@ -441,18 +443,7 @@ SSCD.World.prototype = {
 
           // if collide with object:
           if (this.__do_collision(curr_obj, obj)) {
-            // if got collision list to fill, add object and set return value to true
-            if (out_list) {
-              found++;
-              out_list.push(curr_obj);
-              if (ret_objs_count && found >= ret_objs_count) {
-                return true;
-              }
-            }
-            // if don't have collision list to fill simply return true
-            else {
-              return true;
-            }
+            if (cb(curr_obj) === false) return true;
           }
         }
       }
@@ -476,7 +467,7 @@ SSCD.World.prototype = {
   // NOTE: this function will NOT clear canvas before rendering, if you render within a main loop its your responsibility.
   render: function (canvas, camera_pos, show_grid, show_aabb) {
     // set default camera pos if doesn't exist
-    camera_pos = camera_pos || SSCD.Vector.ZERO;
+    camera_pos = camera_pos || SSCDVector.ZERO;
 
     // set default show_grid and show_aabb
     if (show_grid === undefined) {
@@ -514,7 +505,7 @@ SSCD.World.prototype = {
 
         // render current grid chunk
         if (show_grid) {
-          var position = new SSCD.Vector(i * grid_size, j * grid_size).sub_self(
+          var position = new SSCDVector(i * grid_size, j * grid_size).sub_self(
             camera_pos
           );
           ctx.beginPath();
@@ -554,8 +545,9 @@ SSCD.World.prototype = {
 };
 
 // for illegal action exception
-SSCD.IllegalActionError = function (message) {
-  this.name = "Illegal Action";
-  this.message = message || "";
-};
-SSCD.IllegalActionError.prototype = Error.prototype;
+export class SSCDIllegalActionError extends Error {
+  constructor(message) {
+    this.name = "Illegal Action";
+    this.message = message || "";
+  }
+}

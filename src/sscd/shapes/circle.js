@@ -12,7 +12,7 @@ SSCD.Circle = function (position, radius) {
 
   // set radius and size
   this.__radius = radius;
-  this.__size = new SSCD.Vector(radius, radius).multiply_scalar_self(2);
+  this.__size = new SSCDVector(radius, radius).multiply_scalar_self(2);
 
   // set starting position
   this.set_position(position);
@@ -57,10 +57,7 @@ SSCD.Circle.prototype = {
 
   // return axis-aligned-bounding-box
   build_aabb: function () {
-    return new SSCD.AABB(
-      this.__position.sub_scalar(this.__radius),
-      this.__size
-    );
+    return new SSCDAabb(this.__position.sub_scalar(this.__radius), this.__size);
   },
 
   // return the absolute center of the shape

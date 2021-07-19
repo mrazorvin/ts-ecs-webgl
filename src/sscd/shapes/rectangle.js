@@ -51,7 +51,7 @@ SSCD.Rectangle.prototype = {
 
   // return axis-aligned-bounding-box
   build_aabb: function () {
-    return new SSCD.AABB(this.__position, this.__size);
+    return new SSCDAabb(this.__position, this.__size);
   },
 
   // return absolute top-left corner
@@ -64,7 +64,7 @@ SSCD.Rectangle.prototype = {
   get_bottom_left: function () {
     this.__bottom_left_c =
       this.__bottom_left_c ||
-      this.__position.add(new SSCD.Vector(0, this.__size.y));
+      this.__position.add(new SSCDVector(0, this.__size.y));
     return this.__bottom_left_c;
   },
 
@@ -72,7 +72,7 @@ SSCD.Rectangle.prototype = {
   get_top_right: function () {
     this.__top_right_c =
       this.__top_right_c ||
-      this.__position.add(new SSCD.Vector(this.__size.x, 0));
+      this.__position.add(new SSCDVector(this.__size.x, 0));
     return this.__top_right_c;
   },
 
@@ -80,7 +80,7 @@ SSCD.Rectangle.prototype = {
   get_bottom_right: function () {
     this.__bottom_right_c =
       this.__bottom_right_c ||
-      this.__position.add(new SSCD.Vector(this.__size.x, this.__size.y));
+      this.__position.add(new SSCDVector(this.__size.x, this.__size.y));
     return this.__bottom_right_c;
   },
 

@@ -26,7 +26,7 @@ SSCD.CompositeShape.prototype = {
     this.__shapes = [];
 
     // default position
-    position = position || SSCD.Vector.ZERO;
+    position = position || SSCDVector.ZERO;
     this.set_position(position);
 
     // add objects if provided
@@ -52,7 +52,7 @@ SSCD.CompositeShape.prototype = {
   // read base shape repel() doc for more info.
   repel: function (obj, force, iterations, factor_self, factor_other) {
     // do repel from independant shapes inside this composite shape
-    var ret = SSCD.Vector.ZERO.clone();
+    var ret = SSCDVector.ZERO.clone();
     for (var i = 0; i < this.__shapes.length; ++i) {
       var shape = this.__shapes[i].shape;
       if (shape.test_collide_with(obj)) {
@@ -101,8 +101,8 @@ SSCD.CompositeShape.prototype = {
   build_aabb: function () {
     // if no shapes return zero aabb
     if (this.__shapes.length === 0) {
-      this.__aabb_pos_offset_c = SSCD.Vector.ZERO;
-      return new SSCD.AABB(SSCD.Vector.ZERO, SSCD.Vector.ZERO);
+      this.__aabb_pos_offset_c = SSCDVector.ZERO;
+      return new SSCDAabb(SSCDVector.ZERO, SSCDVector.ZERO);
     }
 
     // return combined aabb
@@ -133,7 +133,7 @@ SSCD.CompositeShape.prototype = {
   add: function (shape) {
     // make sure shape don't have a collision world
     if (shape.__world) {
-      throw new SSCD.IllegalActionError(
+      throw new SSCDIllegalActionError(
         "Can't add shape with collision world to a composite shape!"
       );
     }
@@ -188,7 +188,7 @@ SSCD.CompositeShape.prototype = {
       }
     }
 
-    throw new SSCD.IllegalActionError(
+    throw new SSCDIllegalActionError(
       "Shape to remove is not in composite shape!"
     );
   },
