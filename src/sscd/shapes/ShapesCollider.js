@@ -1,3 +1,6 @@
+import { SSCDMath } from "../utils/Math";
+import { SSCDVector } from "../utils/Vector";
+
 export const SSCDCollisionManager = {
   // test collision between two objects, a and b.
   // @param a, b - instances to check collision. can be any shape or vector.
@@ -128,7 +131,7 @@ export const SSCDCollisionManager = {
     }
 
     // unsupported shapes!
-    throw new SSCD.UnsupportedShapes(a, b);
+    throw new SSCDUnsupportedShapes(a, b);
   },
 
   // test collision between two vectors
@@ -447,13 +450,15 @@ export const SSCDCollisionManager = {
 };
 
 // exception when trying to check collision on shapes not supported
-SSCD.UnsupportedShapes = function (a, b) {
-  this.name = "Unsupported Shapes";
-  this.message =
-    "Unsupported shapes collision test! '" +
-    a.get_name() +
-    "' <-> '" +
-    b.get_name() +
-    "'.";
-};
-SSCD.UnsupportedShapes.prototype = Error.prototype;
+export class SSCDUnsupportedShapes extends Error {
+  constructor(a, b) {
+    super();
+    this.name = "Unsupported Shapes";
+    this.message =
+      "Unsupported shapes collision test! '" +
+      a.get_name() +
+      "' <-> '" +
+      b.get_name() +
+      "'.";
+  }
+}

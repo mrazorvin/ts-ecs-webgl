@@ -1,14 +1,11 @@
-/*
- * rectangle collision shape
- * Author: Ronen Ness, 2015
- */
-
+import { SSCDAabb } from "../utils/Aaab";
+import { SSCDVector } from "../utils/Vector";
 import { SSCDShape } from "./Shape";
 
-// define the rectangle shape
-// @param position - starting position (vector)
-// @param size - rectangle size (vector)
 export class SSCDRectangle extends SSCDShape {
+  // define the rectangle shape
+  // @param position - starting position (vector)
+  // @param size - rectangle size (vector)
   constructor(position, size) {
     super();
 
@@ -21,7 +18,7 @@ export class SSCDRectangle extends SSCDShape {
 }
 
 // rectangle prototype
-SSCDRectangle.prototype = {
+Object.assign(SSCDRectangle.prototype, {
   // set type and collision type
   __type: "rectangle",
   __collision_type: "rectangle",
@@ -103,4 +100,4 @@ SSCDRectangle.prototype = {
     this.__bottom_right_c = undefined;
     this.__abs_center_c = undefined;
   },
-};
+});

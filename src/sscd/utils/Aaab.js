@@ -13,7 +13,7 @@ export class SSCDAabb {
   }
 }
 
-SSCDAabb.prototype = {
+Object.assign(SSCDAabb.prototype, {
   // expand this bounding-box by other bounding box
   expand: function (other) {
     // get new bounds
@@ -68,4 +68,4 @@ SSCDAabb.prototype = {
   clone: function () {
     return new SSCDAabb(this.position, this.size);
   },
-};
+});

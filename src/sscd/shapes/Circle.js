@@ -1,25 +1,25 @@
-/*
- * A circle collision shape
- * Author: Ronen Ness, 2015
- */
+import { SSCDAabb } from "../utils/Aaab";
+import { SSCDVector } from "../utils/Vector";
+import { SSCDShape } from "./Shape";
 
-// define the circle shape
-// @param position - center position (vector)
-// @param radius - circle radius (integer)
-SSCD.Circle = function (position, radius) {
-  // call init chain
-  this.init();
+export class SSCDCircle extends SSCDShape {
+  // define the circle shape
+  // @param position - center position (vector)
+  // @param radius - circle radius (integer)
+  constructor(position, radius) {
+    super();
 
-  // set radius and size
-  this.__radius = radius;
-  this.__size = new SSCDVector(radius, radius).multiply_scalar_self(2);
+    // set radius and size
+    this.__radius = radius;
+    this.__size = new SSCDVector(radius, radius).multiply_scalar_self(2);
 
-  // set starting position
-  this.set_position(position);
-};
+    // set starting position
+    this.set_position(position);
+  }
+}
 
 // Circle prototype
-SSCD.Circle.prototype = {
+Object.assign(SSCDCircle.prototype, {
   // set type and collision type
   __type: "circle",
   __collision_type: "circle",
@@ -64,8 +64,4 @@ SSCD.Circle.prototype = {
   get_abs_center: function () {
     return this.__position.clone();
   },
-};
-
-// inherit from basic shape class.
-// this will fill the missing functions from parent, but will not replace functions existing in child.
-SSCD.extend(SSCDShape.prototype, SSCD.Circle.prototype);
+});

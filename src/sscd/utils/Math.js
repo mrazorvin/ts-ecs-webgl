@@ -1,9 +1,3 @@
-/*
- * Some useful Math functions.
- * Author: Ronen Ness, 2015
- */
-
-// set namespace
 export class SSCDMath {}
 
 // Converts from degrees to radians.

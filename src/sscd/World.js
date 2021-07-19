@@ -1,7 +1,6 @@
-/*
- * Physical world contains a grid of shapes you can efficiently check collision with
- * Author: Ronen Ness, 2015
- */
+import { SSCDCircle } from "./shapes/Circle";
+import { SSCDMath } from "./utils/Math";
+import { SSCDVector } from "./utils/Vector";
 
 // a collision world. you create an instance of this class and add bodies to it to check collision.
 //
@@ -307,7 +306,7 @@ SSCDWorld.prototype = {
     out_list = out_list || [];
 
     // create a circle and check basic collision with it
-    var circle = new SSCD.Circle(position, distance);
+    var circle = new SSCDCircle(position, distance);
     this.__test_collision_shape(circle, collision_tags, out_list);
 
     // now iterate over collided objects and check angle

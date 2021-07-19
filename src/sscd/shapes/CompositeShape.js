@@ -1,19 +1,19 @@
-/*
- * a special shape made from multiple shapes combined together
- * Author: Ronen Ness, 2015
- */
+import { SSCDAabb } from "../utils/Aaab";
+import { SSCDVector } from "../utils/Vector";
+import { SSCDShape } from "./Shape";
 
-// create a composite shape
-// @param position - optional starting position (vector)
-// @param objects - optional list of collision objects to start with
-SSCD.CompositeShape = function (position, objects) {
-  // call init chain
-  this.init();
-  this.__init_comp_shape(position, objects);
-};
+export class SSCDCompositeShape extends SSCDShape {
+  // create a composite shape
+  // @param position - optional starting position (vector)
+  // @param objects - optional list of collision objects to start with
+  constructor(position, objects) {
+    super();
+    this.__init_comp_shape(position, objects);
+  }
+}
 
 // composite shape prototype
-SSCD.CompositeShape.prototype = {
+Object.assign(SSCDCompositeShape, {
   // set type and collision type
   __type: "composite-shape",
   __collision_type: "composite-shape",
@@ -201,8 +201,4 @@ SSCD.CompositeShape.prototype = {
       );
     }
   },
-};
-
-// inherit from basic shape class.
-// this will fill the missing functions from parent, but will not replace functions existing in child.
-SSCD.extend(SSCDShape.prototype, SSCD.CompositeShape.prototype);
+});

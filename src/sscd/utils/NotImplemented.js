@@ -1,4 +1,3 @@
-// for not-implemented exceptions
 export class SSCDNotImplementedError extends Error {
   constructor(message) {
     this.name = "NotImplementedError";

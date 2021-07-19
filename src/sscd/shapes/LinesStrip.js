@@ -1,37 +1,37 @@
-/*
- * A strip-of-lines collision shape
- * Author: Ronen Ness, 2015
- */
+import { SSCDAabb } from "../utils/Aaab";
+import { SSCDVector } from "../utils/Vector";
+import { SSCDShape } from "./Shape";
 
-// define the line shape
-// @param position - starting position (vector)
-// @param points - list of vectors that will make the lines.
-// @param closed - if true, will create a line between last and first points. default to false.
-SSCD.LineStrip = function (position, points, closed) {
-  // call init chain
-  this.init();
+export class SSCDLineStrip extends SSCDShape {
+  // define the line shape
+  // @param position - starting position (vector)
+  // @param points - list of vectors that will make the lines.
+  // @param closed - if true, will create a line between last and first points. default to false.
+  constructor(position, points, closed) {
+    super();
 
-  // set points
-  this.__points = points;
+    // set points
+    this.__points = points;
 
-  // if not enough points assert
-  if (points.length <= 1) {
-    throw new SSCDIllegalActionError(
-      "Not enough vectors for LineStrip (got to have at least two vectors)"
-    );
+    // if not enough points assert
+    if (points.length <= 1) {
+      throw new SSCDIllegalActionError(
+        "Not enough vectors for LineStrip (got to have at least two vectors)"
+      );
+    }
+
+    // close shape
+    if (closed) {
+      this.__points.push(this.__points[0]);
+    }
+
+    // set starting position
+    this.set_position(position);
   }
-
-  // close shape
-  if (closed) {
-    this.__points.push(this.__points[0]);
-  }
-
-  // set starting position
-  this.set_position(position);
-};
+}
 
 // line-strip prototype
-SSCD.LineStrip.prototype = {
+Object.assign(SSCDLineStrip.prototype, {
   // set type and collision type
   __type: "line-strip",
   __collision_type: "line-strip",
@@ -120,8 +120,4 @@ SSCD.LineStrip.prototype = {
     ret.position.add_self(this.__position);
     return ret;
   },
-};
-
-// inherit from basic shape class.
-// this will fill the missing functions from parent, but will not replace functions existing in child.
-SSCD.extend(SSCDShape.prototype, SSCD.LineStrip.prototype);
+});

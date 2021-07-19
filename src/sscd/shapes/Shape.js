@@ -1,8 +1,6 @@
-/*
- * define the base class of any collision shape.
- * every type of shape should inherit from this class.
- * Author: Ronen Ness, 2015
- */
+import { SSCDNotImplementedError } from "../utils/NotImplemented";
+import { SSCDVector } from "../utils/Vector";
+import { SSCDCollisionManager } from "./ShapesCollider";
 
 // base shape class
 export class SSCDShape {
@@ -22,7 +20,7 @@ export class SSCDShape {
 }
 
 // base shape prototype
-SSCDShape.prototype = {
+Object.assign(SSCDShape.prototype, {
   // shape type (need to be overridden by children)
   __type: "shape",
 
@@ -357,4 +355,4 @@ SSCDShape.prototype = {
     this.__aabb = this.__aabb || this.build_aabb();
     return this.__aabb;
   },
-};
+});

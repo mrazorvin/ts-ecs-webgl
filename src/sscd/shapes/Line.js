@@ -1,25 +1,25 @@
-/*
- * A line collision shape
- * Author: Ronen Ness, 2015
- */
+import { SSCDAabb } from "../utils/Aaab";
+import { SSCDVector } from "../utils/Vector";
+import { SSCDShape } from "./Shape";
 
-// define the line shape
-// @param source - starting position (vector)
-// @param dest - destination point from source (vector)
-// output line will be from source to dest, and when you move it you will actually move the source position.
-SSCD.Line = function (source, dest) {
-  // call init chain
-  this.init();
+export class SSCDLine extends SSCDShape {
+  // define the line shape
+  // @param source - starting position (vector)
+  // @param dest - destination point from source (vector)
+  // output line will be from source to dest, and when you move it you will actually move the source position.
+  constructor(source, dest) {
+    super();
 
-  // set dest position
-  this.__dest = dest;
+    // set dest position
+    this.__dest = dest;
 
-  // set starting position
-  this.set_position(source);
-};
+    // set starting position
+    this.set_position(source);
+  }
+}
 
 // Line prototype
-SSCD.Line.prototype = {
+Object.assign(SSCDLine.prototype, {
   // set type and collision type
   __type: "line",
   __collision_type: "line",
@@ -48,6 +48,7 @@ SSCD.Line.prototype = {
     pos.y =
       this.__dest.y > 0 ? this.__position.y : this.__position.y + this.__dest.y;
     var size = this.__dest.apply(Math.abs);
+
     return new SSCDAabb(pos, size);
   },
 
@@ -69,8 +70,4 @@ SSCD.Line.prototype = {
     this.__p1_c = undefined;
     this.__p2_c = undefined;
   },
-};
-
-// inherit from basic shape class.
-// this will fill the missing functions from parent, but will not replace functions existing in child.
-SSCD.extend(SSCDShape.prototype, SSCD.Line.prototype);
+});

@@ -1,59 +1,53 @@
-/*
- * a special shape made from multiple shapes combined together
- * Author: Ronen Ness, 2015
- */
+import { SSCDVector } from "../utils/Vector";
+import { SSCDCircle } from "./Circle";
+import { SSCDRectangle } from "./Rectangle";
+import { SSCDShape } from "./Shape";
 
-// create a capsule shape. implemented by a composite-shape with two circles and a rectangle.
-// @param position - optional starting position (vector)
-// @param size - size in pixels (vector)
-// @param standing - if true, capsule will be standing. else, will lie down. (default: true)
-SSCD.Capsule = function (position, size, standing) {
-  // call init chain
-  this.init();
+export class SSCDCapsule extends SSCDShape {
+  // create a capsule shape. implemented by a composite-shape with two circles and a rectangle.
+  // @param position - optional starting position (vector)
+  // @param size - size in pixels (vector)
+  // @param standing - if true, capsule will be standing. else, will lie down. (default: true)
+  constructor(position, size, standing) {
+    super();
 
-  // default standing
-  if (standing === undefined) standing = true;
+    // default standing
+    if (standing === undefined) standing = true;
 
-  // create objects
-  objects = [];
-  if (standing) {
-    size = size.clone();
-    size.y -= size.x;
-    objects.push(
-      new SSCDRectangle(new SSCDVector(-size.x * 0.5, -size.y * 0.5), size)
-    );
-    objects.push(
-      new SSCD.Circle(new SSCDVector(0, -size.y * 0.5), size.x * 0.5)
-    );
-    objects.push(
-      new SSCD.Circle(new SSCDVector(0, size.y * 0.5), size.x * 0.5)
-    );
-  } else {
-    size = size.clone();
-    size.y -= size.x;
-    objects.push(
-      new SSCDRectangle(
-        new SSCDVector(-size.y * 0.5, -size.x * 0.5),
-        size.flip()
-      )
-    );
-    objects.push(
-      new SSCD.Circle(new SSCDVector(-size.y * 0.5, 0), size.x * 0.5)
-    );
-    objects.push(
-      new SSCD.Circle(new SSCDVector(size.y * 0.5, 0), size.x * 0.5)
-    );
+    // create objects
+    objects = [];
+    if (standing) {
+      size = size.clone();
+      size.y -= size.x;
+      objects.push(
+        new SSCDRectangle(new SSCDVector(-size.x * 0.5, -size.y * 0.5), size)
+      );
+      objects.push(
+        new SSCDCircle(new SSCDVector(0, -size.y * 0.5), size.x * 0.5)
+      );
+      objects.push(
+        new SSCDCircle(new SSCDVector(0, size.y * 0.5), size.x * 0.5)
+      );
+    } else {
+      size = size.clone();
+      size.y -= size.x;
+      objects.push(
+        new SSCDRectangle(
+          new SSCDVector(-size.y * 0.5, -size.x * 0.5),
+          size.flip()
+        )
+      );
+      objects.push(
+        new SSCDCircle(new SSCDVector(-size.y * 0.5, 0), size.x * 0.5)
+      );
+      objects.push(
+        new SSCDCircle(new SSCDVector(size.y * 0.5, 0), size.x * 0.5)
+      );
+    }
+
+    // init composite shape
+    this.__init_comp_shape(position, objects);
+
+    this.__type = "capsule";
   }
-
-  // init composite shape
-  this.__init_comp_shape(position, objects);
-};
-
-// Capsule prototype
-SSCD.Capsule.prototype = {
-  __type: "capsule",
-};
-
-// inherit from CompositeShape class.
-// this will fill the missing functions from parent, but will not replace functions existing in child.
-SSCD.extend(SSCD.CompositeShape.prototype, SSCD.Capsule.prototype);
+}

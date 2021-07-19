@@ -1,7 +1,4 @@
-/*
- * This file define the 2d vector class & utils.
- * Author: Ronen Ness, 2015
- */
+import { SSCDMath } from "./Math";
 
 // a 2d vector
 export class SSCDVector {
