@@ -73,4 +73,4 @@ SSCD.Line.prototype = {
 
 // inherit from basic shape class.
 // this will fill the missing functions from parent, but will not replace functions existing in child.
-SSCD.extend(SSCD.Shape.prototype, SSCD.Line.prototype);
+SSCD.extend(SSCDShape.prototype, SSCD.Line.prototype);

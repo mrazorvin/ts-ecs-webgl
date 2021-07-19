@@ -3,22 +3,25 @@
  * Author: Ronen Ness, 2015
  */
 
+import { SSCDShape } from "./Shape";
+
 // define the rectangle shape
 // @param position - starting position (vector)
 // @param size - rectangle size (vector)
-SSCD.Rectangle = function (position, size) {
-  // call init chain
-  this.init();
+export class SSCDRectangle extends SSCDShape {
+  constructor(position, size) {
+    super();
 
-  // set radius and size
-  this.__size = size;
+    // set radius and size
+    this.__size = size;
 
-  // set starting position
-  this.set_position(position);
-};
+    // set starting position
+    this.set_position(position);
+  }
+}
 
 // rectangle prototype
-SSCD.Rectangle.prototype = {
+SSCDRectangle.prototype = {
   // set type and collision type
   __type: "rectangle",
   __collision_type: "rectangle",
@@ -101,7 +104,3 @@ SSCD.Rectangle.prototype = {
     this.__abs_center_c = undefined;
   },
 };
-
-// inherit from basic shape class.
-// this will fill the missing functions from parent, but will not replace functions existing in child.
-SSCD.extend(SSCD.Shape.prototype, SSCD.Rectangle.prototype);

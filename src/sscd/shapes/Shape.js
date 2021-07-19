@@ -5,11 +5,25 @@
  */
 
 // base shape class
-SSCD.Shape = function () {};
+export class SSCDShape {
+  constructor() {
+    // create position and set default type
+    this.__position = new SSCDVector();
+
+    // for collision-world internal usage
+    this.__grid_chunks = []; // list with world chunks this shape is in
+    this.__world = null; // the parent collision world
+    this.__grid_bounderies = null; // grid bounderies
+    this.__last_insert_aabb = null; // will store the aabb at the last time this shape grid was last updated
+
+    // set unique ids
+    this.__id = SSCDShape.prototype.__next_id++;
+  }
+}
 
 // base shape prototype
-SSCD.Shape.prototype = {
-  // shape type (need to be overrided by children)
+SSCDShape.prototype = {
+  // shape type (need to be overridden by children)
   __type: "shape",
 
   // define the collision type of this shape (how collision is tested against it)
@@ -27,21 +41,6 @@ SSCD.Shape.prototype = {
   // default type flags: everything
   __collision_tags: [],
   __collision_tags_val: SSCDWorld.prototype._ALL_TAGS_VAL,
-
-  // init the general shape
-  __init__: function () {
-    // create position and set default type
-    this.__position = new SSCDVector();
-
-    // for collision-world internal usage
-    this.__grid_chunks = []; // list with world chunks this shape is in
-    this.__world = null; // the parent collision world
-    this.__grid_bounderies = null; // grid bounderies
-    this.__last_insert_aabb = null; // will store the aabb at the last time this shape grid was last updated
-
-    // set unique ids
-    this.__id = SSCD.Shape.prototype.__next_id++;
-  },
 
   // return the shape unique id
   get_id: function () {

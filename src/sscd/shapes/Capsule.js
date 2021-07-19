@@ -20,7 +20,7 @@ SSCD.Capsule = function (position, size, standing) {
     size = size.clone();
     size.y -= size.x;
     objects.push(
-      new SSCD.Rectangle(new SSCDVector(-size.x * 0.5, -size.y * 0.5), size)
+      new SSCDRectangle(new SSCDVector(-size.x * 0.5, -size.y * 0.5), size)
     );
     objects.push(
       new SSCD.Circle(new SSCDVector(0, -size.y * 0.5), size.x * 0.5)
@@ -32,7 +32,7 @@ SSCD.Capsule = function (position, size, standing) {
     size = size.clone();
     size.y -= size.x;
     objects.push(
-      new SSCD.Rectangle(
+      new SSCDRectangle(
         new SSCDVector(-size.y * 0.5, -size.x * 0.5),
         size.flip()
       )
