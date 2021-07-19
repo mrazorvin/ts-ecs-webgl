@@ -33,7 +33,7 @@ import { world_transform_component } from "./WorldView";
 glMatrix.setMatrixArrayType(Array);
 
 // this value must somehow refer to 32x32 grid size, for simplification reason
-const ROWS = 120;
+const ROWS = 160;
 const BACKGROUND_CONTEXT = new ContextID();
 const MONSTER_CONTEXT = new ContextID();
 
