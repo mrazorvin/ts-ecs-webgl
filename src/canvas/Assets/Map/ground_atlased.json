@@ -1,0 +1,1577 @@
+{
+    "fill_rate": 0,
+    "grid_height": 32,
+    "grid_width": 32,
+    "height": 256,
+    "image": "ground_1.png",
+    "name": "ground_atlased",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 0,
+            "name": "region_0",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "region_1",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "region_10",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 100,
+            "name": "region_100",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 101,
+            "name": "region_101",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 102,
+            "name": "region_102",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 103,
+            "name": "region_103",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "region_11",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "region_12",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "region_13",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 14,
+            "name": "region_14",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "region_15",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "region_16",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "region_17",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "region_18",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "region_19",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "region_2",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "region_20",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "region_21",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "region_22",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "region_23",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "region_24",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "region_25",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                32,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "region_26",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 27,
+            "name": "region_27",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 28,
+            "name": "region_28",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 29,
+            "name": "region_29",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "region_3",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 30,
+            "name": "region_30",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 31,
+            "name": "region_31",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 32,
+            "name": "region_32",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 33,
+            "name": "region_33",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 34,
+            "name": "region_34",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 35,
+            "name": "region_35",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 36,
+            "name": "region_36",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 37,
+            "name": "region_37",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 38,
+            "name": "region_38",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                64,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 39,
+            "name": "region_39",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "region_4",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 40,
+            "name": "region_40",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 41,
+            "name": "region_41",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 42,
+            "name": "region_42",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 43,
+            "name": "region_43",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 44,
+            "name": "region_44",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 45,
+            "name": "region_45",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 46,
+            "name": "region_46",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 47,
+            "name": "region_47",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 48,
+            "name": "region_48",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 49,
+            "name": "region_49",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "region_5",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 50,
+            "name": "region_50",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 51,
+            "name": "region_51",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                96,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 52,
+            "name": "region_52",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 53,
+            "name": "region_53",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 54,
+            "name": "region_54",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 55,
+            "name": "region_55",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 56,
+            "name": "region_56",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 57,
+            "name": "region_57",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 58,
+            "name": "region_58",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 59,
+            "name": "region_59",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "region_6",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 60,
+            "name": "region_60",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 61,
+            "name": "region_61",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 62,
+            "name": "region_62",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 63,
+            "name": "region_63",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 64,
+            "name": "region_64",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                128,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 65,
+            "name": "region_65",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 66,
+            "name": "region_66",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 67,
+            "name": "region_67",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 68,
+            "name": "region_68",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 69,
+            "name": "region_69",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "region_7",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 70,
+            "name": "region_70",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 71,
+            "name": "region_71",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 72,
+            "name": "region_72",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 73,
+            "name": "region_73",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 74,
+            "name": "region_74",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 75,
+            "name": "region_75",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 76,
+            "name": "region_76",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 77,
+            "name": "region_77",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                160,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 78,
+            "name": "region_78",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 79,
+            "name": "region_79",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "region_8",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 80,
+            "name": "region_80",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 81,
+            "name": "region_81",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 82,
+            "name": "region_82",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 83,
+            "name": "region_83",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 84,
+            "name": "region_84",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 85,
+            "name": "region_85",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 86,
+            "name": "region_86",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 87,
+            "name": "region_87",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 88,
+            "name": "region_88",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                320,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 89,
+            "name": "region_89",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                352,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "region_9",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                288,
+                0,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 90,
+            "name": "region_90",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                384,
+                192,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 91,
+            "name": "region_91",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                0,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 92,
+            "name": "region_92",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                32,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 93,
+            "name": "region_93",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                64,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 94,
+            "name": "region_94",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                96,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 95,
+            "name": "region_95",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                128,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 96,
+            "name": "region_96",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                160,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 97,
+            "name": "region_97",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                192,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 98,
+            "name": "region_98",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                224,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 99,
+            "name": "region_99",
+            "origin": [
+                16,
+                16
+            ],
+            "rect": [
+                256,
+                224,
+                32,
+                32
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 104,
+    "rotations": false,
+    "using_grid": true,
+    "width": 416
+}

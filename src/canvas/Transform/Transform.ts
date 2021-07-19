@@ -3,13 +3,14 @@ import { Component, EntityRef, World } from "../../ecs/World";
 import { DependenciesUtils } from "../Utils/DependenciesUtils";
 
 const setView = DependenciesUtils.compileMemoizeFactory<
-  [TranslateVec2, Scale, Rotation, ParentView]
+  [TranslateVec2, Scale, Rotation, ParentView, ParentViewChanged]
 >(5);
 
 type TranslateVec2 = Float32Array | undefined;
 type Scale = Float32Array | undefined;
 type Rotation = number | undefined;
 type ParentView = Float32Array | undefined;
+type ParentViewChanged = number | undefined;
 
 export class Transform extends Component {
   position: Float32Array | undefined;
@@ -21,17 +22,16 @@ export class Transform extends Component {
   readonly to_center_offset: [number, number];
   readonly to_origin_offset: [number, number];
 
+  _changed: number;
   _parent: EntityRef | undefined;
-  _current_view: Float32Array;
-  _previous_view: Float32Array;
+  _view: Float32Array;
 
   // OPTIMIZATION: Generate matrix in single operation, instead of multiple functions call
   // TODO: scale must be scalar inside the class
   // TRANSLATE: Should be split on x and y, otherwise matrix mutation doesn't reflected
   getView = setView((translate, scale, rotation, parent) => {
-    const view = this._previous_view;
-    this._previous_view = this._current_view;
-    this._current_view = view;
+    const view = this._view;
+    this._changed += 1;
 
     let matrix = translate ? mat3.fromTranslation(view, translate) : undefined;
     if (rotation || scale) {
@@ -75,9 +75,9 @@ export class Transform extends Component {
   }) {
     super();
 
-    this._current_view = new Float32Array(9);
-    this._previous_view = new Float32Array(9);
+    this._view = new Float32Array(9);
     this._parent = config.parent;
+    this._changed = 0;
 
     this.height = config.height;
     this.width = config.width;
@@ -102,7 +102,8 @@ export namespace Transform {
       transform.rotation,
       parent_transform !== undefined
         ? Transform.view(world, parent_transform)
-        : undefined
+        : undefined,
+      parent_transform?._changed
     );
 
     return result;

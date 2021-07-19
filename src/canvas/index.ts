@@ -14,9 +14,6 @@ import { Context, ContextID } from "./Render/Context";
 import { Screen } from "./Screen";
 
 // @ts-ignore
-import * as river_sprite from "url:./Assets/Backgrounds/River.png";
-
-// @ts-ignore
 import * as ogre_sprite from "url:./Assets/Monsters/Ogre/Ogre.png";
 import * as atlas from "./Assets/Monsters/Ogre/Atlas.json";
 import {
@@ -27,8 +24,11 @@ import { PostPass, POST_PASS_CONTEXT } from "./Assets/View/PostPass/PostPass";
 import { Input } from "./Input";
 import { Creature } from "./Creature";
 import { Static } from "./Static";
-import { Camera } from "./Camera";
+import { camera, Camera, camera_entity } from "./Camera";
 import { Modification } from "./Modification";
+import { MapLoader } from "./Assets/Map/MapLoader";
+import { main_world } from "./MainWorld";
+import { world_transform_component } from "./WorldView";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -37,40 +37,14 @@ const ROWS = 120;
 const BACKGROUND_CONTEXT = new ContextID();
 const MONSTER_CONTEXT = new ContextID();
 
-const world = new World();
-const scheduler = new RafScheduler(world);
+const scheduler = new RafScheduler(main_world);
 const gl = WebGL.setup(document, "app");
 const input = Input.create(gl.canvas);
 
-const world_transform_component = new Transform({
-  position: new Float32Array([-1, 1]),
-  scale: new Float32Array([1, -1]),
-  height: 0,
-  width: 0,
-});
-// should be available globally
-const world_transform = world.entity([world_transform_component]);
-
-const camera_transform = new Transform({
-  parent: world_transform.ref,
-  height: 0,
-  width: 0,
-});
-const camera_entity = world.entity([camera_transform]);
-const camera = new Camera(camera_transform, camera_entity.ref);
-
-const bg_size = ROWS * 2;
-const bg_transform = new Transform({
-  parent: camera_entity.ref,
-  position: new Float32Array([160, 0]),
-  height: bg_size,
-  width: bg_size,
-});
-
-world.resource(input);
-world.resource(new Screen());
-world.resource(gl);
-world.resource(camera);
+main_world.resource(input);
+main_world.resource(new Screen());
+main_world.resource(gl);
+main_world.resource(camera);
 
 const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   const { width, height } = t.size(ctx.gl, "100%", "100%");
@@ -107,10 +81,10 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   camera.transform.position = new Float32Array([0, 0]);
 });
 
-window.onresize = () => world.system_once(resize_system);
-world.system_once(resize_system);
+window.onresize = () => main_world.system_once(resize_system);
+main_world.system_once(resize_system);
 
-world.system_once(
+main_world.system_once(
   sys([WebGL], async (_, ctx) => {
     t.clear(ctx.gl, [0, 0, 0, 0]);
     t.blend(ctx.gl);
@@ -129,17 +103,6 @@ world.system_once(
       SPRITE_SHADER
     );
 
-    const bg_image = await Texture.load_image(river_sprite);
-    const bg_mesh = ctx.create_mesh((gl) =>
-      SpriteMesh.create_rect(gl, {
-        o_width: bg_size,
-        o_height: bg_size,
-        width: bg_size,
-        height: bg_size,
-      })
-    );
-    const bg_texture = ctx.create_texture(bg_image, Texture.create);
-
     const ogre_image = await Texture.load_image(ogre_sprite);
     const ogre_mesh = ctx.create_mesh((gl) =>
       SpriteMesh.create_rect(gl, {
@@ -153,14 +116,8 @@ world.system_once(
     // entities initialization should be some how implemented from the JSON in separate system
     const ogre_texture = ctx.create_texture(ogre_image, Texture.create);
 
-    world.entity([
-      new Sprite(sprite_shader, bg_mesh, bg_texture),
-      bg_transform,
-      new Static(),
-    ]);
-
     // TODO: inject entities in SubWorld instead of World
-    world.entity([
+    main_world.entity([
       new Sprite(sprite_shader, ogre_mesh, ogre_texture),
       new Transform({
         parent: camera_entity.ref,
@@ -171,6 +128,8 @@ world.system_once(
       new Creature(),
       new Modification(),
     ]);
+
+    main_world.system_once(MapLoader);
   })
 );
 
@@ -184,7 +143,7 @@ let selected_animation = "run";
 let sec = 0;
 let current_frame = 0;
 
-world.system(
+main_world.system(
   sys([Input, Camera], (sub_world, input, camera) => {
     sub_world.query(
       [Transform, Modification, Creature],
@@ -218,19 +177,51 @@ world.system(
   })
 );
 
-world.system(
+main_world.system(
   sys([WebGL], (sub_world, ctx) => {
     const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
     if (bg_ctx === undefined) return;
     else t.buffer(ctx.gl, bg_ctx);
 
-    sub_world.query([Sprite, Transform, Static], (_, sprite, transform) => {
-      Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
-    });
+    let i = 0;
+    sub_world.query(
+      [Sprite, Transform, Static],
+      (_, sprite, transform, stat) => {
+        const p1 =
+          transform.position![0] -
+          -Math.min(camera.transform.position![0], 0) +
+          64;
+        const p2 =
+          -Math.min(camera.transform.position![0], 0) +
+          camera.transform.width -
+          transform.position![0] +
+          64;
+        const p3 =
+          transform.position![1] -
+          -Math.min(camera.transform.position![1], 0) +
+          64;
+        const p4 =
+          -Math.min(camera.transform.position![1], 0) +
+          camera.transform.height -
+          transform.position![1] +
+          64;
+
+        if (p1 > 0 && p2 > 0 && p3 > 0 && p4 > 0) {
+          i++;
+          Sprite.render(
+            ctx,
+            sprite,
+            Transform.view(main_world, transform),
+            stat.x,
+            stat.y
+          );
+        }
+      }
+    );
   })
 );
 
-world.system(
+main_world.system(
   sys([], (sub_world) => {
     sub_world.query(
       [Transform, Modification, Creature],
@@ -270,7 +261,7 @@ world.system(
   })
 );
 
-world.system(
+main_world.system(
   sys([WebGL, LoopInfo, Input], (sub_world, ctx, loop, input) => {
     const run_frames = animation[selected_animation as "run"];
     const time_per_frame = 1 / run_frames.length;
@@ -288,7 +279,7 @@ world.system(
       Sprite.render(
         ctx,
         sprite,
-        Transform.view(world, transform),
+        Transform.view(main_world, transform),
         frame.rect[0] / atlas.grid_width,
         frame.rect[1] / atlas.grid_height
       );
@@ -296,7 +287,7 @@ world.system(
   })
 );
 
-world.system(
+main_world.system(
   sys([WebGL], (_, ctx) => {
     const pp_ctx = ctx.context.get(POST_PASS_CONTEXT);
     const bg_context = ctx.context.get(BACKGROUND_CONTEXT);

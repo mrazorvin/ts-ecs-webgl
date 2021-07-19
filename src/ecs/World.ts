@@ -540,12 +540,14 @@ export class World implements WorldShape {
 
 // TODO: inject world directly into SubWorld, and allow us to call his methods
 export class SubWorld implements WorldShape {
+  origin_world: World;
   private world: WorldShape;
   private finished: boolean;
 
-  constructor(world: WorldShape) {
+  constructor(world: WorldShape, origin_world: World) {
     this.finished = false;
     this.world = world;
+    this.origin_world = origin_world;
   }
 
   system(system: System) {
@@ -590,7 +592,9 @@ export class SubWorld implements WorldShape {
 }
 
 export abstract class System<R extends Resource[] = Resource[]> {
-  abstract dependencies: { [K in keyof R]: (new () => R[K]) & typeof Resource };
+  abstract dependencies: {
+    [K in keyof R]: (new (...args: any[]) => R[K]) & typeof Resource;
+  };
   abstract exec(world: SubWorld, ...resources: R): void;
   world: WorldShape | undefined;
 }
@@ -684,7 +688,7 @@ const resource_injector_variables = Array(9)
 // it's possible to generate more optimized code
 const resource_injector = new Function(`return (SubWorld) => {
   return (world, system) => {
-    const sub_world = new SubWorld(system.world ?? world);
+    const sub_world = new SubWorld(system.world ?? world, world);
     switch (system.dependencies.length) {
       ${resource_injector_variables
         .map((_, i) => {

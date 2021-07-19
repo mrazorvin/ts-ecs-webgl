@@ -10,6 +10,9 @@ export class Input extends Resource {
     target.addEventListener("mousedown", input.on_touch_start);
     target.addEventListener("mouseup", input.on_touch_end);
     target.addEventListener("mousemove", input.on_touch_move);
+    target.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
 
     input.clean = () => {
       target.removeEventListener("mousedown", input.on_touch_start);
@@ -59,8 +62,8 @@ export class Input extends Resource {
     }
 
     if (event.button === 2) {
-      this.left_button = true;
-      this.right_button = false;
+      this.left_button = false;
+      this.right_button = true;
     }
 
     const click_x =
