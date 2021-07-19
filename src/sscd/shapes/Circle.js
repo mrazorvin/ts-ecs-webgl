@@ -1,8 +1,8 @@
-import { SSCDAabb } from "../utils/Aaab";
-import { SSCDVector } from "../utils/Vector";
-import { SSCDShape } from "./Shape";
+const SSCDAabb = require("../utils/Aaab");
+const SSCDVector = require("../utils/Vector");
+const SSCDShape = require("./Shape");
 
-export class SSCDCircle extends SSCDShape {
+class SSCDCircle extends SSCDShape {
   // define the circle shape
   // @param position - center position (vector)
   // @param radius - circle radius (integer)
@@ -17,6 +17,8 @@ export class SSCDCircle extends SSCDShape {
     this.set_position(position);
   }
 }
+
+module.exports = SSCDCircle;
 
 // Circle prototype
 Object.assign(SSCDCircle.prototype, {

@@ -1,7 +1,7 @@
-import { SSCDMath } from "../utils/Math";
-import { SSCDVector } from "../utils/Vector";
+const SSCDMath = require("../utils/Math");
+const SSCDVector = require("../utils/Vector");
 
-export const SSCDCollisionManager = {
+module.exports = {
   // test collision between two objects, a and b.
   // @param a, b - instances to check collision. can be any shape or vector.
   test_collision: function (a, b) {
@@ -450,7 +450,7 @@ export const SSCDCollisionManager = {
 };
 
 // exception when trying to check collision on shapes not supported
-export class SSCDUnsupportedShapes extends Error {
+class SSCDUnsupportedShapes extends Error {
   constructor(a, b) {
     super();
     this.name = "Unsupported Shapes";

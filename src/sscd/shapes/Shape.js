@@ -1,9 +1,10 @@
-import { SSCDNotImplementedError } from "../utils/NotImplemented";
-import { SSCDVector } from "../utils/Vector";
-import { SSCDCollisionManager } from "./ShapesCollider";
+const SSCDNotImplementedError = require("../utils/NotImplemented");
+const SSCDVector = require("../utils/Vector");
+const SSCDCollisionManager = require("./ShapesCollider");
+const SSCDWorld = require("../World");
 
 // base shape class
-export class SSCDShape {
+class SSCDShape {
   constructor() {
     // create position and set default type
     this.__position = new SSCDVector();
@@ -18,6 +19,8 @@ export class SSCDShape {
     this.__id = SSCDShape.prototype.__next_id++;
   }
 }
+
+module.exports = SSCDShape;
 
 // base shape prototype
 Object.assign(SSCDShape.prototype, {

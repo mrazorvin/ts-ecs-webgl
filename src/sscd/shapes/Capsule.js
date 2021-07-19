@@ -1,9 +1,9 @@
-import { SSCDVector } from "../utils/Vector";
-import { SSCDCircle } from "./Circle";
-import { SSCDRectangle } from "./Rectangle";
-import { SSCDShape } from "./Shape";
+const SSCDVector = require("../utils/Vector");
+const SSCDShape = require("./Shape");
+const SSCDCircle = require("./Circle");
+const SSCDRectangle = require("./Rectangle");
 
-export class SSCDCapsule extends SSCDShape {
+class SSCDCapsule extends SSCDShape {
   // create a capsule shape. implemented by a composite-shape with two circles and a rectangle.
   // @param position - optional starting position (vector)
   // @param size - size in pixels (vector)
@@ -51,3 +51,5 @@ export class SSCDCapsule extends SSCDShape {
     this.__type = "capsule";
   }
 }
+
+module.exports = SSCDCapsule;

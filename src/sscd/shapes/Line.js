@@ -1,8 +1,8 @@
-import { SSCDAabb } from "../utils/Aaab";
-import { SSCDVector } from "../utils/Vector";
-import { SSCDShape } from "./Shape";
+const SSCDAabb = require("../utils/Aaab");
+const SSCDVector = require("../utils/Vector");
+const SSCDShape = require("./Shape");
 
-export class SSCDLine extends SSCDShape {
+class SSCDLine extends SSCDShape {
   // define the line shape
   // @param source - starting position (vector)
   // @param dest - destination point from source (vector)
@@ -17,6 +17,8 @@ export class SSCDLine extends SSCDShape {
     this.set_position(source);
   }
 }
+
+module.exports = SSCDLine;
 
 // Line prototype
 Object.assign(SSCDLine.prototype, {

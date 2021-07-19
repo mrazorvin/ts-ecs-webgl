@@ -1,4 +1,6 @@
-export class SSCDMath {}
+class SSCDMath {}
+
+module.exports = SSCDMath;
 
 // Converts from degrees to radians.
 SSCDMath.to_radians = function (degrees) {

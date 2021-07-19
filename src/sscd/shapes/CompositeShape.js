@@ -1,8 +1,8 @@
-import { SSCDAabb } from "../utils/Aaab";
-import { SSCDVector } from "../utils/Vector";
-import { SSCDShape } from "./Shape";
+const SSCDAabb = require("../utils/Aaab");
+const SSCDVector = require("../utils/Vector");
+const SSCDShape = require("./Shape");
 
-export class SSCDCompositeShape extends SSCDShape {
+class SSCDCompositeShape extends SSCDShape {
   // create a composite shape
   // @param position - optional starting position (vector)
   // @param objects - optional list of collision objects to start with
@@ -12,8 +12,10 @@ export class SSCDCompositeShape extends SSCDShape {
   }
 }
 
+module.exports = SSCDCompositeShape;
+
 // composite shape prototype
-Object.assign(SSCDCompositeShape, {
+Object.assign(SSCDCompositeShape.prototype, {
   // set type and collision type
   __type: "composite-shape",
   __collision_type: "composite-shape",

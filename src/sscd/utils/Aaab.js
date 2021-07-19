@@ -1,17 +1,14 @@
-/*
- * Define axis-aligned-bounding-box class.
- * Author: Ronen Ness, 2015
- */
-
-// Axis-aligned-bounding-box class
-// position: top-left corner (vector)
-// size: width and height (vector)
-export class SSCDAabb {
+class SSCDAabb {
+  // Axis-aligned-bounding-box class
+  // position: top-left corner (vector)
+  // size: width and height (vector)
   constructor(position, size) {
     this.position = position.clone();
     this.size = size.clone();
   }
 }
+
+module.exports = SSCDAabb;
 
 Object.assign(SSCDAabb.prototype, {
   // expand this bounding-box by other bounding box

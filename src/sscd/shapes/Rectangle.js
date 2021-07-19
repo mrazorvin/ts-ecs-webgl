@@ -1,8 +1,8 @@
-import { SSCDAabb } from "../utils/Aaab";
-import { SSCDVector } from "../utils/Vector";
-import { SSCDShape } from "./Shape";
+const SSCDAabb = require("../utils/Aaab");
+const SSCDVector = require("../utils/Vector");
+const SSCDShape = require("./Shape");
 
-export class SSCDRectangle extends SSCDShape {
+class SSCDRectangle extends SSCDShape {
   // define the rectangle shape
   // @param position - starting position (vector)
   // @param size - rectangle size (vector)
@@ -16,6 +16,8 @@ export class SSCDRectangle extends SSCDShape {
     this.set_position(position);
   }
 }
+
+module.exports = SSCDRectangle;
 
 // rectangle prototype
 Object.assign(SSCDRectangle.prototype, {

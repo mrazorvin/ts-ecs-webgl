@@ -1,15 +1,17 @@
-import { SSCDMath } from "./Math";
+const SSCDMath = require("./Math");
 
 // a 2d vector
-export class SSCDVector {
+class SSCDVector {
   constructor(x, y) {
     this.x = x;
     this.y = y;
   }
 }
 
+module.exports = SSCDVector;
+
 // set vector functions
-SSCDVector.prototype = {
+Object.assign(SSCDVector.prototype, {
   // for debug and prints
   get_name: function () {
     return "vector";
@@ -212,7 +214,7 @@ SSCDVector.prototype = {
   debug: function () {
     console.debug(this.x + ", " + this.y);
   },
-};
+});
 
 SSCDVector.ZERO = new SSCDVector(0, 0);
 SSCDVector.ONE = new SSCDVector(1, 1);

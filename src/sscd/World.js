@@ -1,6 +1,6 @@
-import { SSCDCircle } from "./shapes/Circle";
-import { SSCDMath } from "./utils/Math";
-import { SSCDVector } from "./utils/Vector";
+const SSCDCircle = require("./shapes/Circle");
+const SSCDMath = require("./utils/Math");
+const SSCDVector = require("./utils/Vector");
 
 // a collision world. you create an instance of this class and add bodies to it to check collision.
 //
@@ -10,14 +10,16 @@ import { SSCDVector } from "./utils/Vector";
 //			grid_error: 	max amount of pixels a shape can move before updating the collision grid. default to 2.
 //								you can increase this number to make moving objects more efficient for the price of sometimes
 //								less accurate collision around the edges. set to 0 if you want to always update grid (useful if all your moving objects move fast)
-export class SSCDWorld {
+class SSCDWorld {
   constructor(params) {
     this.__init_world(params);
   }
 }
 
+module.exports = SSCDWorld;
+
 // collision world prototype
-SSCDWorld.prototype = {
+Object.assign(SSCDWorld.prototype, {
   // init the world
   __init_world: function (params) {
     // set defaults
@@ -541,10 +543,9 @@ SSCDWorld.prototype = {
       }
     }
   },
-};
+});
 
-// for illegal action exception
-export class SSCDIllegalActionError extends Error {
+class SSCDIllegalActionError extends Error {
   constructor(message) {
     this.name = "Illegal Action";
     this.message = message || "";
