@@ -13,12 +13,17 @@ type ParentView = Float32Array | undefined;
 type ParentViewChanged = number | undefined;
 
 export class Transform extends Component {
+  // TODO: all those values must be always defined
+  //       it's hell to check them on non existence each time when
+  //       we want to use it
   position: Float32Array | undefined;
   scale: Float32Array | undefined;
   rotation: number | undefined;
 
   height: number;
   width: number;
+
+  // TODO: it's possible that we don't need this values at all
   readonly to_center_offset: [number, number];
   readonly to_origin_offset: [number, number];
 

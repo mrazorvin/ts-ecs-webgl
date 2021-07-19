@@ -1,5 +1,12 @@
 import { glMatrix, vec2 } from "gl-matrix";
-import { Component, LoopInfo, RafScheduler, sys, World } from "@mr/ecs/World";
+import {
+  Component,
+  EntityRef,
+  LoopInfo,
+  RafScheduler,
+  sys,
+  World,
+} from "@mr/ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import {
   SpriteShader,
@@ -29,6 +36,9 @@ import { Modification } from "./Modification";
 import { MapLoader } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
 import { world_transform_component } from "./WorldView";
+import { CollisionWorld } from "./CollisionWorld";
+import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
+import { Visible, visible } from "./Visible";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -45,6 +55,7 @@ main_world.resource(input);
 main_world.resource(new Screen());
 main_world.resource(gl);
 main_world.resource(camera);
+main_world.resource(new CollisionWorld());
 
 const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   const { width, height } = t.size(ctx.gl, "100%", "100%");
@@ -178,6 +189,45 @@ main_world.system(
 );
 
 main_world.system(
+  sys([CollisionWorld, Camera], (_, sscd) => {
+    // amazing method for debbug add more such utils
+    if (sec >= 0.98) {
+      console.log(
+        sscd.world,
+        // TODO: store this vector alongside to prevent additional allocation
+        new SSCDVector(
+          -Math.min(camera.transform.position![0], 0) +
+            camera.transform.width / 2,
+          -Math.min(camera.transform.position![1], 0) +
+            camera.transform.height / 2
+        ),
+        // TODO: not sure if params also co
+        new SSCDVector(camera.transform.width, camera.transform.height)
+      );
+    }
+    sscd.world.test_collision<SSCDShape<EntityRef>>(
+      new SSCDRectangle(
+        new SSCDVector(
+          -Math.min(camera.transform.position![0], 0),
+          -Math.min(camera.transform.position![1], 0)
+        ),
+        new SSCDVector(
+          camera.transform.width + 64,
+          camera.transform.height + 64
+        )
+      ),
+      undefined,
+      (shape) => {
+        const { entity } = shape.get_data();
+        if (entity !== undefined) {
+          main_world.attach_component(entity, visible);
+        }
+      }
+    );
+  })
+);
+
+main_world.system(
   sys([WebGL], (sub_world, ctx) => {
     const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
     if (bg_ctx === undefined) return;
@@ -185,37 +235,18 @@ main_world.system(
 
     let i = 0;
     sub_world.query(
-      [Sprite, Transform, Static],
+      [Sprite, Transform, Static, Visible],
       (_, sprite, transform, stat) => {
-        const p1 =
-          transform.position![0] -
-          -Math.min(camera.transform.position![0], 0) +
-          64;
-        const p2 =
-          -Math.min(camera.transform.position![0], 0) +
-          camera.transform.width -
-          transform.position![0] +
-          64;
-        const p3 =
-          transform.position![1] -
-          -Math.min(camera.transform.position![1], 0) +
-          64;
-        const p4 =
-          -Math.min(camera.transform.position![1], 0) +
-          camera.transform.height -
-          transform.position![1] +
-          64;
-
-        if (p1 > 0 && p2 > 0 && p3 > 0 && p4 > 0) {
-          i++;
-          Sprite.render(
-            ctx,
-            sprite,
-            Transform.view(main_world, transform),
-            stat.x,
-            stat.y
-          );
-        }
+        // we could use single program for all static sprites
+        // so may be something
+        // const optimize = Sprite.render(SPRITE_SHADER, SPRITE_MESH);
+        Sprite.render(
+          ctx,
+          sprite,
+          Transform.view(main_world, transform),
+          stat.x,
+          stat.y
+        );
       }
     );
   })
@@ -306,6 +337,12 @@ main_world.system(
       monster_context.need_clear = true;
       pp_ctx.need_clear = true;
     }
+  })
+);
+
+main_world.system(
+  sys([], () => {
+    main_world.clear_collection(Visible);
   })
 );
 

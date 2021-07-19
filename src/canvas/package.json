@@ -2,6 +2,7 @@
   "name": "@mr/canvas",
   "version": "1.0.0",
   "dependencies": {
-    "@mr/ecs": "^1"
+    "@mr/ecs": "^1",
+    "@mr/sscd": "^1"
   }
 }

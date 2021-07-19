@@ -13,10 +13,12 @@ export class Camera extends Resource {
   }
 }
 
+// find better way to modify camera stats, for example in some aggregation object
 export const camera_transform = new Transform({
   parent: world_transform.ref,
   height: 0,
   width: 0,
+  position: new Float32Array([0, 0]),
 });
 export const camera_entity = main_world.entity([camera_transform]);
 export const camera = new Camera(camera_transform, camera_entity.ref);

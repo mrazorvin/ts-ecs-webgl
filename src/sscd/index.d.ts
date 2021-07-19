@@ -4,15 +4,18 @@ export const SSCDMath: {};
 
 export class SSCDAabb {}
 
-export class SSCDShape {
+export class SSCDShape<T = {}> {
   set_collision_tags(tags: string[]): void;
+  set_data<T>(data: T): void;
+  get_data(): T;
 }
 
 export class SSCDWorld {
+  constructor(config: { grid_size: number });
   add<T extends SSCDShape>(component: T): T;
   test_collision<T extends SSCDShape>(
-    shape: T,
-    tags: string[],
+    shape: SSCDShape,
+    tags: string[] | undefined,
     cb: (shape: T) => undefined | void | boolean
   ): boolean;
 }
@@ -28,4 +31,6 @@ export class SSCDCircle extends SSCDShape {
 export class SSCDCompositeShape {}
 export class SSCDLine {}
 export class SSCDLinesStrip {}
-export class SSCDRectangle {}
+export class SSCDRectangle<T = {}> extends SSCDShape<T> {
+  constructor(position: SSCDVector, size: SSCDVector);
+}

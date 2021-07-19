@@ -505,20 +505,32 @@ export class World implements WorldShape {
     const entity = new Entity();
 
     for (const component of components) {
-      const Constructor = component.constructor as typeof Component;
-      Constructor.set(entity, component);
-
-      let collection = this.components.get(Constructor);
-      if (!collection) {
-        collection = new ComponentsCollection();
-        this.components.set(Constructor, collection);
-      }
-
-      collection.size += 1;
-      collection.refs.push(entity.ref);
+      this.attach_component(entity, component);
     }
 
     return entity;
+  }
+
+  clear_collection(Constructor: typeof Component) {
+    const collection = this.components.get(Constructor);
+    if (collection !== undefined) {
+      collection.refs.length = 0;
+      collection.size = 0;
+    }
+  }
+
+  attach_component(entity: Entity, component: Component) {
+    const Constructor = component.constructor as typeof Component;
+    Constructor.set(entity, component);
+
+    let collection = this.components.get(Constructor);
+    if (!collection) {
+      collection = new ComponentsCollection();
+      this.components.set(Constructor, collection);
+    }
+
+    collection.size += 1;
+    collection.refs.push(entity.ref);
   }
 
   delete_entity(entity: Entity) {
