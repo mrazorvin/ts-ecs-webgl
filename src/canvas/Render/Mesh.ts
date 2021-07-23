@@ -130,6 +130,44 @@ export namespace Mesh {
     };
   }
 
+  export function divisor_attribute_buffer(
+    gl: WebGL2RenderingContext,
+    ext: ANGLE_instanced_arrays,
+    data: {
+      location: number;
+      array: Float32Array;
+      component_length: number;
+    }
+  ): Buffer {
+    const buffer = gl.createBuffer();
+    const count = data.array.length / data.component_length;
+
+    if (buffer == null) {
+      throw new Error(
+        `[WebGLUtils.mesh.attribute_buffer()] can't create buffer`
+      );
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(data.location);
+    gl.vertexAttribPointer(
+      data.location,
+      data.component_length,
+      gl.FLOAT,
+      false,
+      0,
+      0
+    );
+    ext.vertexAttribDivisorANGLE(data.location, 1);
+
+    return {
+      count,
+      buffer,
+      component_length: data.component_length,
+    };
+  }
+
   export function index_buffer(
     gl: WebGL2RenderingContext,
     data: {

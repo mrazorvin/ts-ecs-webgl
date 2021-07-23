@@ -2,7 +2,7 @@ import { sys } from "@mr/ecs/World";
 import { WebGL } from "../../Render/WebGL";
 import * as tiled_map from "./tiled_map.json";
 import * as tiles_properties from "./ground_atlased.json";
-import { Texture } from "../../Render/Texture";
+import { Texture, TextureID } from "../../Render/Texture";
 import { SpriteMesh } from "../View/Sprite/Sprite.mesh";
 import { Transform } from "../../Transform/Transform";
 import { Static } from "../../Static";
@@ -14,10 +14,17 @@ import * as ground_sprite from "url:./ground_tiled.png";
 import { camera_entity } from "../../Camera";
 import { CollisionWorld } from "../../CollisionWorld";
 import { SSCDRectangle, SSCDVector } from "@mr/sscd";
+import { SpriteInstancingMesh } from "../View/SpriteInstancing/SpriteInstancing.mesh";
+import { SpriteInstancingShader } from "../View/SpriteInstancing/SpriteInstancing.shader";
+import { t } from "../../Render/WebGLUtils";
 
 const query = <T extends any[]>(args: [...T]) => args;
-
 const Query = query([WebGL, CollisionWorld]);
+
+export let map_mesh: SpriteInstancingMesh = undefined as any;
+export let map_shader: SpriteInstancingShader = undefined as any;
+export let map_texture: TextureID = undefined as any;
+
 export const MapLoader = sys(Query, async (world, ctx, sscd) => {
   const ground_image = await Texture.load_image(ground_sprite);
   const bg_texture = ctx.create_texture(ground_image, Texture.create);
@@ -28,6 +35,23 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
       width: 32,
       height: 32,
     })
+  );
+
+  map_texture = bg_texture;
+
+  map_mesh = SpriteInstancingMesh.create_rect(ctx.gl, {
+    o_width: ground_image.width,
+    o_height: ground_image.height,
+    width: 32,
+    height: 32,
+  });
+
+  map_shader = SpriteInstancingShader.create(
+    ctx.gl,
+    t.program(ctx.gl, [
+      t.shader(ctx.gl, SpriteInstancingShader.fragment_shader, "FRAGMENT"),
+      t.shader(ctx.gl, SpriteInstancingShader.vertex_shader, "VERTEX"),
+    ])
   );
 
   // this code must be generic and use less constants

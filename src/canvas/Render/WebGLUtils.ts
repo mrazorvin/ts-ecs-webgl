@@ -91,29 +91,35 @@ export namespace t {
     return shader;
   }
 
-  export function program(gl: WebGL2RenderingContext, shaders: WebGLShader[]) {
+  export function program(
+    gl: WebGL2RenderingContext,
+    shaders: WebGLShader[],
+    enable_default_attributes = true
+  ) {
     const program = gl.createProgram()!;
     for (const shader of shaders) {
       gl.attachShader(program, shader);
     }
 
-    gl.bindAttribLocation(
-      program,
-      ShaderGlobals.Location[ShaderGlobals.Attribute.Position],
-      ShaderGlobals.Attribute.Position
-    );
+    if (enable_default_attributes) {
+      gl.bindAttribLocation(
+        program,
+        ShaderGlobals.Location[ShaderGlobals.Attribute.Position],
+        ShaderGlobals.Attribute.Position
+      );
 
-    gl.bindAttribLocation(
-      program,
-      ShaderGlobals.Location[ShaderGlobals.Attribute.Normal],
-      ShaderGlobals.Attribute.Normal
-    );
+      gl.bindAttribLocation(
+        program,
+        ShaderGlobals.Location[ShaderGlobals.Attribute.Normal],
+        ShaderGlobals.Attribute.Normal
+      );
 
-    gl.bindAttribLocation(
-      program,
-      ShaderGlobals.Location[ShaderGlobals.Attribute.UV],
-      ShaderGlobals.Attribute.UV
-    );
+      gl.bindAttribLocation(
+        program,
+        ShaderGlobals.Location[ShaderGlobals.Attribute.UV],
+        ShaderGlobals.Attribute.UV
+      );
+    }
 
     gl.linkProgram(program);
 

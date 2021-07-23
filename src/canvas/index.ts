@@ -33,7 +33,12 @@ import { Creature } from "./Creature";
 import { Static } from "./Static";
 import { camera, Camera, camera_entity } from "./Camera";
 import { Modification } from "./Modification";
-import { MapLoader } from "./Assets/Map/MapLoader";
+import {
+  MapLoader,
+  map_mesh,
+  map_shader,
+  map_texture,
+} from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
 import { world_transform_component } from "./WorldView";
 import { CollisionWorld } from "./CollisionWorld";
@@ -230,25 +235,45 @@ main_world.system(
 main_world.system(
   sys([WebGL], (sub_world, ctx) => {
     const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
-    if (bg_ctx === undefined) return;
+    const gl = ctx.gl;
+    if (bg_ctx === undefined || map_shader === undefined) return;
     else t.buffer(ctx.gl, bg_ctx);
 
-    let i = 0;
-    sub_world.query(
-      [Sprite, Transform, Static, Visible],
-      (_, sprite, transform, stat) => {
-        // we could use single program for all static sprites
-        // so may be something
-        // const optimize = Sprite.render(SPRITE_SHADER, SPRITE_MESH);
-        Sprite.render(
-          ctx,
-          sprite,
-          Transform.view(main_world, transform),
-          stat.x,
-          stat.y
-        );
-      }
+    const bg_texture = ctx.textures.get(map_texture)!.texture;
+
+    let idx = 0;
+    sub_world.query([Sprite, Transform, Static], (_, __, transform, ___) => {
+      const view = Transform.view(main_world, transform);
+      const data = map_mesh.transformation_data;
+
+      data[idx * 9 + 0] = view[0];
+      data[idx * 9 + 1] = view[1];
+      data[idx * 9 + 2] = view[2];
+      data[idx * 9 + 3] = view[3];
+      data[idx * 9 + 4] = view[4];
+      data[idx * 9 + 5] = view[5];
+      data[idx * 9 + 6] = view[6];
+      data[idx * 9 + 7] = view[7];
+      data[idx * 9 + 8] = view[8];
+
+      idx++;
+    });
+
+    gl.useProgram(map_shader.program);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, bg_texture);
+    gl.uniform1i(map_shader.location.Image, 0);
+    gl.bindVertexArray(map_mesh.vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, map_mesh.transformation_buffer.buffer);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, map_mesh.transformation_data);
+    gl.drawArraysInstanced(
+      gl.TRIANGLE_STRIP,
+      0, // offset
+      6, // num vertices per instance
+      idx - 1 // num instances
     );
+    gl.bindVertexArray(null);
+    gl.useProgram(null);
   })
 );
 
