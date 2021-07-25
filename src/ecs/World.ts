@@ -40,26 +40,35 @@ type PoolInstancesUndef<T extends Array<typeof Component>> = {
 export class EntityPool<T extends Array<typeof Component>> {
   entities: Entity<T>[];
   components: T;
-  create?: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>;
-  reuse?: (
-    world: World,
-    entity: Entity<PoolInstances<T>>,
-    reset: (
-      create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
-      ...args: PoolInstancesUndef<T>
-    ) => Entity<PoolInstances<T>>
-  ) => Entity<PoolInstances<T>>;
-  instantiate?: (
-    world: World,
-    instantiate: (
-      create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
-    ) => Entity<PoolInstances<T>>
-  ) => Entity<PoolInstances<T>>;
+
+  create: ((...args: PoolInstances<T>) => Entity<PoolInstances<T>>) | undefined;
+
+  reuse:
+    | ((
+        world: World,
+        entity: Entity<PoolInstances<T>>,
+        reset: (
+          create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
+          ...args: PoolInstancesUndef<T>
+        ) => Entity<PoolInstances<T>>
+      ) => Entity<PoolInstances<T>>)
+    | undefined;
+
+  instantiate:
+    | ((
+        world: World,
+        instantiate: (
+          create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
+        ) => Entity<PoolInstances<T>>
+      ) => Entity<PoolInstances<T>>)
+    | undefined;
 
   constructor(components: [...T]) {
     this.entities = [];
     this.components = components;
     this.create = undefined;
+    this.reuse = undefined;
+    this.instantiate = undefined;
   }
 
   pop(): Entity<T> | undefined {

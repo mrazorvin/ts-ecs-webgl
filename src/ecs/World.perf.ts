@@ -1,6 +1,7 @@
 import { Component, World } from "./World";
 
 const world = new World();
+// @ts-expect-error
 const clases = [];
 for (let i = 0; i < 5000; i++) {
   clases.push(class _c extends Component {});
@@ -29,6 +30,7 @@ for (let i = 0; i < 40; i++) {
       new TestComponent7(),
       ...Array(8)
         .fill(10)
+        // @ts-expect-error
         .map((x, y) => new clases[y * x + i + z]()),
     ]);
 }
@@ -70,7 +72,7 @@ console.time("manual-query");
 let y = [] as any;
 
 function x() {
-  for (const ref of world.components.get(TestComponent1)!.refs) {
+  for (const ref of world.components[TestComponent1.id]!.refs) {
     if (ref.entity) {
       y[0] = TestComponent1.get(ref.entity);
       y[1] = TestComponent2.get(ref.entity);
@@ -119,7 +121,7 @@ iteration: {
   };
 
   function x() {
-    for (const entity of world.components.get(TestComponent1)!.refs) {
+    for (const entity of world.components[TestComponent1.id]!.refs) {
       y[0] = y1.x();
       y[1] = y2.x();
       y[2] = y3.x();

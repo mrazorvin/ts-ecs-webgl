@@ -1,4 +1,5 @@
 import { pixi_compressed_textures } from "./Parser";
+// @ts-expect-error
 import * as url from "url:./Ogre.astc";
 
 let result: any;
