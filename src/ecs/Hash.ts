@@ -9,6 +9,8 @@ export class Hash<T extends number = number> {
   prev: undefined | Hash<T>;
   possible_next: Map<T, Hash<T>>;
 
+  static path_to_head: Array<HashValue<any>> = [];
+
   constructor(component_constructor: HashValue<T>, prev: Hash<T> | undefined) {
     this.value = component_constructor;
     this.prev = prev;
@@ -29,14 +31,16 @@ export class Hash<T extends number = number> {
 
       return tail_hash;
     } else {
-      const path_to_head: Array<HashValue<T>> = [];
+      const path_to_head: Array<HashValue<T>> = Hash.path_to_head;
+      let length = 0;
       let hash: Hash<T> | undefined = this;
       while (hash && hash.value.id > value.id) {
-        path_to_head.push(hash.value);
+        path_to_head[length] = hash.value;
+        length += 1;
         hash = hash.prev;
       }
 
-      if (hash?.prev === undefined) {
+      if (hash === undefined) {
         throw new Error(
           `[World -> ComponentsHash] provided value.id=${value.id} is less than hash root, this behavior currently not supported`
         );
@@ -47,7 +51,8 @@ export class Hash<T extends number = number> {
         hash.possible_next.set(value.id, tail_hash);
       }
 
-      for (const value of path_to_head) {
+      for (let i = 0; i < length; i++) {
+        const value = path_to_head[i];
         let next_tail = tail_hash.possible_next.get(value.id);
         if (next_tail === undefined) {
           next_tail = new Hash(value, tail_hash);
@@ -60,8 +65,6 @@ export class Hash<T extends number = number> {
     }
   }
 }
-
-const HEAD_HASH = new Hash({ id: -Infinity }, undefined);
 
 export namespace Hash {
   export const get = (
