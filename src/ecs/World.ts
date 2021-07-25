@@ -9,11 +9,13 @@ export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
   components: { [key: string]: ComponentsContainer };
+  registers: { [key: string]: ComponentsRegister };
   pool: EntityPool<[]> | undefined;
   ref: EntityRef;
 
   constructor(...args: any[]) {
     this.components = {};
+    this.registers = {};
     this.ref = new EntityRef(this);
     this.pool = undefined;
   }
@@ -141,10 +143,10 @@ export class EntityPool<T extends Array<typeof Component>> {
             .map(
               (_, i) => `
               const Constructor${i} = components[${i}];
-              let collection${i} = world.components.get(Constructor${i});
+              let collection${i} = world.components[Constructor${i}.id];
               if (collection${i} === undefined) {
                 collection${i} = new ComponentsCollection();
-                world.components.set(Constructor${i}, collection${i});
+                world.components[Constructor${i}.id] = collection${i};
               }
               collection${i}.size += 1;
               collection${i}.refs.push(new_entity.ref);
@@ -172,10 +174,10 @@ export class EntityPool<T extends Array<typeof Component>> {
             .map(
               (_, i) => `
               const Constructor${i} = components[${i}];
-              let collection${i} = world.components.get(Constructor${i});
+              let collection${i} = world.components[Constructor${i}.id];
               if (collection${i} === undefined) {
                 collection${i} = new ComponentsCollection();
-                world.components.set(Constructor${i}, collection${i});
+                world.components[Constructor${i}.id] = collection${i};
               }
               collection${i}.size += 1;
               collection${i}.refs.push(new_entity.ref);
@@ -236,9 +238,18 @@ interface ComponentsContainer {
   [key: string]: Component;
 }
 
+interface ComponentsRegister {
+  [key: string]: number;
+}
+
 // move to member of static class
 let global_id = 0;
 export abstract class Component {
+  // TODO: we already has > 10 properties, new properties could cause slow down
+  //       this mean that we must group methods like _add, _set... i.e non public method and properties in sub_container
+  //       maybe it will easier to ini all components in some smart way, instead of live check if component is initialized
+  //       for example instead of simple extends Component we could call Extends(), and initialized ahead
+  //       i.e get rid of init() calls
   static id: number;
 
   constructor(...args: any[]) {}
@@ -252,16 +263,49 @@ export abstract class Component {
   }
 
   // real code will be injected after initialization
-  private static _set(entity: Entity, component: Component): Component {
+  // TODO
+  static delete<T>(
+    this: (new (...args: any[]) => T) & typeof Component,
+    entity: Entity
+  ): boolean {
+    return false;
+  }
+
+  // real code will be injected after initialization
+  private static _set<T>(
+    this: (new (...args: any[]) => T) & typeof Component,
+    entity: Entity,
+    component: T
+  ): T {
     return component;
   }
 
-  static set(entity: Entity, component: Component) {
+  private static _add<T>(
+    this: (new (...args: any[]) => T) & typeof Component,
+    collection: ComponentsCollection,
+    entity: T
+  ): T {
+    return entity;
+  }
+
+  static set<T>(
+    this: (new (...args: any[]) => T) & typeof Component,
+    entity: Entity,
+    component: T
+  ): T {
     this.init();
     return this._set(entity, component);
   }
 
-  // TODO: normalize container locations
+  static add<T>(
+    this: (new (...args: any[]) => T) & typeof Component,
+    collection: ComponentsCollection,
+    entity: T
+  ): T {
+    this.init();
+    return this._add(collection, entity);
+  }
+
   static container_class: undefined | ComponentsContainer;
   static storage_row_id = ID_SEQ_START;
   static container_column_id = ID_SEQ_START;
@@ -278,9 +322,15 @@ export abstract class Component {
         class ComponentsContainer {
           [key: string]: Component;
         }
+        class ComponentsRegister {
+          [key: string]: number;
+        }
         Component.container_class_cache[
           `_${Component.last_container_row_id}`
         ] = ComponentsContainer as any;
+        Component.register_class_cache[
+          `_${Component.last_container_row_id}`
+        ] = ComponentsRegister as any;
         const vars = Array(CONTAINER_SIZE)
           .fill(null)
           .map((_, i) => `c${i}`);
@@ -311,6 +361,28 @@ export abstract class Component {
         `return entity.components._${this.storage_row_id} && entity.components._${this.storage_row_id}._${this.container_column_id}`
       ) as typeof this.get;
 
+      // TODO: Not implemented
+      this.delete = new Function(
+        "collection",
+        "entity",
+        `
+          const register = entity.registers._${this.storage_row_id};
+          const id = register._${this.container_column_id};
+          if (register == null || id == null)  {
+            return false;
+          }
+          else {
+            let last_element = collection.pop();
+            if (last_element?.ref === undefined) {
+              // we need to iter only until key, then we could stope
+              for (let i = collection.length - 1; i >= 0; i--) 
+                if ((last_element = collection[i])?.ref) break;
+            }
+            register._${this.container_column_id} = null;
+            return true;
+          }`
+      ) as typeof this.delete;
+
       this._set = new Function(
         ...["Component", "ContainerClass"],
         `return (entity, component) => {
@@ -326,8 +398,13 @@ export abstract class Component {
 export namespace Component {
   export let last_container_row_id = ID_SEQ_START;
   export let last_container_column_id = CONTAINER_SIZE;
+
   export const container_class_cache: {
     [key: string]: ComponentsContainer;
+  } = {};
+
+  export const register_class_cache: {
+    [key: string]: ComponentsRegister;
   } = {};
 }
 
@@ -447,14 +524,14 @@ export class World implements WorldShape {
   //                         add_component1(world, entity, ...), add_component2(world, entity, ...)
   //            i.e it's mean that world should left only method that needed for hierarchy calls
   //                system, system_once ...
-  components: Map<typeof Component, ComponentsCollection>;
+  components: ComponentsCollection[] = [];
   resources: { [key: string]: { [key: string]: Resource } };
   systems: System[];
   systems_once: System[];
   on_tick_end: Array<() => void>;
 
   constructor() {
-    this.components = new Map();
+    this.components = [];
     this.resources = {};
     this.systems = [];
     this.systems_once = [];
@@ -512,7 +589,7 @@ export class World implements WorldShape {
   }
 
   clear_collection(Constructor: typeof Component) {
-    const collection = this.components.get(Constructor);
+    const collection = this.components[Constructor.id];
     if (collection !== undefined) {
       collection.refs.length = 0;
       collection.size = 0;
@@ -521,12 +598,14 @@ export class World implements WorldShape {
 
   attach_component(entity: Entity, component: Component) {
     const Constructor = component.constructor as typeof Component;
-    Constructor.set(entity, component);
+    // since Component is abstract class, and Constructor is subclass
+    // we must ignore constructor type interference
+    (Constructor as any).set(entity, component);
 
-    let collection = this.components.get(Constructor);
+    let collection = this.components[Constructor.id];
     if (!collection) {
       collection = new ComponentsCollection();
-      this.components.set(Constructor, collection);
+      this.components[Constructor.id] = collection;
     }
 
     collection.size += 1;
@@ -539,9 +618,9 @@ export class World implements WorldShape {
     for (const key in entity.components) {
       const container = entity.components[key];
       container.components((component) => {
-        const collection = this.components.get(
-          component.constructor as typeof Component
-        );
+        const collection = this.components[
+          (component.constructor as typeof Component).id
+        ];
         if (collection) {
           collection.size -= 1;
         }
@@ -735,7 +814,7 @@ function inject_resources_and_sub_world(world: World, system: System) {
 
 const noop = () => void 0;
 
-// TODO: refactor names]
+// TODO: refactor names
 class Cacher {
   static storage = new Map<string, Function>();
   static get_func(components: Array<typeof Component>) {
@@ -793,7 +872,7 @@ let component_injector = new Function(
             .slice(0, i)
             .map((v, i) => {
               return `
-                 var _t${v} = world.components.get(components[${i}]);
+                 var _t${v} = world.components[components[${i}].id];
                  var _${v} = _t${v}?.refs;
               `;
             })

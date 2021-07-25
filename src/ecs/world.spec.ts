@@ -68,9 +68,9 @@ test("[World.entity()]", (t) => {
   const expected_entity = world.entity([component]);
 
   t.assert(
-    world.components
-      .get(TestComponent1)!
-      .refs.find(({ entity }) => entity === expected_entity)
+    world.components[TestComponent1.id].refs.find(
+      ({ entity }) => entity === expected_entity
+    )
   );
   t.is(TestComponent1.get(expected_entity), component);
 });
@@ -319,34 +319,34 @@ test("[World.delete_entity()]", (t) => {
   const entity2 = world.entity([new Component2()]);
   const entity3 = world.entity([new Component1(), new Component2()]);
 
-  t.is(world.components.get(Component1)?.size, 3);
-  t.is(world.components.get(Component1)?.refs?.length, 3);
-  t.is(world.components.get(Component2)?.size, 3);
-  t.is(world.components.get(Component2)?.refs?.length, 3);
+  t.is(world.components[Component1.id]?.size, 3);
+  t.is(world.components[Component1.id]?.refs?.length, 3);
+  t.is(world.components[Component2.id]?.size, 3);
+  t.is(world.components[Component2.id]?.refs?.length, 3);
 
   world.delete_entity(entity1);
-  t.is(world.components.get(Component2)?.size, 2);
-  t.is(world.components.get(Component2)?.refs?.length, 3);
+  t.is(world.components[Component2.id]?.size, 2);
+  t.is(world.components[Component2.id]?.refs?.length, 3);
 
   world.delete_entity(entity2);
-  t.is(world.components.get(Component2)?.size, 1);
-  t.is(world.components.get(Component2)?.refs?.length, 3);
+  t.is(world.components[Component2.id]?.size, 1);
+  t.is(world.components[Component2.id]?.refs?.length, 3);
 
   world.query([Component2, Component1], () => null);
-  t.is(world.components.get(Component2)?.size, 1);
-  t.is(world.components.get(Component2)?.refs?.length, 1);
+  t.is(world.components[Component2.id]?.size, 1);
+  t.is(world.components[Component2.id]?.refs?.length, 1);
 
   world.delete_entity(entity3);
   world.entity([new Component2()]);
   world.entity([new Component2()]);
   world.entity([new Component2()]);
 
-  t.is(world.components.get(Component1)?.size, 2);
-  t.is(world.components.get(Component1)?.refs?.length, 3);
-  t.is(world.components.get(Component2)?.size, 3);
-  t.is(world.components.get(Component2)?.refs?.length, 4);
+  t.is(world.components[Component1.id]?.size, 2);
+  t.is(world.components[Component1.id]?.refs?.length, 3);
+  t.is(world.components[Component2.id]?.size, 3);
+  t.is(world.components[Component2.id]?.refs?.length, 4);
 
   world.query([Component2, Component1], () => null);
-  t.is(world.components.get(Component1)?.size, 2);
-  t.is(world.components.get(Component1)?.refs?.length, 2);
+  t.is(world.components[Component1.id]?.size, 2);
+  t.is(world.components[Component1.id]?.refs?.length, 2);
 });

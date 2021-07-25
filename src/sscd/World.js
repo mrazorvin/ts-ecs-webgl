@@ -127,13 +127,6 @@ Object.assign(SSCDWorld.prototype, {
       (aabb.position.y + aabb.size.y) / this.__params.grid_size
     );
 
-    console.log({
-      min_x: min_i,
-      min_y: min_j,
-      max_x: max_i,
-      max_y: max_j,
-    });
-
     // return grid range
     return {
       min_x: min_i,
