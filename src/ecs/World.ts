@@ -456,14 +456,14 @@ export abstract class Resource {
 
       this.get = new Function(
         "world",
-        `return world.resources._${this.storage_row_id} && world.resources._${this.storage_row_id}._${this.container_column_id}`
+        `return world.resources[${this.storage_row_id}] && world.resources[${this.storage_row_id}]._${this.container_column_id}`
       ) as typeof this.get;
 
       this._set = new Function(
         "Resource",
         `return (world, resource) => {
-          return (world.resources._${this.storage_row_id} || 
-            (world.resources._${this.storage_row_id} = new Resource.container_class_cache._${this.storage_row_id}()) 
+          return (world.resources[${this.storage_row_id}] || 
+            (world.resources[${this.storage_row_id}] = new Resource.container_class_cache._${this.storage_row_id}()) 
           )._${this.container_column_id} = resource
         }`
       )(Resource) as typeof this.set;
@@ -525,14 +525,14 @@ export class World implements WorldShape {
   //            i.e it's mean that world should left only method that needed for hierarchy calls
   //                system, system_once ...
   components: ComponentsCollection[] = [];
-  resources: { [key: string]: { [key: string]: Resource } };
+  resources: Array<{ [key: string]: Resource }>;
   systems: System[];
   systems_once: System[];
   on_tick_end: Array<() => void>;
 
   constructor() {
     this.components = [];
-    this.resources = {};
+    this.resources = [];
     this.systems = [];
     this.systems_once = [];
     this.on_tick_end = [];
