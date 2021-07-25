@@ -343,7 +343,7 @@ export abstract class Component {
         const vars = Array(CONTAINER_SIZE)
           .fill(null)
           .map((_, i) => `c${i}`);
-        ComponentsContainer.prototype.components = new Function(
+        ComponentsContainer.prototype["components"] = new Function(
           "fn",
           `
             ${vars
@@ -755,12 +755,12 @@ export class RafScheduler extends Scheduler {
   current_fps = 0;
   info = new LoopInfo(0);
 
-  start = () => {
+  override start = () => {
     this.world.resource(this.info);
     this.raf = requestAnimationFrame(this.execute);
   };
 
-  execute = () => {
+  override execute = () => {
     const ms_now = performance.now();
     const ms_delta = (ms_now - this.ms_last_frame) / 1000;
 
@@ -776,7 +776,7 @@ export class RafScheduler extends Scheduler {
     this.start();
   };
 
-  stop() {
+  override stop() {
     cancelAnimationFrame(this.raf);
   }
 }

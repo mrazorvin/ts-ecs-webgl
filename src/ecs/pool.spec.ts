@@ -82,10 +82,10 @@ test("[EntityPool.create()]", (t) => {
   const entity = pool.create?.(component1, component9);
 
   t.deepEqual(pool.components, [Component1, Component9]);
-  t.is(entity?.components._0._1, component1);
-  t.is(entity?.components._1._0, component9);
-  t.is(entity?.components._0.constructor, Component1.container_class as any);
-  t.is(entity?.components._1.constructor, Component9.container_class as any);
+  t.is(entity?.components["_0"]["_1"], component1);
+  t.is(entity?.components["_1"]["_0"], component9);
+  t.is(entity?.components["_0"].constructor, Component1.container_class as any);
+  t.is(entity?.components["_1"].constructor, Component9.container_class as any);
 });
 
 test("[EntityPool.create() inverse]", (t) => {
@@ -99,10 +99,10 @@ test("[EntityPool.create() inverse]", (t) => {
   const entity = pool.create?.(component9, component1);
 
   t.deepEqual(pool.components, [Component9, Component1]);
-  t.is(entity?.components._0._1, component1);
-  t.is(entity?.components._1._0, component9);
-  t.is(entity?.components._0.constructor, Component1.container_class as any);
-  t.is(entity?.components._1.constructor, Component9.container_class as any);
+  t.is(entity?.components["_0"]["_1"], component1);
+  t.is(entity?.components["_1"]["_0"], component9);
+  t.is(entity?.components["_0"].constructor, Component1.container_class as any);
+  t.is(entity?.components["_1"].constructor, Component9.container_class as any);
 });
 
 test("[EntityPool.instantiate()]", (t) => {
@@ -214,8 +214,8 @@ test("[Pool.get()]", (t) => {
 
   t.is(entity_pool.entities.length, 0);
   t.not(new_entity, entity);
-  t.is(new_entity.components._0._1, entity.components._0._1);
-  t.is(new_entity.components._1._0, entity.components._1._0);
+  t.is(new_entity.components["_0"]["_1"], entity.components["_0"]["_1"]);
+  t.is(new_entity.components["_1"]["_0"], entity.components["_1"]["_0"]);
 
   t.is(world.components[Component1.id]?.refs[0].entity, undefined);
   t.is(world.components[Component1.id]?.refs[1].entity, new_entity);
