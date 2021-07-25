@@ -15,7 +15,7 @@ test("[World.resource()] cache", (t) => {
   const world = new World();
 
   world.resource(new TestResource());
-  t.is(world.resources[0]["_0"].constructor, TestResource);
+  t.is(world.resources[0]!["_0"]!.constructor, TestResource);
   class R1 extends Resource {}
   class R2 extends Resource {}
   class R3 extends Resource {}
@@ -29,28 +29,28 @@ test("[World.resource()] cache", (t) => {
   class R11 extends Resource {}
 
   world.resource(new R1());
-  t.is(world.resources[0]["_1"].constructor, R1);
+  t.is(world.resources[0]!!["_1"]!!.constructor, R1);
 
   world.resource(new R2());
-  t.is(world.resources[0]["_2"].constructor, R2);
+  t.is(world.resources[0]!!["_2"]!!.constructor, R2);
 
   world.resource(new R3());
-  t.is(world.resources[0]["_3"].constructor, R3);
+  t.is(world.resources[0]!["_3"]!.constructor, R3);
 
   world.resource(new R4());
-  t.is(world.resources[0]["_4"].constructor, R4);
+  t.is(world.resources[0]!["_4"]!.constructor, R4);
 
   world.resource(new R5());
-  t.is(world.resources[0]["_5"].constructor, R5);
+  t.is(world.resources[0]!["_5"]!.constructor, R5);
 
   world.resource(new R6());
-  t.is(world.resources[0]["_6"].constructor, R6);
+  t.is(world.resources[0]!["_6"]!.constructor, R6);
 
   world.resource(new R7());
-  t.is(world.resources[0]["_7"].constructor, R7);
+  t.is(world.resources[0]!["_7"]!.constructor, R7);
 
   world.resource(new R8());
-  t.is(world.resources[0]["_8"].constructor, R8);
+  t.is(world.resources[0]!["_8"]!.constructor, R8);
 
   // world.resource(new R9());
   // t.is(world.resources._0._9.constructor, R9);
@@ -68,7 +68,7 @@ test("[World.entity()]", (t) => {
   const expected_entity = world.entity([component]);
 
   t.assert(
-    world.components[TestComponent1.id].refs.find(
+    world.components[TestComponent1.id]!.refs.find(
       ({ entity }) => entity === expected_entity
     )
   );

@@ -74,16 +74,15 @@ export namespace pixi_compressed_textures {
       const dim_x = header[ASTC_HEADER_DIM_X];
       const dim_y = header[ASTC_HEADER_DIM_Y];
       const width =
-        header[ASTC_HEADER_WIDTH] +
-        (header[ASTC_HEADER_WIDTH + 1] << 8) +
-        (header[ASTC_HEADER_WIDTH + 2] << 16);
+        header[ASTC_HEADER_WIDTH]! +
+        (header[ASTC_HEADER_WIDTH + 1]! << 8) +
+        (header[ASTC_HEADER_WIDTH + 2]! << 16);
       const height =
-        header[ASTC_HEADER_HEIGHT] +
-        (header[ASTC_HEADER_HEIGHT + 1] << 8) +
-        (header[ASTC_HEADER_HEIGHT + 2] << 16);
+        header[ASTC_HEADER_HEIGHT]! +
+        (header[ASTC_HEADER_HEIGHT + 1]! << 8) +
+        (header[ASTC_HEADER_HEIGHT + 2]! << 16);
       const internalFormat =
-        // TODO: tell format
-        ASTC_DIMS_TO_FORMAT[dim_x * dim_y] +
+        ASTC_DIMS_TO_FORMAT[dim_x! * dim_y!]! +
         (false
           ? COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR
           : COMPRESSED_RGBA_ASTC_4x4_KHR);

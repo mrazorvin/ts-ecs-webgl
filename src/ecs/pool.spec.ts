@@ -53,10 +53,10 @@ Component8.init();
 Component9.init();
 
 test("[EntityPool.pop()]", (t) => {
-  const pool = new EntityPool([Component2, Component1]);
+  const pool = new EntityPool([Component2, Component1]!);
   const entity = pool.pop();
 
-  t.deepEqual(pool.components, [Component2, Component1]);
+  t.deepEqual(pool.components, [Component2, Component1]!);
   t.is(entity, undefined);
 });
 
@@ -67,7 +67,7 @@ test("[EntityPool.push()]", (t) => {
   pool.push(entity);
 
   t.is(pool.entities.length, 1);
-  t.is(pool.entities[0], entity);
+  t.is(pool.entities[0]!, entity);
   t.is(entity.ref.entity, entity);
 });
 
@@ -82,14 +82,20 @@ test("[EntityPool.create()]", (t) => {
   const entity = pool.create?.(component1, component9);
 
   t.deepEqual(pool.components, [Component1, Component9]);
-  t.is(entity?.components["_0"]["_1"], component1);
-  t.is(entity?.components["_1"]["_0"], component9);
-  t.is(entity?.components["_0"].constructor, Component1.container_class as any);
-  t.is(entity?.components["_1"].constructor, Component9.container_class as any);
+  t.is(entity?.components["_0"]!["_1"]!, component1);
+  t.is(entity?.components["_1"]!["_0"]!, component9);
+  t.is(
+    entity?.components["_0"]!.constructor,
+    Component1.container_class as any
+  );
+  t.is(
+    entity?.components["_1"]!.constructor,
+    Component9.container_class as any
+  );
 });
 
 test("[EntityPool.create() inverse]", (t) => {
-  const pool = new EntityPool([Component9, Component1]);
+  const pool = new EntityPool([Component9, Component1]!);
   const component1 = new Component1();
   const component9 = new Component9();
 
@@ -98,15 +104,21 @@ test("[EntityPool.create() inverse]", (t) => {
 
   const entity = pool.create?.(component9, component1);
 
-  t.deepEqual(pool.components, [Component9, Component1]);
-  t.is(entity?.components["_0"]["_1"], component1);
-  t.is(entity?.components["_1"]["_0"], component9);
-  t.is(entity?.components["_0"].constructor, Component1.container_class as any);
-  t.is(entity?.components["_1"].constructor, Component9.container_class as any);
+  t.deepEqual(pool.components, [Component9, Component1]!);
+  t.is(entity?.components["_0"]!["_1"]!, component1);
+  t.is(entity?.components["_1"]!["_0"]!, component9);
+  t.is(
+    entity?.components["_0"]!.constructor,
+    Component1.container_class as any
+  );
+  t.is(
+    entity?.components["_1"]!.constructor,
+    Component9.container_class as any
+  );
 });
 
 test("[EntityPool.instantiate()]", (t) => {
-  const pool = new EntityPool([Component9, Component1]);
+  const pool = new EntityPool([Component9, Component1]!);
   const world = new World();
   const component1 = new Component1();
   const component9 = new Component9();
@@ -118,11 +130,11 @@ test("[EntityPool.instantiate()]", (t) => {
     create(component9, component1)
   );
 
-  t.is(world.components[Component1.id]?.refs[0].entity, entity);
+  t.is(world.components[Component1.id]?.refs[0]!.entity, entity);
   t.is(world.components[Component1.id]?.refs.length, 1);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0].entity, entity);
+  t.is(world.components[Component9.id]?.refs[0]!.entity, entity);
   t.is(world.components[Component9.id]?.refs.length, 1);
   t.is(world.components[Component9.id]?.size, 1);
 });
@@ -146,11 +158,11 @@ test("[EntityPool.reuse()]", (t) => {
   t.not(entity?.ref, empty_entity.ref);
   t.not(entity?.ref.entity, empty_entity);
 
-  t.is(world.components[Component1.id]?.refs[0].entity, entity);
+  t.is(world.components[Component1.id]?.refs[0]!.entity, entity);
   t.is(world.components[Component1.id]?.refs.length, 1);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0].entity, entity);
+  t.is(world.components[Component9.id]?.refs[0]!.entity, entity);
   t.is(world.components[Component9.id]?.refs.length, 1);
   t.is(world.components[Component9.id]?.size, 1);
 
@@ -159,9 +171,9 @@ test("[EntityPool.reuse()]", (t) => {
   );
 
   t.not(entity, entity2);
-  t.not(world.components[Component1.id]?.refs[0].entity, entity2);
-  t.is(world.components[Component1.id]?.refs[0].entity, entity);
-  t.is(world.components[Component1.id]?.refs[1].entity, entity2);
+  t.not(world.components[Component1.id]?.refs[0]!.entity, entity2);
+  t.is(world.components[Component1.id]?.refs[0]!.entity, entity);
+  t.is(world.components[Component1.id]?.refs[1]!.entity, entity2);
   t.is(world.components[Component1.id]?.size, 2);
   t.is(world.components[Component1.id]?.refs.length, 2);
 
@@ -192,11 +204,11 @@ test("[Pool.get()]", (t) => {
 
   const entity = pool.get(world);
 
-  t.is(world.components[Component1.id]?.refs[0].entity, entity);
+  t.is(world.components[Component1.id]?.refs[0]!!.entity, entity);
   t.is(world.components[Component1.id]?.refs.length, 1);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0].entity, entity);
+  t.is(world.components[Component9.id]?.refs[0]!!.entity, entity);
   t.is(world.components[Component9.id]?.refs.length, 1);
   t.is(world.components[Component9.id]?.size, 1);
 
@@ -208,22 +220,22 @@ test("[Pool.get()]", (t) => {
   world.delete_entity(entity);
 
   t.is(entity_pool.entities.length, 1);
-  t.is(entity_pool.entities[0], entity);
+  t.is(entity_pool.entities[0]!, entity);
 
   const new_entity = pool.get(world);
 
   t.is(entity_pool.entities.length, 0);
   t.not(new_entity, entity);
-  t.is(new_entity.components["_0"]["_1"], entity.components["_0"]["_1"]);
-  t.is(new_entity.components["_1"]["_0"], entity.components["_1"]["_0"]);
+  t.is(new_entity.components["_0"]!["_1"]!, entity.components["_0"]!["_1"]!);
+  t.is(new_entity.components["_1"]!["_0"]!, entity.components["_1"]!["_0"]!);
 
-  t.is(world.components[Component1.id]?.refs[0].entity, undefined);
-  t.is(world.components[Component1.id]?.refs[1].entity, new_entity);
+  t.is(world.components[Component1.id]?.refs[0]!.entity, undefined);
+  t.is(world.components[Component1.id]?.refs[1]!.entity, new_entity);
   t.is(world.components[Component1.id]?.refs.length, 2);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0].entity, undefined);
-  t.is(world.components[Component9.id]?.refs[1].entity, new_entity);
+  t.is(world.components[Component9.id]?.refs[0]!.entity, undefined);
+  t.is(world.components[Component9.id]?.refs[1]!.entity, new_entity);
   t.is(world.components[Component9.id]?.refs.length, 2);
   t.is(world.components[Component9.id]?.size, 1);
 });

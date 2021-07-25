@@ -5,7 +5,7 @@ const world = new World();
 const clases = [];
 for (let i = 0; i < 5000; i++) {
   clases.push(class _c extends Component {});
-  world.entity([new clases[clases.length - 1]()]);
+  world.entity([new clases[clases.length - 1]!()]);
 }
 class TestComponent extends Component {}
 class TestComponent1 extends Component {}

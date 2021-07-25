@@ -52,7 +52,7 @@ export class Hash<T extends number = number> {
       }
 
       for (let i = 0; i < length; i++) {
-        const value = path_to_head[i];
+        const value = path_to_head[i]!;
         let next_tail = tail_hash.possible_next.get(value.id);
         if (next_tail === undefined) {
           next_tail = new Hash(value, tail_hash);

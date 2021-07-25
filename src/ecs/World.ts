@@ -5,6 +5,9 @@ export enum ResourceID {}
 export enum ComponentTypeID {}
 export enum EntityID {}
 
+const x: number[] = [];
+const z = x[0];
+
 export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
@@ -626,6 +629,8 @@ export class World implements WorldShape {
     if (entity.pool) entity.pool.push(entity);
     for (const key in entity.components) {
       const container = entity.components[key];
+      if (container === undefined) continue;
+      
       container.components((component) => {
         const collection = this.components[
           (component.constructor as typeof Component).id

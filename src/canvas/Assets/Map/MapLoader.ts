@@ -57,12 +57,12 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
   // this code must be generic and use less constants
   const rows_amount = tiled_map.height;
   const columns_amount = tiled_map.width;
-  const layer = tiled_map.layers[0].data;
+  const layer = tiled_map.layers[0]!.data;
   for (let row = 0; row < rows_amount; row++) {
     for (let column = 0; column < columns_amount; column++) {
       const tile_id = row * columns_amount + column;
-      const frame = layer[tile_id] - 1;
-      const meta = tiles_properties.regions[frame];
+      const frame = layer[tile_id]! - 1;
+      const meta = tiles_properties.regions[frame]!;
 
       // TODO: find a better API to connect transform with CollisionWorld
       const transform = new Transform({
@@ -77,8 +77,8 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
         new Sprite(SPRITE_SHADER, tile_mesh, bg_texture),
         transform,
         new Static(
-          meta.rect[0] / tiles_properties.grid_width,
-          meta.rect[1] / tiles_properties.grid_height
+          meta.rect[0]! / tiles_properties.grid_width,
+          meta.rect[1]! / tiles_properties.grid_height
         ),
       ]);
 
@@ -86,8 +86,8 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
         entity.ref,
         new SSCDRectangle(
           new SSCDVector(
-            transform.position![0] + transform.width / 2,
-            transform.position![1] + transform.width / 2
+            transform.position![0]! + transform.width / 2,
+            transform.position![1]! + transform.width / 2
           ),
           new SSCDVector(transform.width, transform.width)
         )
