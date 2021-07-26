@@ -1,13 +1,11 @@
-import { Component, ComponentTypeID } from "./World";
+import { Component } from "./World";
 
-export interface HashValue<T extends number> {
-  id: T;
-}
+export type HashValue<T extends { id: number }> = T;
 
-export class Hash<T extends number = number> {
+export class Hash<T extends { id: number } = { id: number }> {
   value: HashValue<T>;
   prev: undefined | Hash<T>;
-  possible_next: Map<T, Hash<T>>;
+  possible_next: Map<T["id"], Hash<T>>;
 
   static path_to_head: Array<HashValue<any>> = [];
 

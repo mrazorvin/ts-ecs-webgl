@@ -1,5 +1,6 @@
 import { default as test } from "ava";
-import { Component, Entity, EntityPool, Pool, World } from "./World";
+import { Component, Entity, World } from "./World";
+import { EntityPool, Pool } from "./Pool";
 
 class Component0 extends Component {
   log1() {}
