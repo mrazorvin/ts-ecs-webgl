@@ -1,7 +1,7 @@
 import { default as test } from "ava";
 import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
-import { Component } from "./World";
+import { Component } from "./Component";
 
 Component.id = -Infinity;
 const HEAD_HASH = new Hash(Component, undefined);

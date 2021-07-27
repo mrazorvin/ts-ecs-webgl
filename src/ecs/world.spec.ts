@@ -1,13 +1,6 @@
 import { default as test } from "ava";
-import {
-  Component,
-  Resource,
-  Scheduler,
-  SubWorld,
-  System,
-  World,
-  sys,
-} from "./World";
+import { Resource, Scheduler, SubWorld, System, World, sys } from "./World";
+import { Component } from "./Component";
 
 class TestComponent1 extends Component {}
 

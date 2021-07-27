@@ -1,6 +1,6 @@
 import { default as test } from "ava";
 import { Hash } from "./Hash";
-import { Component } from "./World";
+import { Component } from "./Component";
 
 const HEAD_HASH = new Hash({ id: -Infinity }, undefined);
 

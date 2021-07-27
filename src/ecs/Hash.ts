@@ -1,4 +1,4 @@
-import { Component } from "./World";
+import { Component } from "./Component";
 
 export type HashValue<T extends { id: number }> = T;
 

@@ -1,4 +1,5 @@
-import { Component, World } from "./World";
+import { World } from "./World";
+import { Component } from "./Component";
 
 const world = new World();
 // @ts-expect-error

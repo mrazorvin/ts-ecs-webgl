@@ -1,11 +1,6 @@
 import { Hash } from "./Hash";
-import {
-  Component,
-  Entity,
-  World,
-  ComponentsCollection,
-  HASH_HEAD,
-} from "./World";
+import { Entity, World, ComponentsCollection } from "./World";
+import { Component, HASH_HEAD } from "./Component";
 
 type PoolInstances<T extends Array<typeof Component>> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : never;

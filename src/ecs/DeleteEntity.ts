@@ -1,5 +1,6 @@
 import { Hash } from "./Hash";
-import { Component, Entity, World } from "./World";
+import { Entity, World } from "./World";
+import { Component } from "./Component";
 
 type DeleteFunction = (entity: Entity, world: World) => void;
 type HashType = Hash<typeof Component>;
@@ -40,7 +41,7 @@ export class DeleteEntity {
     const storages = [
       ...new Set(components.map(({ storage_row_id }) => storage_row_id)),
     ];
-    const body = `
+    const body = `return (world, entity) => {
       ${components
         .map((component) => `
           var coll_${component.id} = world.components[${component.id}];`
@@ -63,6 +64,7 @@ export class DeleteEntity {
       var register = entity.register;
       ${storages
         .map((storage_id) => `
+          var r${storage_id} = register._${storage_id};
           ${components.filter((component) => storage_id === component.storage_row_id)
             .map(
               (component) => `
@@ -76,18 +78,17 @@ export class DeleteEntity {
         .map(
           (component) => `
             if (reg_${component.id} != null) {
-              const refs = coll_${component.id}.refs;
-
               coll_${component.id}.size -= 1;
-              refs[reg_${component.id}] = refs[coll_${component.id}.size];
-              refs.length = coll_${component.id}.size;
+              coll_${component.id}.refs[reg_${component.id}] = coll_${component.id}.refs[coll_${component.id}.size];
             }
           `
         ).join("\n")}
-    `;
 
-    const func = new Function("entity", "world", body);
+        entity.hash = pool_hash;
+    }`;
 
-    return func as DeleteFunction;
+    const func = new Function("pool_hash", body);
+
+    return func(pool_hash) as DeleteFunction;
   }
 }
