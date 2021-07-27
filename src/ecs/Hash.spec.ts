@@ -4,9 +4,9 @@ import { Component } from "./Component";
 
 const HEAD_HASH = new Hash({ id: -Infinity }, undefined);
 
-class Component1 extends Component {}
-class Component2 extends Component {}
-class Component3 extends Component {}
+class Component1 extends Component.Extends() {}
+class Component2 extends Component.Extends() {}
+class Component3 extends Component.Extends() {}
 
 test("[World -> Hash]", (t) => {
   Component1.init();

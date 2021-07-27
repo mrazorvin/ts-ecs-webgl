@@ -12,7 +12,7 @@ type Rotation = number | undefined;
 type ParentView = Float32Array | undefined;
 type ParentViewChanged = number | undefined;
 
-export class Transform extends Component {
+export class Transform extends Component.Extends() {
   // TODO: all those values must be always defined
   //       it's hell to check them on non existence each time when
   //       we want to use it

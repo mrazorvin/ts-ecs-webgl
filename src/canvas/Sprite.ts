@@ -6,7 +6,7 @@ import { Shader, ShaderID } from "./Render/Shader";
 import { TextureID } from "./Render/Texture";
 import { WebGL } from "./Render/WebGL";
 
-export class Sprite extends Component {
+export class Sprite extends Component.Extends() {
   constructor(
     public shader: ShaderID,
     public mesh: MeshID,

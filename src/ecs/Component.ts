@@ -5,21 +5,27 @@ const ID_SEQ_START = -1;
 const CONTAINER_SIZE = 8;
 
 export enum ComponentTypeID {}
+
 export interface ComponentsContainer {
   components(fn: (component: Component) => void): void;
   [key: string]: Component;
 }
+
 export interface ComponentsRegister {
   [key: string]: number;
 }
 
+// TODO: add component ot register
+// TODO: remove single component code
+// TODO: clear collection code
+// TODO: hash-match code
 // move to member of static class
 let global_id = 0;
 export abstract class Component {
   // TODO: we already has > 10 properties, new properties could cause slow down
   //       this mean that we must group methods like _add, _set... i.e non public method and properties in sub_container
   //       maybe it will easier to ini all components in some smart way, instead of live check if component is initialized
-  //       for example instead of simple extends Component we could call Extends(), and initialized ahead
+  //       for example instead of simple extends Component.Extends() we could call Extends(), and initialized ahead
   //       i.e get rid of init() calls
   static id: number;
 
@@ -177,6 +183,10 @@ export namespace Component {
   export const register_class_cache: {
     [key: string]: ComponentsRegister;
   } = {};
+
+  export function Extends() {
+    return Component;
+  }
 }
 
 export const HASH_HEAD = new Hash<typeof Component>(Component, undefined);

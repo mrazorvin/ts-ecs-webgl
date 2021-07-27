@@ -6,9 +6,9 @@ import { Component } from "./Component";
 Component.id = -Infinity;
 const HEAD_HASH = new Hash(Component, undefined);
 
-class Component1 extends Component {}
-class Component2 extends Component {}
-class Component3 extends Component {}
+class Component1 extends Component.Extends() {}
+class Component2 extends Component.Extends() {}
+class Component3 extends Component.Extends() {}
 
 test("[World -> DeleteEntity]", (t) => {
   Component1.init();

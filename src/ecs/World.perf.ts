@@ -5,18 +5,18 @@ const world = new World();
 // @ts-expect-error
 const clases = [];
 for (let i = 0; i < 5000; i++) {
-  clases.push(class _c extends Component {});
+  clases.push(class _c extends Component.Extends() {});
   world.entity([new clases[clases.length - 1]!()]);
 }
-class TestComponent extends Component {}
-class TestComponent1 extends Component {}
-class TestComponent2 extends Component {}
-class TestComponent3 extends Component {}
-class TestComponent4 extends Component {}
-class TestComponent5 extends Component {}
-class TestComponent6 extends Component {}
-class TestComponent7 extends Component {}
-class TestComponent8 extends Component {}
+class TestComponent extends Component.Extends() {}
+class TestComponent1 extends Component.Extends() {}
+class TestComponent2 extends Component.Extends() {}
+class TestComponent3 extends Component.Extends() {}
+class TestComponent4 extends Component.Extends() {}
+class TestComponent5 extends Component.Extends() {}
+class TestComponent6 extends Component.Extends() {}
+class TestComponent7 extends Component.Extends() {}
+class TestComponent8 extends Component.Extends() {}
 
 for (let i = 0; i < 40; i++) {
   for (let z = 0; z < 100; z++)

@@ -604,3 +604,5 @@ export function sys<T extends Array<new (...args: any[]) => Resource>>(
 ) {
   return new DynamicSystem(args as any, fn);
 }
+
+export { Component, EntityPool };
