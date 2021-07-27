@@ -183,7 +183,7 @@ export namespace Component {
   } = {};
 }
 
-const HASH_HEAD = new Hash<typeof Component>(Component, undefined); 
+export const HASH_HEAD = new Hash<typeof Component>(Component, undefined); 
 
 export class Entity<T extends Component[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.

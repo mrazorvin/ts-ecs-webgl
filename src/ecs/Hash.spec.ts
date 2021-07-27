@@ -37,4 +37,8 @@ test("[World -> Hash]", (t) => {
   t.not(hash123, hash1);
   t.not(hash123, hash2);
   t.not(hash123, hash12);
+
+  t.is(hash123.value, Component3);
+  t.is(hash312.prev?.value, Component2);
+  t.is(hash312.prev?.prev?.value, Component1);
 });

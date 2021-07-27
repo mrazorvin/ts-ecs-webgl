@@ -45,11 +45,11 @@ export class Hash<T extends { id: number } = { id: number }> {
       }
       let tail_hash = hash.possible_next.get(value.id);
       if (tail_hash === undefined) {
-        tail_hash = new Hash(value, this);
+        tail_hash = new Hash(value, hash);
         hash.possible_next.set(value.id, tail_hash);
       }
 
-      for (let i = 0; i < length; i++) {
+      for (let i = length - 1; i >= 0; i--) {
         const value = path_to_head[i]!;
         let next_tail = tail_hash.possible_next.get(value.id);
         if (next_tail === undefined) {

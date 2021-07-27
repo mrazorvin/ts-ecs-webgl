@@ -1,8 +1,16 @@
-import { Component, Entity, World, ComponentsCollection } from "./World";
+import { Hash } from "./Hash";
+import {
+  Component,
+  Entity,
+  World,
+  ComponentsCollection,
+  HASH_HEAD,
+} from "./World";
 
 type PoolInstances<T extends Array<typeof Component>> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : never;
 };
+
 type PoolInstancesUndef<T extends Array<typeof Component>> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => infer A
     ? A | undefined
@@ -10,6 +18,8 @@ type PoolInstancesUndef<T extends Array<typeof Component>> = {
 };
 
 export class EntityPool<T extends Array<typeof Component>> {
+  id: number;
+  hash: Hash<typeof Component>;
   entities: Entity<T>[];
   components: T;
 
@@ -36,6 +46,11 @@ export class EntityPool<T extends Array<typeof Component>> {
     | undefined;
 
   constructor(components: [...T]) {
+    this.hash = components.reduce(
+      (acc, component) => acc.add(component),
+      HASH_HEAD
+    );
+    this.id = EntityPool.global_id++;
     this.entities = [];
     this.components = components;
     this.create = undefined;
@@ -179,6 +194,10 @@ export class EntityPool<T extends Array<typeof Component>> {
   push(entity: Entity) {
     this.entities.push(entity);
   }
+}
+
+export namespace EntityPool {
+  export let global_id = 0;
 }
 
 export class Pool<T extends Array<typeof Component>> {

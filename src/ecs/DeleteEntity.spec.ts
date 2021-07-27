@@ -15,10 +15,14 @@ test("[World -> DeleteEntity]", (t) => {
   Component2.init();
   Component3.init();
 
+  const hash = HEAD_HASH.add(Component1).add(Component3).add(Component2);
+
+  t.is(hash.value, Component3);
+  t.is(hash.prev?.value, Component2);
+  t.is(hash.prev?.prev?.value, Component1);
+
   console.log(
-    DeleteEntity.generate_function(
-      HEAD_HASH.add(Component1).add(Component2).add(Component3)
-    ).toString()
+    DeleteEntity.generate_function(hash, HEAD_HASH.add(Component3)).toString()
   );
 
   t.pass();

@@ -5,23 +5,35 @@ type DeleteFunction = (entity: Entity, world: World) => void;
 type HashType = Hash<typeof Component>;
 
 export class DeleteEntity {
-  static func_cache = new Map<HashType, DeleteFunction>();
+  static func_cache = new Map<HashType, { [key: string]: DeleteFunction }>();
   static delete(entity: Entity, world: World): void {
-    let func = this.func_cache.get(entity.hash);
+    let func_container = this.func_cache.get(entity.hash);
+    if (func_container === undefined) {
+      func_container = {};
+      this.func_cache.set(entity.hash, func_container);
+    }
+    const key = `_${entity.pool?.id ?? ""}`;
+    let func = func_container[key];
     if (func === undefined) {
-      func = this.generate_function(entity.hash);
-      this.func_cache.set(entity.hash, func);
+      func = this.generate_function(entity.hash, entity.pool?.hash);
+      func_container[key] = func;
     }
 
     return func(entity, world);
   }
 
   // prettier-ignore
-  static generate_function(hash: HashType): DeleteFunction {
+  static generate_function(hash: HashType, pool_hash: HashType | undefined): DeleteFunction {
     let components: Array<typeof Component> = [];
+    let pool_components: Array<typeof Component> = [];
     let current_hash: HashType | undefined = hash;
     while (current_hash && current_hash.value !== Component) {
       components.push(current_hash.value);
+      current_hash = current_hash.prev;
+    }
+    current_hash = pool_hash;
+    while (current_hash && current_hash.value !== Component) {
+      pool_components.push(current_hash.value);
       current_hash = current_hash.prev;
     }
     components = components.reverse();
@@ -31,8 +43,8 @@ export class DeleteEntity {
     const body = `
       ${components
         .map((component) => `
-          var coll_${component.id} = world.components[${component.id}];
-        `).join("")
+          var coll_${component.id} = world.components[${component.id}];`
+        ).join("")
       }
         
       var components = entity.components;
@@ -43,8 +55,19 @@ export class DeleteEntity {
           ${components.filter((component) => storage_id === component.storage_row_id)
             .map(
               (component) => `
-                var comp_${component.id} = s${storage_id}._${component.container_column_id};
-                s${storage_id}._${component.container_column_id} = null;
+                ${pool_components.includes(component) ?  "" : `s${storage_id}._${component.container_column_id} = null;`}
+              `).join("\n")}
+        `).join("\n")
+      }
+
+      var register = entity.register;
+      ${storages
+        .map((storage_id) => `
+          ${components.filter((component) => storage_id === component.storage_row_id)
+            .map(
+              (component) => `
+                var reg_${component.id} = r${storage_id}._${component.container_column_id};
+                r${storage_id}._${component.container_column_id} = null;
               `).join("\n")}
         `).join("\n")
       }
@@ -52,15 +75,17 @@ export class DeleteEntity {
       ${components
         .map(
           (component) => `
-            if (comp_${component.id} != null) {
+            if (reg_${component.id} != null) {
+              const refs = coll_${component.id}.refs;
+
               coll_${component.id}.size -= 1;
-              coll_${component.id}.refs[entity.register._${component.storage_row_id}._${component.container_column_id}] = coll_${component.id}.refs[coll_${component.id}.size];
-              coll_${component.id}.refs.length = coll_${component.id}.size;
+              refs[reg_${component.id}] = refs[coll_${component.id}.size];
+              refs.length = coll_${component.id}.size;
             }
           `
         ).join("\n")}
     `;
-    console.log(body);
+
     const func = new Function("entity", "world", body);
 
     return func as DeleteFunction;
