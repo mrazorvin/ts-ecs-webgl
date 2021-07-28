@@ -10,7 +10,7 @@ export class SSCDShapeRef {
 }
 
 // TODO: Better naming
-export class CollisionShape extends Component.Extends() {
+export class CollisionShape extends Component.Init() {
   constructor(public ref: SSCDShapeRef) {
     super();
   }

@@ -2,7 +2,7 @@ import { default as test } from "ava";
 import { Resource, Scheduler, SubWorld, System, World, sys } from "./World";
 import { Component } from "./Component";
 
-class TestComponent1 extends Component.Extends() {}
+class TestComponent1 extends Component.Init() {}
 
 test("[World.resource()] cache", (t) => {
   const world = new World();
@@ -68,8 +68,8 @@ test("[World.entity()]", (t) => {
   t.is(TestComponent1.get(expected_entity), component);
 });
 
-class TestComponent2 extends Component.Extends() {}
-class TestComponent3 extends Component.Extends() {}
+class TestComponent2 extends Component.Init() {}
+class TestComponent3 extends Component.Init() {}
 
 test("[World.query()]", (t) => {
   t.plan(10);
@@ -304,8 +304,8 @@ test("[World -> SubWorld.finish] finishing parent SubWorld stop system propagati
 
 test("[World.delete_entity()]", (t) => {
   const world = new World();
-  class Component1 extends Component.Extends() {}
-  class Component2 extends Component.Extends() {}
+  class Component1 extends Component.Init() {}
+  class Component2 extends Component.Init() {}
   world.entity([new Component1()]);
   world.entity([new Component1()]);
   const entity1 = world.entity([new Component2()]);

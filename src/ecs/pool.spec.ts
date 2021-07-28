@@ -3,43 +3,43 @@ import { Entity, World } from "./World";
 import { Component } from "./Component";
 import { EntityPool, Pool } from "./Pool";
 
-class Component0 extends Component.Extends() {
+class Component0 extends Component.Init() {
   log1() {}
 }
 
-class Component1 extends Component.Extends() {
+class Component1 extends Component.Init() {
   log1() {}
 }
 
-class Component2 extends Component.Extends() {
+class Component2 extends Component.Init() {
   log2() {}
 }
 
-class Component3 extends Component.Extends() {
+class Component3 extends Component.Init() {
   log3() {}
 }
 
-class Component4 extends Component.Extends() {
+class Component4 extends Component.Init() {
   log4() {}
 }
 
-class Component5 extends Component.Extends() {
+class Component5 extends Component.Init() {
   log5() {}
 }
 
-class Component6 extends Component.Extends() {
+class Component6 extends Component.Init() {
   log6() {}
 }
 
-class Component7 extends Component.Extends() {
+class Component7 extends Component.Init() {
   log7() {}
 }
 
-class Component8 extends Component.Extends() {
+class Component8 extends Component.Init() {
   log8() {}
 }
 
-class Component9 extends Component.Extends() {
+class Component9 extends Component.Init() {
   log9() {}
 }
 
