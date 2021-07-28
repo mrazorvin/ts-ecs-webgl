@@ -148,9 +148,11 @@ export function InitComponent() {
   }
 
   const type_check: typeof IComponent = Component;
-  console.log(type_check);
+  noop(type_check);
 
   return Component;
 }
+
+const noop = (_: any) => _;
 
 export const HASH_HEAD = new Hash<typeof IComponent>(IComponent, undefined);
