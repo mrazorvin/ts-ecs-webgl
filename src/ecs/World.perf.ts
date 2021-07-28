@@ -4,7 +4,7 @@ import { Component } from "./Component";
 const world = new World();
 // @ts-expect-error
 const clases = [];
-for (let i = 0; i < 5000; i++) {
+for (let i = 0; i < 6000; i++) {
   clases.push(class _c extends Component.Extends() {});
   world.entity([new clases[clases.length - 1]!()]);
 }
@@ -18,8 +18,8 @@ class TestComponent6 extends Component.Extends() {}
 class TestComponent7 extends Component.Extends() {}
 class TestComponent8 extends Component.Extends() {}
 
-for (let i = 0; i < 40; i++) {
-  for (let z = 0; z < 100; z++)
+for (let i = 0; i < 4; i++) {
+  for (let z = 0; z < 10; z++)
     world.entity([
       new TestComponent(),
       new TestComponent1(),
@@ -60,12 +60,12 @@ query: {
     });
   }
 
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 10000; i++) {
     x();
   }
 
   console.log(y.map((x: any) => (x instanceof Object ? {} : x)));
-  console.log(console.log(y[3].components));
+  // console.log(console.log(y[3].components));
   console.timeEnd("query");
 }
 
