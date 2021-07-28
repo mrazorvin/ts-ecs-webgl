@@ -19,7 +19,6 @@ let last_storage_column_id = CONTAINER_SIZE;
 export enum ComponentTypeID {}
 
 export interface ComponentsContainer {
-  components(fn: (component: Component) => void): void;
   [key: string]: Component;
 }
 
@@ -183,7 +182,7 @@ export abstract class Component {
 }
 
 export function InitComponent() {
-  // return Component;
+  return Component;
 
   if (last_storage_column_id >= CONTAINER_SIZE) {
     last_container_row_id += 1;
@@ -204,24 +203,6 @@ export function InitComponent() {
     register_class_cache[
       `_${last_container_row_id}`
     ] = ComponentsRegister as any;
-
-    const vars = Array(CONTAINER_SIZE)
-      .fill(null)
-      .map((_, i) => `c${i}`);
-
-    ComponentsContainer.prototype["components"] = new Function(
-      "fn",
-      `
-    ${vars
-      .map(
-        (v, i) => `
-          const ${v} = this._${i};
-          if (${v}) fn(${v});
-        `
-      )
-      .join("\n")}
-  `
-    );
   } else {
     last_storage_column_id += 1;
   }

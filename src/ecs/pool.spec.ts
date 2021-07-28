@@ -219,10 +219,14 @@ test("[Pool.get()]", (t) => {
 
   t.is(entity_pool.entities.length, 0);
 
+  console.log("BREAK", world.components[Component1.id]);
+
   world.delete_entity(entity);
 
   t.is(entity_pool.entities.length, 1);
   t.is(entity_pool.entities[0]!, entity);
+
+  console.log("BREAK", world.components[Component1.id]);
 
   const new_entity = pool.get(world);
 

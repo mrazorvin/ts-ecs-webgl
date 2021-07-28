@@ -160,7 +160,7 @@ export class EntityPool<T extends Array<typeof Component>> {
       `
         return (world, instantiate) => {
           const new_entity = instantiate(create);
-          
+
           ${this.components
             .map(
               (_, i) => `

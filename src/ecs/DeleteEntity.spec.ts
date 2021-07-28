@@ -21,9 +21,9 @@ test("[World -> DeleteEntity]", (t) => {
   t.is(hash.prev?.value, Component2);
   t.is(hash.prev?.prev?.value, Component1);
 
-  console.log(
-    DeleteEntity.generate_function(hash, HEAD_HASH.add(Component3)).toString()
-  );
+  // console.log(
+  //   DeleteEntity.generate_function(hash, HEAD_HASH.add(Component3)).toString()
+  // );
 
   t.pass();
 });

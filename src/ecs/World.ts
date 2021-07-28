@@ -242,14 +242,15 @@ export class World implements WorldShape {
       const container = entity.components[key];
       if (container === undefined) continue;
       
-      container.components((component) => {
+      for (const storage_column in container) {
+        const component = container[storage_column];
+        if (component == null) continue;
         const collection = this.components[
           (component.constructor as typeof Component).id
         ];
-        if (collection) {
-          collection.size -= 1;
-        }
-      });
+
+        if (collection)  collection.size -= 1;
+      }
     }
   }
 }
@@ -592,7 +593,6 @@ export class DynamicSystem extends System {
   }
 }
 
-type IgnoreMethodSignature = any;
 export function sys<T extends Array<new (...args: any[]) => Resource>>(
   args: [...T],
   fn: (
