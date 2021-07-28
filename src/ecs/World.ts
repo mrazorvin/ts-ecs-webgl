@@ -366,6 +366,8 @@ export class LoopInfo extends Resource {
   }
 }
 
+let sec = 0;
+
 export class RafScheduler extends Scheduler {
   raf = requestAnimationFrame(() => null);
   ms_last_frame = 0;
@@ -388,9 +390,19 @@ export class RafScheduler extends Scheduler {
     // we could pas 1 / {ms_delta} to show user how fractional of second left
     // from the previous second
     this.info.time_delta = ms_delta;
+    sec += ms_delta;
+
+    if (sec >= 1) {
+      console.time("tick")
+    }
 
     this.tick();
     this.start();
+
+    if (sec >= 1) {
+      console.timeEnd("tick")
+      sec = 0;
+    }
   };
 
   override stop() {

@@ -189,20 +189,20 @@ main_world.system(
 main_world.system(
   sys([CollisionWorld, Camera], (_, sscd) => {
     // amazing method for debbug add more such utils
-    if (sec >= 0.98) {
-      console.log(
-        sscd.world,
-        // TODO: store this vector alongside to prevent additional allocation
-        new SSCDVector(
-          -Math.min(camera.transform.position![0], 0) +
-            camera.transform.width / 2,
-          -Math.min(camera.transform.position![1], 0) +
-            camera.transform.height / 2
-        ),
-        // TODO: not sure if params also co
-        new SSCDVector(camera.transform.width, camera.transform.height)
-      );
-    }
+    // if (sec >= 0.98) {
+    //   console.log(
+    //     sscd.world,
+    //     // TODO: store this vector alongside to prevent additional allocation
+    //     new SSCDVector(
+    //       -Math.min(camera.transform.position![0], 0) +
+    //         camera.transform.width / 2,
+    //       -Math.min(camera.transform.position![1], 0) +
+    //         camera.transform.height / 2
+    //     ),
+    //     // TODO: not sure if params also co
+    //     new SSCDVector(camera.transform.width, camera.transform.height)
+    //   );
+    // }
     sscd.world.test_collision<SSCDShape<EntityRef>>(
       new SSCDRectangle(
         new SSCDVector(
