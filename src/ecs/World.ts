@@ -1,4 +1,4 @@
-import { IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD } from "./Component";
+import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD } from "./Component";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
 
@@ -605,4 +605,4 @@ export function sys<T extends Array<new (...args: any[]) => Resource>>(
   return new DynamicSystem(args as any, fn);
 }
 
-export { IComponent as Component, EntityPool };
+export { EntityPool, InitComponent };

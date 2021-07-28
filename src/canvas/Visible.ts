@@ -1,4 +1,4 @@
-import { Component } from "@mr/ecs/World";
+import { InitComponent } from "@mr/ecs/World";
 
-export class Visible extends Component.Init() {}
+export class Visible extends InitComponent() {}
 export const visible = new Visible();

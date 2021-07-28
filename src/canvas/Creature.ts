@@ -1,3 +1,3 @@
-import { Component } from "@mr/ecs/World";
+import { InitComponent } from "@mr/ecs/World";
 
-export class Creature extends Component.Init() {}
+export class Creature extends InitComponent() {}

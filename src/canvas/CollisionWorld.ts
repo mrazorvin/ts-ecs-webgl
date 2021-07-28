@@ -1,4 +1,4 @@
-import { Component, EntityRef, Resource } from "@mr/ecs/World";
+import { InitComponent, EntityRef, Resource } from "@mr/ecs/World";
 import { SSCDShape, SSCDWorld } from "@mr/sscd";
 
 // TODO: must be stored is SSCD
@@ -10,7 +10,7 @@ export class SSCDShapeRef {
 }
 
 // TODO: Better naming
-export class CollisionShape extends Component.Init() {
+export class CollisionShape extends InitComponent() {
   constructor(public ref: SSCDShapeRef) {
     super();
   }

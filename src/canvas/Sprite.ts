@@ -1,4 +1,4 @@
-import { Component } from "../ecs/World";
+import { InitComponent } from "../ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import { SpriteShader } from "./Assets/View/Sprite/Sprite.shader";
 import { MeshID } from "./Render/Mesh";
@@ -6,7 +6,7 @@ import { Shader, ShaderID } from "./Render/Shader";
 import { TextureID } from "./Render/Texture";
 import { WebGL } from "./Render/WebGL";
 
-export class Sprite extends Component.Init() {
+export class Sprite extends InitComponent() {
   constructor(
     public shader: ShaderID,
     public mesh: MeshID,

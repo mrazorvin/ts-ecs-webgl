@@ -1,6 +1,5 @@
 import { Context } from "./Context";
 import { ShaderGlobals } from "./ShaderGlobal";
-import { WebGL } from "./WebGL";
 
 export namespace t {
   export function clear(

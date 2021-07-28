@@ -1,5 +1,5 @@
 import { glMatrix, mat3 } from "gl-matrix";
-import { Component, EntityRef, World } from "../../ecs/World";
+import { EntityRef, InitComponent, World } from "../../ecs/World";
 import { DependenciesUtils } from "../Utils/DependenciesUtils";
 
 const setView = DependenciesUtils.compileMemoizeFactory<
@@ -12,7 +12,7 @@ type Rotation = number | undefined;
 type ParentView = Float32Array | undefined;
 type ParentViewChanged = number | undefined;
 
-export class Transform extends Component.Init() {
+export class Transform extends InitComponent() {
   // TODO: all those values must be always defined
   //       it's hell to check them on non existence each time when
   //       we want to use it

@@ -1,12 +1,5 @@
 import { glMatrix, vec2 } from "gl-matrix";
-import {
-  Component,
-  EntityRef,
-  LoopInfo,
-  RafScheduler,
-  sys,
-  World,
-} from "@mr/ecs/World";
+import { EntityRef, LoopInfo, RafScheduler, sys } from "@mr/ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import {
   SpriteShader,

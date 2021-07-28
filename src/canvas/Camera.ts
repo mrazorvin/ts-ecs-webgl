@@ -1,4 +1,4 @@
-import { EntityID, EntityRef, Resource } from "@mr/ecs/World";
+import { EntityRef, Resource } from "@mr/ecs/World";
 import { main_world } from "./MainWorld";
 import { Transform } from "./Transform/Transform";
 import { world_transform } from "./WorldView";
