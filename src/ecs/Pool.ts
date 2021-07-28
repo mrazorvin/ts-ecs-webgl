@@ -62,11 +62,6 @@ export class EntityPool<T extends Array<typeof Component>> {
   }
 
   init() {
-    for (const Component of this.components) {
-      if (Component.id === undefined) {
-        Component.init();
-      }
-    }
     const vars = this.components.map(({ id }) => `c${id}`);
     const storages = Array.from(
       new Set(this.components.map((c) => c.storage_row_id))

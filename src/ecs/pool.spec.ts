@@ -43,17 +43,6 @@ class Component9 extends Component.Init() {
   log9() {}
 }
 
-Component0.init();
-Component1.init();
-Component2.init();
-Component3.init();
-Component4.init();
-Component5.init();
-Component6.init();
-Component7.init();
-Component8.init();
-Component9.init();
-
 test("[EntityPool.pop()]", (t) => {
   const pool = new EntityPool([Component2, Component1]!);
   const entity = pool.pop();
@@ -219,14 +208,10 @@ test("[Pool.get()]", (t) => {
 
   t.is(entity_pool.entities.length, 0);
 
-  console.log("BREAK", world.components[Component1.id]);
-
   world.delete_entity(entity);
 
   t.is(entity_pool.entities.length, 1);
   t.is(entity_pool.entities[0]!, entity);
-
-  console.log("BREAK", world.components[Component1.id]);
 
   const new_entity = pool.get(world);
 

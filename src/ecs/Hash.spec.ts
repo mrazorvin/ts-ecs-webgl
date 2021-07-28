@@ -9,10 +9,6 @@ class Component2 extends Component.Init() {}
 class Component3 extends Component.Init() {}
 
 test("[World -> Hash]", (t) => {
-  Component1.init();
-  Component2.init();
-  Component3.init();
-
   const hash1 = HEAD_HASH.add(Component1);
   const hash2 = HEAD_HASH.add(Component2);
   t.is(hash1, HEAD_HASH.add(Component1));

@@ -11,10 +11,6 @@ class Component2 extends Component.Init() {}
 class Component3 extends Component.Init() {}
 
 test("[World -> DeleteEntity]", (t) => {
-  Component1.init();
-  Component2.init();
-  Component3.init();
-
   const hash = HEAD_HASH.add(Component1).add(Component3).add(Component2);
 
   t.is(hash.value, Component3);

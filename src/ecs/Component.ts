@@ -182,8 +182,6 @@ export abstract class Component {
 }
 
 export function InitComponent() {
-  return Component;
-
   if (last_storage_column_id >= CONTAINER_SIZE) {
     last_container_row_id += 1;
     last_storage_column_id = 0;
@@ -207,36 +205,50 @@ export function InitComponent() {
     last_storage_column_id += 1;
   }
 
-  return class X {
+  const row_id = last_container_row_id;
+  const column_id = last_storage_column_id;
+
+  // prettier-ignore
+  return class Component {
     static id = global_id_seq++;
-    static container_class: undefined | ComponentsContainer;
-    static storage_row_id = ID_SEQ_START;
-    static container_column_id = ID_SEQ_START;
+    static storage_row_id = row_id;
+    static container_column_id = column_id;
+    static container_class = container_class_cache[`_${row_id}`];
 
     constructor(...args: any[]) {}
 
     // real code will be injected after initialization
-    static get<T>(
-      this: (new (...args: any[]) => T) & typeof Component,
-      entity: Entity
-    ): T | undefined {
-      return undefined;
-    }
+    static get = new Function(
+      "entity",
+      `return entity.components._${row_id} && entity.components._${row_id}._${column_id}`
+    );
 
-    static delete<T>(
-      this: (new (...args: any[]) => T) & typeof Component,
-      entity: Entity
-    ): boolean {
-      return false;
-    }
+    static delete = new Function("collection", "entity", `
+      const register = entity.registers._${column_id};
+      const id = register._${row_id};
+      if (register == null || id == null)  {
+        return false;
+      }
+      else {
+        let last_element = collection.pop();
+        if (last_element?.ref === undefined) {
+          // we need to iter only until key, then we could stope
+          for (let i = collection.length - 1; i >= 0; i--) 
+            if ((last_element = collection[i])?.ref) break;
+        }
+        register._${column_id} = null;
+        return true;
+      }
+    `);
 
-    static set<T>(
-      this: (new (...args: any[]) => T) & typeof Component,
-      entity: Entity,
-      component: T
-    ): T {
-      return component;
-    }
+    static set = new Function(
+      ...["Component", "ContainerClass"],
+          `return (entity, component) => {
+        return (entity.components._${row_id} || 
+          (entity.components._${row_id} = new ContainerClass()) 
+        )._${column_id} = component
+      }`
+    )(Component, container_class_cache[`_${row_id}`])
 
     static add<T>(
       this: (new (...args: any[]) => T) & typeof Component,
@@ -244,53 +256,6 @@ export function InitComponent() {
       entity: T
     ): T {
       return entity;
-    }
-
-    static init() {
-      if (
-        X.container_column_id === ID_SEQ_START ||
-        X.storage_row_id === ID_SEQ_START
-      ) {
-        X.storage_row_id = last_container_row_id;
-        X.container_column_id = last_storage_column_id;
-        X.container_class = container_class_cache[`_${X.storage_row_id}`];
-
-        X.get = new Function(
-          "entity",
-          `return entity.components._${X.storage_row_id} && entity.components._${X.storage_row_id}._${X.container_column_id}`
-        ) as typeof X.get;
-
-        // TODO: Not implemented
-        X.delete = new Function(
-          "collection",
-          "entity",
-          `
-        const register = entity.registers._${X.storage_row_id};
-        const id = register._${X.container_column_id};
-        if (register == null || id == null)  {
-          return false;
-        }
-        else {
-          let last_element = collection.pop();
-          if (last_element?.ref === undefined) {
-            // we need to iter only until key, then we could stope
-            for (let i = collection.length - 1; i >= 0; i--) 
-              if ((last_element = collection[i])?.ref) break;
-          }
-          register._${X.container_column_id} = null;
-          return true;
-        }`
-        ) as typeof X.delete;
-
-        X._set = new Function(
-          ...["Component", "ContainerClass"],
-          `return (entity, component) => {
-        return (entity.components._${X.storage_row_id} || 
-          (entity.components._${X.storage_row_id} = new ContainerClass()) 
-        )._${X.container_column_id} = component
-      }`
-        )(Component, X.container_class) as typeof X.set;
-      }
     }
   };
 }
