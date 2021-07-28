@@ -1,4 +1,4 @@
-import { Component, ComponentsContainer, ComponentsRegister, HASH_HEAD } from "./Component";
+import { IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD } from "./Component";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
 
@@ -6,12 +6,12 @@ export const ID_SEQ_START = -1;
 export const CONTAINER_SIZE = 8; // TODO: set to 32 after normalizing container locations
 
 export enum ResourceID {}
-export class Entity<T extends Component[] = []> {
+export class Entity<T extends IComponent[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
   components: { [key: string]: ComponentsContainer };
   registers: { [key: string]: ComponentsRegister };
-  hash: Hash<typeof Component>;
+  hash: Hash<typeof IComponent>;
   pool: EntityPool<[]> | undefined;
   ref: EntityRef;
 
@@ -109,20 +109,20 @@ export namespace Resource {
 interface WorldShape {
   system(system: System): void;
   system_once(system: System): void;
-  query<T extends Array<typeof Component>>(
+  query<T extends Array<typeof IComponent>>(
     components: [...T],
     reduce: (
       entity: Entity<
         {
           [K in keyof T]: T[K] extends new (...args: any[]) => infer A
             ? A
-            : Component;
+            : IComponent;
         }
       >,
       ...args: {
         [K in keyof T]: T[K] extends new (...args: any[]) => infer A
           ? A
-          : Component;
+          : IComponent;
       }
     ) => void
   ): void;
@@ -168,20 +168,20 @@ export class World implements WorldShape {
    *    - drawback = multiple component owners,
    * - similar optimization could be applied to resource with similar drawback
    */
-  query<T extends Array<typeof Component>>(
+  query<T extends Array<typeof IComponent>>(
     components: [...T],
     fn: (
       entity: Entity<
         {
           [K in keyof T]: T[K] extends new (...args: any[]) => infer A
             ? A
-            : Component;
+            : IComponent;
         }
       >,
       ...args: {
         [K in keyof T]: T[K] extends new (...args: any[]) => infer A
           ? A
-          : Component;
+          : IComponent;
       }
     ) => void
   ) {
@@ -201,7 +201,7 @@ export class World implements WorldShape {
     Constructor.set(this, resource);
   }
 
-  entity<T extends Component[]>(components: [...T]): Entity<T> {
+  entity<T extends IComponent[]>(components: [...T]): Entity<T> {
     const entity = new Entity();
 
     for (const component of components) {
@@ -211,7 +211,7 @@ export class World implements WorldShape {
     return entity;
   }
 
-  clear_collection(Constructor: typeof Component) {
+  clear_collection(Constructor: typeof IComponent) {
     const collection = this.components[Constructor.id];
     if (collection !== undefined) {
       collection.refs.length = 0;
@@ -219,8 +219,8 @@ export class World implements WorldShape {
     }
   }
 
-  attach_component(entity: Entity, component: Component) {
-    const Constructor = component.constructor as typeof Component;
+  attach_component(entity: Entity, component: IComponent) {
+    const Constructor = component.constructor as typeof IComponent;
     // since Component is abstract class, and Constructor is subclass
     // we must ignore constructor type interference
     (Constructor as any).set(entity, component);
@@ -246,7 +246,7 @@ export class World implements WorldShape {
         const component = container[storage_column];
         if (component == null) continue;
         const collection = this.components[
-          (component.constructor as typeof Component).id
+          (component.constructor as typeof IComponent).id
         ];
 
         if (collection)  collection.size -= 1;
@@ -283,20 +283,20 @@ export class SubWorld implements WorldShape {
     this.world.system_once(system);
   }
 
-  query<T extends Array<typeof Component>>(
+  query<T extends Array<typeof IComponent>>(
     components: [...T],
     reduce: (
       entity: Entity<
         {
           [K in keyof T]: T[K] extends new (...args: any[]) => infer A
             ? A
-            : Component;
+            : IComponent;
         }
       >,
       ...args: {
         [K in keyof T]: T[K] extends new (...args: any[]) => infer A
           ? A
-          : Component;
+          : IComponent;
       }
     ) => void
   ) {
@@ -443,7 +443,7 @@ const noop = () => void 0;
 // TODO: refactor names
 class Cacher {
   static storage = new Map<string, Function>();
-  static get_func(components: Array<typeof Component>) {
+  static get_func(components: Array<typeof IComponent>) {
     let id = "";
     for (const component of components) {
       if (component.id === undefined) return noop;
@@ -575,8 +575,8 @@ let component_injector = new Function(
 
 function inject_entity_and_component(
   world: World,
-  components: Array<typeof Component>,
-  fn: (entity: Entity, ...components: Component[]) => void
+  components: Array<typeof IComponent>,
+  fn: (entity: Entity, ...components: IComponent[]) => void
 ) {
   return component_injector(world, fn, components);
 }
@@ -605,4 +605,4 @@ export function sys<T extends Array<new (...args: any[]) => Resource>>(
   return new DynamicSystem(args as any, fn);
 }
 
-export { Component, EntityPool };
+export { IComponent as Component, EntityPool };

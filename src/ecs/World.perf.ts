@@ -1,22 +1,22 @@
 import { World } from "./World";
-import { Component } from "./Component";
+import { InitComponent } from "./Component";
 
 const world = new World();
 // @ts-expect-error
 const clases = [];
 for (let i = 0; i < 6000; i++) {
-  clases.push(class _c extends Component.Init() {});
+  clases.push(class _c extends InitComponent() {});
   world.entity([new clases[clases.length - 1]!()]);
 }
-class TestComponent extends Component.Init() {}
-class TestComponent1 extends Component.Init() {}
-class TestComponent2 extends Component.Init() {}
-class TestComponent3 extends Component.Init() {}
-class TestComponent4 extends Component.Init() {}
-class TestComponent5 extends Component.Init() {}
-class TestComponent6 extends Component.Init() {}
-class TestComponent7 extends Component.Init() {}
-class TestComponent8 extends Component.Init() {}
+class TestComponent extends InitComponent() {}
+class TestComponent1 extends InitComponent() {}
+class TestComponent2 extends InitComponent() {}
+class TestComponent3 extends InitComponent() {}
+class TestComponent4 extends InitComponent() {}
+class TestComponent5 extends InitComponent() {}
+class TestComponent6 extends InitComponent() {}
+class TestComponent7 extends InitComponent() {}
+class TestComponent8 extends InitComponent() {}
 
 for (let i = 0; i < 4; i++) {
   for (let z = 0; z < 10; z++)

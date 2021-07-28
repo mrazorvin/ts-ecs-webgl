@@ -1,14 +1,12 @@
 import { default as test } from "ava";
-import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
-import { Component } from "./Component";
+import { InitComponent, IComponent } from "./Component";
 
-Component.id = -Infinity;
-const HEAD_HASH = new Hash(Component, undefined);
+const HEAD_HASH = new Hash(IComponent, undefined);
 
-class Component1 extends Component.Init() {}
-class Component2 extends Component.Init() {}
-class Component3 extends Component.Init() {}
+class Component1 extends InitComponent() {}
+class Component2 extends InitComponent() {}
+class Component3 extends InitComponent() {}
 
 test("[World -> DeleteEntity]", (t) => {
   const hash = HEAD_HASH.add(Component1).add(Component3).add(Component2);

@@ -1,20 +1,20 @@
 import { Hash } from "./Hash";
 import { Entity, World, ComponentsCollection } from "./World";
-import { Component, HASH_HEAD } from "./Component";
+import { IComponent, HASH_HEAD } from "./Component";
 
-type PoolInstances<T extends Array<typeof Component>> = {
+type PoolInstances<T extends Array<typeof IComponent>> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : never;
 };
 
-type PoolInstancesUndef<T extends Array<typeof Component>> = {
+type PoolInstancesUndef<T extends Array<typeof IComponent>> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => infer A
     ? A | undefined
     : never;
 };
 
-export class EntityPool<T extends Array<typeof Component>> {
+export class EntityPool<T extends Array<typeof IComponent>> {
   id: number;
-  hash: Hash<typeof Component>;
+  hash: Hash<typeof IComponent>;
   entities: Entity<T>[];
   components: T;
 
@@ -190,7 +190,7 @@ export namespace EntityPool {
   export let global_id = 0;
 }
 
-export class Pool<T extends Array<typeof Component>> {
+export class Pool<T extends Array<typeof IComponent>> {
   instantiate: (
     create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
   ) => Entity<PoolInstances<T>>;

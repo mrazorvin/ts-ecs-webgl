@@ -19,7 +19,7 @@ let last_storage_column_id = CONTAINER_SIZE;
 export enum ComponentTypeID {}
 
 export interface ComponentsContainer {
-  [key: string]: Component;
+  [key: string]: IComponent;
 }
 
 export interface ComponentsRegister {
@@ -31,153 +31,47 @@ export interface ComponentsRegister {
 // TODO: clear collection code
 // TODO: hash-match code
 // move to member of static class
-export abstract class Component {
+export class IComponent {
   // TODO: we already has > 10 properties, new properties could cause slow down
   //       this mean that we must group methods like _add, _set... i.e non public method and properties in sub_container
   //       maybe it will easier to ini all components in some smart way, instead of live check if component is initialized
   //       for example instead of simple extends Component.Extends() we could call Extends(), and initialized ahead
   //       i.e get rid of init() calls
-  static id: number;
+  static id = -Infinity as ComponentTypeID;
+  static storage_row_id = ID_SEQ_START;
+  static container_column_id = ID_SEQ_START;
+  static container_class: ComponentsContainer | undefined = undefined;
 
   constructor(...args: any[]) {}
 
-  // real code will be injected after initialization
   static get<T>(
-    this: (new (...args: any[]) => T) & typeof Component,
+    this: (new (...args: any[]) => T) & typeof IComponent,
     entity: Entity
   ): T | undefined {
     return undefined;
   }
 
-  // real code will be injected after initialization
-  // TODO
   static delete<T>(
-    this: (new (...args: any[]) => T) & typeof Component,
+    this: (new (...args: any[]) => T) & typeof IComponent,
     entity: Entity
   ): boolean {
     return false;
   }
 
-  // real code will be injected after initialization
-  private static _set<T>(
-    this: (new (...args: any[]) => T) & typeof Component,
+  static set<T>(
+    this: (new (...args: any[]) => T) & typeof IComponent,
     entity: Entity,
     component: T
   ): T {
     return component;
   }
 
-  private static _add<T>(
-    this: (new (...args: any[]) => T) & typeof Component,
+  static add<T>(
+    this: (new (...args: any[]) => T) & typeof IComponent,
     collection: ComponentsCollection,
     entity: T
   ): T {
     return entity;
-  }
-
-  static set<T>(
-    this: (new (...args: any[]) => T) & typeof Component,
-    entity: Entity,
-    component: T
-  ): T {
-    this.init();
-    return this._set(entity, component);
-  }
-
-  static add<T>(
-    this: (new (...args: any[]) => T) & typeof Component,
-    collection: ComponentsCollection,
-    entity: T
-  ): T {
-    this.init();
-    return this._add(collection, entity);
-  }
-
-  static container_class: undefined | ComponentsContainer;
-  static storage_row_id = ID_SEQ_START;
-  static container_column_id = ID_SEQ_START;
-  static init() {
-    if (
-      this.container_column_id === ID_SEQ_START ||
-      this.storage_row_id === ID_SEQ_START
-    ) {
-      this.id = global_id_seq++;
-
-      if (last_storage_column_id >= CONTAINER_SIZE) {
-        last_container_row_id += 1;
-        last_storage_column_id = 0;
-        class ComponentsContainer {
-          [key: string]: Component;
-        }
-        class ComponentsRegister {
-          [key: string]: number;
-        }
-        container_class_cache[
-          `_${last_container_row_id}`
-        ] = ComponentsContainer as any;
-        register_class_cache[
-          `_${last_container_row_id}`
-        ] = ComponentsRegister as any;
-        const vars = Array(CONTAINER_SIZE)
-          .fill(null)
-          .map((_, i) => `c${i}`);
-        ComponentsContainer.prototype["components"] = new Function(
-          "fn",
-          `
-            ${vars
-              .map(
-                (v, i) => `
-                  const ${v} = this._${i};
-                  if (${v}) fn(${v});
-                `
-              )
-              .join("\n")}
-          `
-        );
-      } else {
-        last_storage_column_id += 1;
-      }
-
-      this.storage_row_id = last_container_row_id;
-      this.container_column_id = last_storage_column_id;
-      this.container_class = container_class_cache[`_${this.storage_row_id}`];
-
-      this.get = new Function(
-        "entity",
-        `return entity.components._${this.storage_row_id} && entity.components._${this.storage_row_id}._${this.container_column_id}`
-      ) as typeof this.get;
-
-      // TODO: Not implemented
-      this.delete = new Function(
-        "collection",
-        "entity",
-        `
-          const register = entity.registers._${this.storage_row_id};
-          const id = register._${this.container_column_id};
-          if (register == null || id == null)  {
-            return false;
-          }
-          else {
-            let last_element = collection.pop();
-            if (last_element?.ref === undefined) {
-              // we need to iter only until key, then we could stope
-              for (let i = collection.length - 1; i >= 0; i--) 
-                if ((last_element = collection[i])?.ref) break;
-            }
-            register._${this.container_column_id} = null;
-            return true;
-          }`
-      ) as typeof this.delete;
-
-      this._set = new Function(
-        ...["Component", "ContainerClass"],
-        `return (entity, component) => {
-          return (entity.components._${this.storage_row_id} || 
-            (entity.components._${this.storage_row_id} = new ContainerClass()) 
-          )._${this.container_column_id} = component
-        }`
-      )(Component, this.container_class) as typeof this.set;
-    }
   }
 }
 
@@ -187,7 +81,7 @@ export function InitComponent() {
     last_storage_column_id = 0;
 
     class ComponentsContainer {
-      [key: string]: Component;
+      [key: string]: IComponent;
     }
 
     class ComponentsRegister {
@@ -209,7 +103,7 @@ export function InitComponent() {
   const column_id = last_storage_column_id;
 
   // prettier-ignore
-  return class Component {
+  class Component {
     static id = global_id_seq++;
     static storage_row_id = row_id;
     static container_column_id = column_id;
@@ -221,7 +115,7 @@ export function InitComponent() {
     static get = new Function(
       "entity",
       `return entity.components._${row_id} && entity.components._${row_id}._${column_id}`
-    );
+    ) as typeof IComponent["get"];
 
     static delete = new Function("collection", "entity", `
       const register = entity.registers._${column_id};
@@ -239,7 +133,7 @@ export function InitComponent() {
         register._${column_id} = null;
         return true;
       }
-    `);
+    `) as typeof IComponent["delete"];
 
     static set = new Function(
       ...["Component", "ContainerClass"],
@@ -248,22 +142,15 @@ export function InitComponent() {
           (entity.components._${row_id} = new ContainerClass()) 
         )._${column_id} = component
       }`
-    )(Component, container_class_cache[`_${row_id}`])
+    )(Component, container_class_cache[`_${row_id}`]) as typeof IComponent["set"];
 
-    static add<T>(
-      this: (new (...args: any[]) => T) & typeof Component,
-      collection: ComponentsCollection,
-      entity: T
-    ): T {
-      return entity;
-    }
-  };
+    static add = null as any as typeof IComponent["add"];
+  }
+
+  const type_check: typeof IComponent = Component;
+  console.log(type_check);
+
+  return Component;
 }
 
-export namespace InitComponent {}
-
-export namespace Component {
-  export import Init = InitComponent;
-}
-
-export const HASH_HEAD = new Hash<typeof Component>(Component, undefined);
+export const HASH_HEAD = new Hash<typeof IComponent>(IComponent, undefined);

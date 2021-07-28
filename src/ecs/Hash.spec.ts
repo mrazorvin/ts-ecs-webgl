@@ -1,12 +1,12 @@
 import { default as test } from "ava";
 import { Hash } from "./Hash";
-import { Component } from "./Component";
+import { InitComponent } from "./Component";
 
 const HEAD_HASH = new Hash({ id: -Infinity }, undefined);
 
-class Component1 extends Component.Init() {}
-class Component2 extends Component.Init() {}
-class Component3 extends Component.Init() {}
+class Component1 extends InitComponent() {}
+class Component2 extends InitComponent() {}
+class Component3 extends InitComponent() {}
 
 test("[World -> Hash]", (t) => {
   const hash1 = HEAD_HASH.add(Component1);

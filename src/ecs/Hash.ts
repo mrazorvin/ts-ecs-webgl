@@ -1,4 +1,4 @@
-import { Component } from "./Component";
+import { IComponent } from "./Component";
 
 export type HashValue<T extends { id: number }> = T;
 
@@ -66,7 +66,7 @@ export class Hash<T extends { id: number } = { id: number }> {
 
 export namespace Hash {
   export const get = (
-    component_constructor: typeof Component,
+    component_constructor: typeof IComponent,
     current_hash: Hash
   ) => {
     return current_hash.add(component_constructor);

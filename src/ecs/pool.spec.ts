@@ -1,45 +1,45 @@
 import { default as test } from "ava";
 import { Entity, World } from "./World";
-import { Component } from "./Component";
+import { InitComponent } from "./Component";
 import { EntityPool, Pool } from "./Pool";
 
-class Component0 extends Component.Init() {
+class Component0 extends InitComponent() {
   log1() {}
 }
 
-class Component1 extends Component.Init() {
+class Component1 extends InitComponent() {
   log1() {}
 }
 
-class Component2 extends Component.Init() {
+class Component2 extends InitComponent() {
   log2() {}
 }
 
-class Component3 extends Component.Init() {
+class Component3 extends InitComponent() {
   log3() {}
 }
 
-class Component4 extends Component.Init() {
+class Component4 extends InitComponent() {
   log4() {}
 }
 
-class Component5 extends Component.Init() {
+class Component5 extends InitComponent() {
   log5() {}
 }
 
-class Component6 extends Component.Init() {
+class Component6 extends InitComponent() {
   log6() {}
 }
 
-class Component7 extends Component.Init() {
+class Component7 extends InitComponent() {
   log7() {}
 }
 
-class Component8 extends Component.Init() {
+class Component8 extends InitComponent() {
   log8() {}
 }
 
-class Component9 extends Component.Init() {
+class Component9 extends InitComponent() {
   log9() {}
 }
 

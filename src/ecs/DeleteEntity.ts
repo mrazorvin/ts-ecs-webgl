@@ -1,9 +1,9 @@
 import { Hash } from "./Hash";
 import { Entity, World } from "./World";
-import { Component } from "./Component";
+import { IComponent } from "./Component";
 
 type DeleteFunction = (entity: Entity, world: World) => void;
-type HashType = Hash<typeof Component>;
+type HashType = Hash<typeof IComponent>;
 
 export class DeleteEntity {
   static func_cache = new Map<HashType, { [key: string]: DeleteFunction }>();
@@ -25,15 +25,15 @@ export class DeleteEntity {
 
   // prettier-ignore
   static generate_function(hash: HashType, pool_hash: HashType | undefined): DeleteFunction {
-    let components: Array<typeof Component> = [];
-    let pool_components: Array<typeof Component> = [];
+    let components: Array<typeof IComponent> = [];
+    let pool_components: Array<typeof IComponent> = [];
     let current_hash: HashType | undefined = hash;
-    while (current_hash && current_hash.value !== Component) {
+    while (current_hash && current_hash.value !== IComponent) {
       components.push(current_hash.value);
       current_hash = current_hash.prev;
     }
     current_hash = pool_hash;
-    while (current_hash && current_hash.value !== Component) {
+    while (current_hash && current_hash.value !== IComponent) {
       pool_components.push(current_hash.value);
       current_hash = current_hash.prev;
     }
