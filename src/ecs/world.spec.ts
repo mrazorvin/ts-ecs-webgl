@@ -317,6 +317,12 @@ test("[World.delete_entity()]", (t) => {
   t.is(world.components[Component2.id]?.size, 3);
   t.is(world.components[Component2.id]?.refs?.length, 3);
 
+  // console.log(entity1);
+  // console.log(
+  //   DeleteEntity.generate_function(entity1.hash, undefined).toString()
+  // );
+  // const _delete = DeleteEntity.generate_function(entity1.hash, undefined);
+
   world.delete_entity(entity1);
   t.is(world.components[Component2.id]?.size, 2);
   t.is(world.components[Component2.id]?.refs?.length, 3);
@@ -327,9 +333,10 @@ test("[World.delete_entity()]", (t) => {
 
   world.query([Component2, Component1], () => null);
   t.is(world.components[Component2.id]?.size, 1);
-  t.is(world.components[Component2.id]?.refs?.length, 1);
+  t.is(world.components[Component2.id]?.refs?.length, 3);
 
   world.delete_entity(entity3);
+
   world.entity([new Component2()]);
   world.entity([new Component2()]);
   world.entity([new Component2()]);
@@ -337,9 +344,9 @@ test("[World.delete_entity()]", (t) => {
   t.is(world.components[Component1.id]?.size, 2);
   t.is(world.components[Component1.id]?.refs?.length, 3);
   t.is(world.components[Component2.id]?.size, 3);
-  t.is(world.components[Component2.id]?.refs?.length, 4);
+  t.is(world.components[Component2.id]?.refs?.length, 3);
 
   world.query([Component2, Component1], () => null);
   t.is(world.components[Component1.id]?.size, 2);
-  t.is(world.components[Component1.id]?.refs?.length, 2);
+  t.is(world.components[Component1.id]?.refs?.length, 3);
 });

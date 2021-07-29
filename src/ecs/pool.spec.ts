@@ -75,14 +75,6 @@ test("[EntityPool.create()]", (t) => {
   t.deepEqual(pool.components, [Component1, Component9]);
   t.is(entity?.components["_0"]!["_1"]!, component1);
   t.is(entity?.components["_1"]!["_0"]!, component9);
-  t.is(
-    entity?.components["_0"]!.constructor,
-    Component1.container_class as any
-  );
-  t.is(
-    entity?.components["_1"]!.constructor,
-    Component9.container_class as any
-  );
 });
 
 test("[EntityPool.create() inverse]", (t) => {
@@ -98,14 +90,6 @@ test("[EntityPool.create() inverse]", (t) => {
   t.deepEqual(pool.components, [Component9, Component1]!);
   t.is(entity?.components["_0"]!["_1"]!, component1);
   t.is(entity?.components["_1"]!["_0"]!, component9);
-  t.is(
-    entity?.components["_0"]!.constructor,
-    Component1.container_class as any
-  );
-  t.is(
-    entity?.components["_1"]!.constructor,
-    Component9.container_class as any
-  );
 });
 
 test("[EntityPool.instantiate()]", (t) => {
@@ -208,7 +192,13 @@ test("[Pool.get()]", (t) => {
 
   t.is(entity_pool.entities.length, 0);
 
+  console.log(world.components[Component1.id]);
+  console.log(world.components[Component9.id]);
+
   world.delete_entity(entity);
+
+  console.log(world.components[Component1.id]);
+  console.log(world.components[Component9.id]);
 
   t.is(entity_pool.entities.length, 1);
   t.is(entity_pool.entities[0]!, entity);

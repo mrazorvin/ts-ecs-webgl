@@ -2,12 +2,12 @@ import { Hash } from "./Hash";
 import { Entity, World } from "./World";
 import { IComponent } from "./Component";
 
-type DeleteFunction = (entity: Entity, world: World) => void;
+type DeleteFunction = (world: World, entity: Entity) => void;
 type HashType = Hash<typeof IComponent>;
 
 export class DeleteEntity {
   static func_cache = new Map<HashType, { [key: string]: DeleteFunction }>();
-  static delete(entity: Entity, world: World): void {
+  static delete(world: World, entity: Entity): void {
     let func_container = this.func_cache.get(entity.hash);
     if (func_container === undefined) {
       func_container = {};
@@ -20,7 +20,7 @@ export class DeleteEntity {
       func_container[key] = func;
     }
 
-    return func(entity, world);
+    return func(world, entity);
   }
 
   // prettier-ignore
@@ -78,13 +78,17 @@ export class DeleteEntity {
         .map(
           (component) => `
             if (reg_${component.id} != null) {
-              coll_${component.id}.size -= 1;
-              coll_${component.id}.refs[reg_${component.id}] = coll_${component.id}.refs[coll_${component.id}.size];
+              coll_${component.id}.size -= 1
+              const temp_entity = coll_${component.id}.refs[coll_${component.id}.size];
+              temp_entity.entity.register._${component.storage_row_id}._${component.container_column_id} = reg_${component.id};
+              coll_${component.id}.refs[reg_${component.id}] = temp_entity;
+              coll_${component.id}.refs[coll_${component.id}.size] = undefined;
             }
           `
         ).join("\n")}
-
-        entity.hash = pool_hash;
+          
+        entity.ref.entity = undefined;
+        ${pool_hash !== undefined ? `entity.pool.push(entity);` : undefined}
     }`;
 
     const func = new Function("pool_hash", body);

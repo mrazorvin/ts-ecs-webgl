@@ -15,7 +15,7 @@ type PoolInstancesUndef<T extends Array<typeof IComponent>> = {
 export class EntityPool<T extends Array<typeof IComponent>> {
   id: number;
   hash: Hash<typeof IComponent>;
-  entities: Entity<T>[];
+  entities: Entity<PoolInstances<T>>[];
   components: T;
 
   create: ((...args: PoolInstances<T>) => Entity<PoolInstances<T>>) | undefined;
@@ -53,7 +53,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
     this.instantiate = undefined;
   }
 
-  pop(): Entity<T> | undefined {
+  pop(): Entity<PoolInstances<T>> | undefined {
     if (this.create === undefined) {
       this.init();
     }

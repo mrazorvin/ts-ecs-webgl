@@ -1,5 +1,5 @@
 import { Hash } from "./Hash";
-import { Entity, ComponentsCollection } from "./World";
+import { Entity, ComponentsCollection, World } from "./World";
 
 const container_class_cache: {
   [key: string]: ComponentsContainer;
@@ -58,19 +58,23 @@ export class IComponent {
     return false;
   }
 
-  static set<T>(
+  static clear<T>(
     this: (new (...args: any[]) => T) & typeof IComponent,
-    entity: Entity,
-    component: T
-  ): T {
-    return component;
+    world: World
+  ): boolean {
+    return false;
   }
 
-  static add<T>(
+  static attach<T>(
     this: (new (...args: any[]) => T) & typeof IComponent,
-    collection: ComponentsCollection,
-    entity: T
-  ): T {
+    world: World,
+    entity: Entity,
+    component: T
+  ): Entity {
+    return entity;
+  }
+
+  attach(world: World, entity: Entity): Entity {
     return entity;
   }
 }
@@ -101,10 +105,11 @@ export function InitComponent() {
 
   const row_id = last_container_row_id;
   const column_id = last_storage_column_id;
+  const id = global_id_seq++;
 
   // prettier-ignore
   class Component {
-    static id = global_id_seq++;
+    static id = id;
     static storage_row_id = row_id;
     static container_column_id = column_id;
     static container_class = container_class_cache[`_${row_id}`];
@@ -117,34 +122,62 @@ export function InitComponent() {
       `return entity.components._${row_id} && entity.components._${row_id}._${column_id}`
     ) as typeof IComponent["get"];
 
-    static delete = new Function("collection", "entity", `
-      const register = entity.registers._${column_id};
-      const id = register._${row_id};
-      if (register == null || id == null)  {
-        return false;
+    static delete = new Function("world", "entity", `
+      const id = entity.register._${column_id}?._${row_id};
+      const component = entity.components._${column_id}?._${row_id};
+      if (component != null) entity.components._${column_id}._${row_id} = null;
+      if (id != null) {
+        entity.register._${column_id}._${row_id} = null;
+        const collection = world.components[${id}];
+        collection.size -= 1;
+        collection[id] = collection[collection.size];
       }
-      else {
-        let last_element = collection.pop();
-        if (last_element?.ref === undefined) {
-          // we need to iter only until key, then we could stope
-          for (let i = collection.length - 1; i >= 0; i--) 
-            if ((last_element = collection[i])?.ref) break;
-        }
-        register._${column_id} = null;
-        return true;
-      }
+
+      return entity;
     `) as typeof IComponent["delete"];
 
-    static set = new Function(
-      ...["Component", "ContainerClass"],
-          `return (entity, component) => {
-        return (entity.components._${row_id} || 
-          (entity.components._${row_id} = new ContainerClass()) 
-        )._${column_id} = component
-      }`
-    )(Component, container_class_cache[`_${row_id}`]) as typeof IComponent["set"];
+    static clear = new Function("world", `
+      const collection = world.components[${id}]
+      const refs = collection.refs;
+      for (let i = 0; i < collection.size; i++) {
+        const entity = refs[i];
+        entity.components._${column_id}._${row_id} = null;
+        entity.register._${column_id}._${row_id} = null;
+      }
+      refs.length = collection.size = 0;
 
-    static add = null as any as typeof IComponent["add"];
+      return true;
+    `) as typeof IComponent["clear"];
+
+    static attach = new Function(
+      ...["RegisterClass", "ContainerClass", "ComponentsCollection"],
+      `return function(world, entity, component) {
+        var collection = world.components[${id}] ?? (
+          world.components[${id}] = new ComponentsCollection()
+        );
+        
+        entity.hash = entity.hash.add(component.constructor);
+        
+        var id = (collection.size += 1) - 1;
+        collection.refs[id] = entity.ref;
+
+        (entity.components._${row_id} || 
+          (entity.components._${row_id} = new ContainerClass()) 
+        )._${column_id} = component;
+
+        (entity.register._${row_id} || 
+          (entity.register._${row_id} = new RegisterClass()) 
+        )._${column_id} = id;
+
+        return entity;
+      }`
+    )(register_class_cache[`_${row_id}`], 
+      container_class_cache[`_${row_id}`],
+      ComponentsCollection) as typeof IComponent["attach"];
+    
+    attach(world: World, entity: Entity): Entity  {
+      return Component.attach(world, entity, this);
+    }
   }
 
   const type_check: typeof IComponent = Component;

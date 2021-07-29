@@ -1,4 +1,5 @@
 import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD } from "./Component";
+import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
 
@@ -10,14 +11,14 @@ export class Entity<T extends IComponent[] = []> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
   components: { [key: string]: ComponentsContainer };
-  registers: { [key: string]: ComponentsRegister };
+  register: { [key: string]: ComponentsRegister };
   hash: Hash<typeof IComponent>;
   pool: EntityPool<[]> | undefined;
   ref: EntityRef;
 
   constructor(...args: any[]) {
     this.components = {};
-    this.registers = {};
+    this.register = {};
     this.ref = new EntityRef(this);
     this.pool = undefined;
     this.hash = HASH_HEAD;
@@ -205,53 +206,22 @@ export class World implements WorldShape {
     const entity = new Entity();
 
     for (const component of components) {
-      this.attach_component(entity, component);
+      component.attach(this, entity);
     }
 
     return entity;
   }
 
   clear_collection(Constructor: typeof IComponent) {
-    const collection = this.components[Constructor.id];
-    if (collection !== undefined) {
-      collection.refs.length = 0;
-      collection.size = 0;
-    }
+    Constructor.clear(this);
   }
 
   attach_component(entity: Entity, component: IComponent) {
-    const Constructor = component.constructor as typeof IComponent;
-    // since Component is abstract class, and Constructor is subclass
-    // we must ignore constructor type interference
-    (Constructor as any).set(entity, component);
-
-    let collection = this.components[Constructor.id];
-    if (!collection) {
-      collection = new ComponentsCollection();
-      this.components[Constructor.id] = collection;
-    }
-
-    collection.size += 1;
-    collection.refs.push(entity.ref);
+    component.attach(this, entity);
   }
 
   delete_entity(entity: Entity) {
-    entity.ref.entity = undefined;
-    if (entity.pool) entity.pool.push(entity);
-    for (const key in entity.components) {
-      const container = entity.components[key];
-      if (container === undefined) continue;
-      
-      for (const storage_column in container) {
-        const component = container[storage_column];
-        if (component == null) continue;
-        const collection = this.components[
-          (component.constructor as typeof IComponent).id
-        ];
-
-        if (collection)  collection.size -= 1;
-      }
-    }
+    DeleteEntity.delete(this, entity);
   }
 }
 
@@ -533,27 +503,9 @@ let component_injector = new Function(
             if (!components_collection) return;
 
             const inject = cacher.get_func(components);
-            let tail = components_collection.length;
-            const length = components_collection.length;
-            main: for (let head = 0; head < length; head++) {
-              let ref = components_collection[head];
-              let entity = ref.entity;
-              if (!entity) { 
-                for (;;) {
-                  tail -= 1;
-                  if (tail === head) break main;
-                  ref = components_collection[tail];
-                  entity = ref.entity;
-                  if (entity) {
-                    components_collection[head] = ref;
-                    break;
-                  } else continue
-                }
-              }
-
-              inject(entity, fn);
+            for (let head = 0; head < size; head++) {
+              inject(components_collection[head].entity, fn);
             }
-            components_collection.length = tail;
         }`;
     })
     .join("\n")}

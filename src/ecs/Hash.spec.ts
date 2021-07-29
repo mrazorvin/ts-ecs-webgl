@@ -1,8 +1,8 @@
 import { default as test } from "ava";
 import { Hash } from "./Hash";
-import { InitComponent } from "./Component";
+import { IComponent, InitComponent } from "./Component";
 
-const HEAD_HASH = new Hash({ id: -Infinity }, undefined);
+const HEAD_HASH = new Hash(IComponent, undefined);
 
 class Component1 extends InitComponent() {}
 class Component2 extends InitComponent() {}
