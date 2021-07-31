@@ -1,23 +1,10 @@
 import { default as test } from "ava";
 import { World } from "../World";
 import {
+  TestComponent3,
   TestComponent1,
   TestComponent2,
-  TestComponent3,
 } from "./world_spec_fixtures";
-
-test("[World.entity()]", (t) => {
-  const world = new World();
-  const component = new TestComponent1();
-  const expected_entity = world.entity([component]);
-
-  t.assert(
-    world.components[TestComponent1.id]!.refs.find(
-      (entity) => entity === expected_entity
-    )
-  );
-  t.is(TestComponent1.get(expected_entity), component);
-});
 
 test("[World.entity()]", (t) => {
   const world = new World();
@@ -98,4 +85,52 @@ test("[World.query()] multiple entities", (t) => {
     t.true(component1 instanceof TestComponent1);
     t.true(component2 instanceof TestComponent3);
   });
+});
+
+test("[World.delete_entity()]", (t) => {
+  const world = new World();
+
+  world.entity([new TestComponent1()]);
+  world.entity([new TestComponent1()]);
+  const entity1 = world.entity([new TestComponent2()]);
+  const entity2 = world.entity([new TestComponent2()]);
+  const entity3 = world.entity([new TestComponent1(), new TestComponent2()]);
+
+  t.is(world.components[TestComponent1.id]?.size, 3);
+  t.is(world.components[TestComponent1.id]?.refs?.length, 3);
+  t.is(world.components[TestComponent2.id]?.size, 3);
+  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+
+  // console.log(entity1);
+  // console.log(
+  //   DeleteEntity.generate_function(entity1.hash, undefined).toString()
+  // );
+  // const _delete = DeleteEntity.generate_function(entity1.hash, undefined);
+
+  world.delete_entity(entity1);
+  t.is(world.components[TestComponent2.id]?.size, 2);
+  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+
+  world.delete_entity(entity2);
+  t.is(world.components[TestComponent2.id]?.size, 1);
+  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+
+  world.query([TestComponent2, TestComponent1], () => null);
+  t.is(world.components[TestComponent2.id]?.size, 1);
+  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+
+  world.delete_entity(entity3);
+
+  world.entity([new TestComponent2()]);
+  world.entity([new TestComponent2()]);
+  world.entity([new TestComponent2()]);
+
+  t.is(world.components[TestComponent1.id]?.size, 2);
+  t.is(world.components[TestComponent1.id]?.refs?.length, 3);
+  t.is(world.components[TestComponent2.id]?.size, 3);
+  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+
+  world.query([TestComponent2, TestComponent1], () => null);
+  t.is(world.components[TestComponent1.id]?.size, 2);
+  t.is(world.components[TestComponent1.id]?.refs?.length, 3);
 });
