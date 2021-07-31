@@ -24,7 +24,7 @@ test("[InitComponent()] Component 9", (t) => {
   t.is(column_id, 0);
 });
 
-const validate_deleted_entity = (t: ExecutionContext, entity: Entity) => {
+export const validate_deleted_entity = (t: ExecutionContext, entity: Entity, exceptions?: Array<typeof IComponent>) => {
   t.true(Object.values(entity.components).flatMap((container) => Object.values(container)).length !== 0);
   t.true(Object.values(entity.register).flatMap((register) => Object.values(register)).length !== 0);
 
@@ -33,12 +33,21 @@ const validate_deleted_entity = (t: ExecutionContext, entity: Entity) => {
       const pos_in_collection = entity.register[row_id]![column_id]!;
       const component = entity.components[row_id]![column_id]!;
       t.is(pos_in_collection, null);
-      t.is(component, null);
+
+      if (component != null && exceptions !== undefined) {
+        if (exceptions.find((Constructor) => component.constructor === Constructor)) {
+          // ignore exception
+        } else {
+          t.is(component, null);
+        }
+      } else {
+        t.is(component, null);
+      }
     }
   }
 };
 
-const validate_component = <T extends typeof IComponent>(
+export const validate_component = <T extends typeof IComponent>(
   t: ExecutionContext,
   world: World,
   entity: Entity,
