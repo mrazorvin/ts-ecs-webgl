@@ -113,6 +113,7 @@ export function InitComponent() {
     static storage_row_id = row_id;
     static container_column_id = column_id;
     static container_class = container_class_cache[`_${row_id}`];
+    static register_class = register_class_cache[`_${row_id}`];
 
     constructor(...args: any[]) {}
 
@@ -136,13 +137,15 @@ export function InitComponent() {
       return entity;
     `) as typeof IComponent["delete"];
 
+    // if entity has single component, return entity to pool and   
     static clear = new Function("world", `
-      const collection = world.components[${id}]
+      const collection = world.components[${id}];
+      if (collection === undefined) return false;
       const refs = collection.refs;
       for (let i = 0; i < collection.size; i++) {
         const entity = refs[i];
-        entity.components._${column_id}._${row_id} = null;
-        entity.register._${column_id}._${row_id} = null;
+        entity.components._${row_id}._${column_id} = null;
+        entity.register._${row_id}._${column_id} = null;
       }
       refs.length = collection.size = 0;
 
@@ -159,7 +162,7 @@ export function InitComponent() {
         entity.hash = entity.hash.add(component.constructor);
         
         var id = (collection.size += 1) - 1;
-        collection.refs[id] = entity.ref;
+        collection.refs[id] = entity;
 
         (entity.components._${row_id} || 
           (entity.components._${row_id} = new ContainerClass()) 

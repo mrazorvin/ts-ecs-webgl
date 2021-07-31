@@ -18,8 +18,8 @@ class TestComponent6 extends InitComponent() {}
 class TestComponent7 extends InitComponent() {}
 class TestComponent8 extends InitComponent() {}
 
-for (let i = 0; i < 4; i++) {
-  for (let z = 0; z < 10; z++)
+for (let i = 0; i < 400; i++) {
+  for (let z = 0; z < 100; z++)
     world.entity([
       new TestComponent(),
       new TestComponent1(),
@@ -60,7 +60,7 @@ query: {
     });
   }
 
-  for (let i = 0; i < 10000; i++) {
+  for (let i = 0; i < 10; i++) {
     x();
   }
 
@@ -73,23 +73,21 @@ console.time("manual-query");
 let y = [] as any;
 
 function x() {
-  for (const ref of world.components[TestComponent1.id]!.refs) {
-    if (ref.entity) {
-      y[0] = TestComponent1.get(ref.entity);
-      y[1] = TestComponent2.get(ref.entity);
-      y[2] = TestComponent3.get(ref.entity);
-      y[3] = TestComponent4.get(ref.entity);
-      TestComponent5.get(ref.entity);
-      TestComponent6.get(ref.entity);
-      TestComponent7.get(ref.entity);
-      TestComponent8.get(ref.entity);
-      y[4] = y[4] != null ? y[4] + 1 : 0;
-      if (!y[4]) continue;
-    }
+  for (const entity of world.components[TestComponent1.id]!.refs) {
+    y[0] = TestComponent1.get(entity);
+    y[1] = TestComponent2.get(entity);
+    y[2] = TestComponent3.get(entity);
+    y[3] = TestComponent4.get(entity);
+    TestComponent5.get(entity);
+    TestComponent6.get(entity);
+    TestComponent7.get(entity);
+    TestComponent8.get(entity);
+    y[4] = y[4] != null ? y[4] + 1 : 0;
+    if (!y[4]) continue;
   }
 }
 
-for (let i = 0; i < 1000; i++) {
+for (let i = 0; i < 10; i++) {
   x();
 }
 
@@ -131,7 +129,7 @@ iteration: {
     }
   }
 
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 10; i++) {
     x();
   }
 

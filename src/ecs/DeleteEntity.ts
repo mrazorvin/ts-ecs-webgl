@@ -80,9 +80,8 @@ export class DeleteEntity {
             if (reg_${component.id} != null) {
               coll_${component.id}.size -= 1
               const temp_entity = coll_${component.id}.refs[coll_${component.id}.size];
-              temp_entity.entity.register._${component.storage_row_id}._${component.container_column_id} = reg_${component.id};
+              temp_entity.register._${component.storage_row_id}._${component.container_column_id} = reg_${component.id};
               coll_${component.id}.refs[reg_${component.id}] = temp_entity;
-              coll_${component.id}.refs[coll_${component.id}.size] = undefined;
             }
           `
         ).join("\n")}

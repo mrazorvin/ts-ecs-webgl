@@ -1,6 +1,6 @@
 import { default as test } from "ava";
-import { Resource, Scheduler, SubWorld, System, World, sys } from "./World";
-import { InitComponent } from "./Component";
+import { Resource, Scheduler, SubWorld, System, World, sys } from "../World";
+import { InitComponent } from "../Component";
 
 class TestComponent1 extends InitComponent() {}
 
@@ -62,7 +62,7 @@ test("[World.entity()]", (t) => {
 
   t.assert(
     world.components[TestComponent1.id]!.refs.find(
-      ({ entity }) => entity === expected_entity
+      (entity) => entity === expected_entity
     )
   );
   t.is(TestComponent1.get(expected_entity), component);
@@ -350,3 +350,6 @@ test("[World.delete_entity()]", (t) => {
   t.is(world.components[Component1.id]?.size, 2);
   t.is(world.components[Component1.id]?.refs?.length, 3);
 });
+
+// call clear on collection that non exist in world
+// call clear collection WTF, without test :()

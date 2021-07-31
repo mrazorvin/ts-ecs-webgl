@@ -2,6 +2,7 @@ import { default as test } from "ava";
 import { Entity, World } from "./World";
 import { InitComponent } from "./Component";
 import { EntityPool, Pool } from "./Pool";
+import { DeleteEntity } from "./DeleteEntity";
 
 class Component0 extends InitComponent() {
   log1() {}
@@ -105,11 +106,11 @@ test("[EntityPool.instantiate()]", (t) => {
     create(component9, component1)
   );
 
-  t.is(world.components[Component1.id]?.refs[0]!.entity, entity);
+  t.is(world.components[Component1.id]?.refs[0]!, entity);
   t.is(world.components[Component1.id]?.refs.length, 1);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0]!.entity, entity);
+  t.is(world.components[Component9.id]?.refs[0]!, entity);
   t.is(world.components[Component9.id]?.refs.length, 1);
   t.is(world.components[Component9.id]?.size, 1);
 });
@@ -119,7 +120,11 @@ test("[EntityPool.reuse()]", (t) => {
   const world = new World();
   const component1 = new Component1();
   const component9 = new Component9();
-  const empty_entity = new Entity();
+  const empty_entity = world.entity([component1, component9]);
+
+  const prev_ref = empty_entity.ref;
+
+  world.delete_entity(empty_entity);
 
   // lazy initialization
   pool.pop();
@@ -128,16 +133,15 @@ test("[EntityPool.reuse()]", (t) => {
     create(c1 ?? component1, c9 ?? component9)
   );
 
-  // pool don't reuse entities instances
-  t.not(entity, empty_entity);
-  t.not(entity?.ref, empty_entity.ref);
-  t.not(entity?.ref.entity, empty_entity);
+  // pool reuse entities instances
+  t.is(entity, empty_entity);
+  t.not(prev_ref, empty_entity.ref);
 
-  t.is(world.components[Component1.id]?.refs[0]!.entity, entity);
+  t.is(world.components[Component1.id]?.refs[0]!, entity);
   t.is(world.components[Component1.id]?.refs.length, 1);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0]!.entity, entity);
+  t.is(world.components[Component9.id]?.refs[0]!, entity);
   t.is(world.components[Component9.id]?.refs.length, 1);
   t.is(world.components[Component9.id]?.size, 1);
 
@@ -145,10 +149,9 @@ test("[EntityPool.reuse()]", (t) => {
     create(c1 ?? component1, c9 ?? component9)
   );
 
-  t.not(entity, entity2);
-  t.not(world.components[Component1.id]?.refs[0]!.entity, entity2);
-  t.is(world.components[Component1.id]?.refs[0]!.entity, entity);
-  t.is(world.components[Component1.id]?.refs[1]!.entity, entity2);
+  t.is(entity, entity2);
+  t.is(world.components[Component1.id]?.refs[0]!, entity);
+  t.is(world.components[Component1.id]?.refs[1]!, entity2);
   t.is(world.components[Component1.id]?.size, 2);
   t.is(world.components[Component1.id]?.refs.length, 2);
 
@@ -161,6 +164,8 @@ test("[Pool.get()]", (t) => {
   const world = new World();
   let created = false;
   let updated = false;
+  const reuse_component1 = new Component1();
+  const reuse_component9 = new Component9();
   const pool = new Pool(
     entity_pool,
     (create) => {
@@ -179,11 +184,11 @@ test("[Pool.get()]", (t) => {
 
   const entity = pool.get(world);
 
-  t.is(world.components[Component1.id]?.refs[0]!!.entity, entity);
+  t.is(world.components[Component1.id]?.refs[0]!, entity);
   t.is(world.components[Component1.id]?.refs.length, 1);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0]!!.entity, entity);
+  t.is(world.components[Component9.id]?.refs[0]!, entity);
   t.is(world.components[Component9.id]?.refs.length, 1);
   t.is(world.components[Component9.id]?.size, 1);
 
@@ -192,13 +197,18 @@ test("[Pool.get()]", (t) => {
 
   t.is(entity_pool.entities.length, 0);
 
-  console.log(world.components[Component1.id]);
-  console.log(world.components[Component9.id]);
+  // console.log("Before Delete 1", world.components[Component1.id]);
+  // console.log("Before Delete 9", world.components[Component9.id]);
+
+  // console.log(entity);
+  // console.log(
+  //   DeleteEntity.generate_function(entity.hash, entity?.pool?.hash).toString()
+  // );
 
   world.delete_entity(entity);
 
-  console.log(world.components[Component1.id]);
-  console.log(world.components[Component9.id]);
+  // console.log("After Delete 1", world.components[Component1.id]);
+  // console.log("After Delete 9", world.components[Component9.id]);
 
   t.is(entity_pool.entities.length, 1);
   t.is(entity_pool.entities[0]!, entity);
@@ -206,17 +216,23 @@ test("[Pool.get()]", (t) => {
   const new_entity = pool.get(world);
 
   t.is(entity_pool.entities.length, 0);
-  t.not(new_entity, entity);
+  t.is(new_entity, entity);
   t.is(new_entity.components["_0"]!["_1"]!, entity.components["_0"]!["_1"]!);
   t.is(new_entity.components["_1"]!["_0"]!, entity.components["_1"]!["_0"]!);
 
-  t.is(world.components[Component1.id]?.refs[0]!.entity, undefined);
-  t.is(world.components[Component1.id]?.refs[1]!.entity, new_entity);
-  t.is(world.components[Component1.id]?.refs.length, 2);
+  // console.log(world.components[Component1.id]);
+
+  t.is(world.components[Component1.id]?.refs[0]!, new_entity);
+  t.is(world.components[Component1.id]?.refs[1]!, undefined);
+  t.is(world.components[Component1.id]?.refs.length, 1);
   t.is(world.components[Component1.id]?.size, 1);
 
-  t.is(world.components[Component9.id]?.refs[0]!.entity, undefined);
-  t.is(world.components[Component9.id]?.refs[1]!.entity, new_entity);
-  t.is(world.components[Component9.id]?.refs.length, 2);
+  t.is(world.components[Component9.id]?.refs[0]!, new_entity);
+  t.is(world.components[Component9.id]?.refs[1]!, undefined);
+  t.is(world.components[Component9.id]?.refs.length, 1);
   t.is(world.components[Component9.id]?.size, 1);
 });
+
+// Add spec with register check
+// Add spec when create/reuse function don't set component on entity
+// Add spec with prev entity

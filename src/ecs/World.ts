@@ -130,7 +130,7 @@ interface WorldShape {
 }
 
 export class ComponentsCollection {
-  refs: EntityRef[];
+  refs: Entity[];
   size: number;
 
   constructor() {
@@ -504,7 +504,7 @@ let component_injector = new Function(
 
             const inject = cacher.get_func(components);
             for (let head = 0; head < size; head++) {
-              inject(components_collection[head].entity, fn);
+              inject(components_collection[head], fn);
             }
         }`;
     })
