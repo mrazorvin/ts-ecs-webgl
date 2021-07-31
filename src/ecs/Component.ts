@@ -112,16 +112,20 @@ export function InitComponent() {
     ) as typeof IComponent["get"];
 
     static clear = new Function("world", "entity", `
-      const id = entity.register._${row_id}?._${column_id};
-      const component = entity.components._${row_id}?._${column_id};
-      if (component != null) entity.components._${row_id}._${column_id} = null;
-      if (id != null) {
-        entity.register._${row_id}._${column_id} = null;
-        const collection = world.components[${id}];
-        collection.size -= 1;
-        var temp_entity = collection.refs[collection.size];
-        temp_entity.register._${row_id}._${column_id} = id;
-        collection.refs[id] = temp_entity;
+      // we must have this check, otherwise we might create property that we don't wan't on deletion 
+      const container = entity.components._${row_id};
+      if (container._${column_id} != null) {
+        container._${column_id} = null;
+        const register = entity.register._${row_id};
+        const id = register?._${column_id};
+        if (id != null) {
+          register._${column_id} = null;
+          const collection = world.components[${id}];
+          collection.size -= 1;
+          var temp_entity = collection.refs[collection.size];
+          temp_entity.register._${row_id}._${column_id} = id;
+          collection.refs[id] = temp_entity;
+        }
       }
 
       return entity;
