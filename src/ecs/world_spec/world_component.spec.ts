@@ -1,22 +1,211 @@
-import { default as test } from "ava";
-import { World } from "../World";
-import {
-  TestComponent3,
-  TestComponent1,
-  TestComponent2,
-} from "./world_spec_fixtures";
+import { default as test, ExecutionContext } from "ava";
+import { IComponent } from "../Component";
+import { Entity, World } from "../World";
+import { TestComponent3, TestComponent1, TestComponent2, TestComponent0, TestComponent9 } from "./world_spec_fixtures";
 
-test("[World.entity()]", (t) => {
+// test that TestComponent1 has expected container class, register class, row_id, column id
+
+test("[InitComponent()] Component 1", (t) => {
+  const id = TestComponent0.id;
+  const row_id = TestComponent0.storage_row_id;
+  const column_id = TestComponent0.container_column_id;
+  t.is(id, 0);
+  t.is(row_id, 0);
+  t.is(column_id, 0);
+});
+
+test("[InitComponent()] Component 9", (t) => {
+  const id = TestComponent9.id;
+  const row_id = TestComponent9.storage_row_id;
+  const column_id = TestComponent9.container_column_id;
+  t.is(id, 9);
+  t.is(row_id, 1);
+  t.is(column_id, 0);
+});
+
+const validate_component = <T extends typeof IComponent>(
+  t: ExecutionContext,
+  world: World,
+  entity: Entity,
+  component: IComponent,
+  props: {
+    Constructor: T;
+    size: number;
+    length?: number;
+    rows: number;
+    columns: number;
+    id: number;
+  }
+) => {
+  const { Constructor, size, length, rows, columns, id } = props;
+
+  // getting, un-exist component on entity, must return undefined
+  // and shouldn't cause any side effect (creating new properties in entity)
+  t.is(TestComponent0.get(entity), undefined);
+
+  // collection must changed exactly, one time
+  t.is(world.components[Constructor.id]?.size, size);
+  t.is(world.components[Constructor.id]?.refs.length, length ?? size);
+  t.is(world.components[Constructor.id]?.refs[id], entity);
+
+  const row = `_${Constructor.storage_row_id}`;
+  const column = `_${Constructor.container_column_id}`;
+
+  // entity must have exactly one record about new component
+  t.is(entity.register[row]?.constructor, Constructor.register_class as unknown);
+  t.is(entity.register[row]?.[column], id);
+  t.is(Object.keys(entity.register).length, rows);
+  t.is(Object.keys(entity.register[row]!).length, columns);
+
+  // entity must have exactly one record about it position in collection
+  t.is(entity.components[row]?.constructor, Constructor.container_class as unknown);
+  t.is(entity.components[row]?.[column], component);
+  t.is(Object.keys(entity.components).length, rows);
+  t.is(Object.keys(entity.components[row]!).length, columns);
+
+  t.is(Constructor.get(entity), component);
+};
+
+// test that after attaching all affecting values such as collection.refs, collection.size
+// entity.hash, entity.register, entity.components
+test("[World.entity(), Component.attach(), Component.get()]", (t) => {
   const world = new World();
-  const component = new TestComponent1();
-  const expected_entity = world.entity([component]);
+  const component1 = new TestComponent1();
+  // creating new component's don't magically add new collection to the world
+  t.is(world.components[TestComponent1.id], undefined);
 
-  t.assert(
-    world.components[TestComponent1.id]!.refs.find(
-      (entity) => entity === expected_entity
-    )
-  );
-  t.is(TestComponent1.get(expected_entity), component);
+  const entity = world.entity([component1]);
+  validate_component(t, world, entity, component1, {
+    id: 0,
+    Constructor: TestComponent1,
+    size: 1,
+    rows: 1,
+    columns: 1,
+  });
+
+  component1.attach(world, entity);
+  validate_component(t, world, entity, component1, {
+    id: 0,
+    Constructor: TestComponent1,
+    size: 1,
+    rows: 1,
+    columns: 1,
+  });
+
+  const override_component = new TestComponent1();
+  override_component.attach(world, entity);
+  validate_component(t, world, entity, override_component, {
+    id: 0,
+    Constructor: TestComponent1,
+    size: 1,
+    rows: 1,
+    columns: 1,
+  });
+
+  const shared_component = component1;
+  const entity_with_shared = world.entity([shared_component]);
+  validate_component(t, world, entity_with_shared, shared_component, {
+    id: 1,
+    Constructor: TestComponent1,
+    size: 2,
+    rows: 1,
+    columns: 1,
+  });
+
+  const component2 = new TestComponent2();
+  component2.attach(world, entity);
+  validate_component(t, world, entity, override_component, {
+    id: 0,
+    Constructor: TestComponent1,
+    size: 2,
+    rows: 1,
+    columns: 2,
+  });
+  validate_component(t, world, entity, component2, {
+    id: 0,
+    Constructor: TestComponent2,
+    size: 1,
+    rows: 1,
+    columns: 2,
+  });
+
+  const component9 = new TestComponent9();
+  component9.attach(world, entity);
+  validate_component(t, world, entity, component9, {
+    id: 0,
+    Constructor: TestComponent9,
+    size: 1,
+    rows: 2,
+    columns: 1,
+  });
+});
+
+// clearing entity from component won't delete it, but
+// if entity has single component which was cleared, it won't return
+// to pool, instead it will be cleared by garbage collector when all references ended
+test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
+  const world = new World();
+
+  TestComponent1.clear_collection(world);
+
+  const entities: Entity[] = [];
+  entities.push(world.entity([new TestComponent1()]));
+  entities.push(world.entity([new TestComponent1()]));
+  entities.push(world.entity([new TestComponent1()]));
+  entities.push(world.entity([new TestComponent1()]));
+  entities.push(world.entity([new TestComponent1()]));
+  entities.push(world.entity([new TestComponent1()]));
+
+  validate_component(t, world, entities[0]!, TestComponent1.get(entities[0]!)!, {
+    id: 0,
+    Constructor: TestComponent1,
+    size: entities.length,
+    rows: 1,
+    columns: 1,
+  });
+
+  TestComponent1.clear_collection(world);
+
+  const hashes = entities.map(({ hash }) => hash);
+  entities.forEach((entity, i) => {
+    const [component] = Object.values(Object.values(entity.components)[0]!);
+    const [register] = Object.values(Object.values(entity.register)[0]!);
+
+    t.is(component, null);
+    t.is(register, null);
+    t.is(entity.pool, undefined);
+    t.is(entity.hash, hashes[i]);
+  });
+  t.is(world.components[TestComponent1.id]?.size, 0);
+  t.is(world.components[TestComponent1.id]?.refs.length, entities.length);
+
+  const entity1 = world.entity([new TestComponent2()]);
+  const entity2 = world.entity([new TestComponent2()]);
+  TestComponent1.clear(world, entity1);
+  validate_component(t, world, entity1, TestComponent2.get(entity1)!, {
+    id: 0,
+    Constructor: TestComponent2,
+    size: 2,
+    rows: 1,
+    columns: 1,
+  });
+
+  const pre_position = entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`];
+
+  TestComponent2.clear(world, entity1);
+  t.is(world.components[TestComponent2.id]?.size, 1);
+  t.is(world.components[TestComponent2.id]?.refs.length, 2);
+  t.is(entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], null);
+  t.is(TestComponent2.get(entity1), null);
+
+  TestComponent2.clear(world, entity1);
+  t.is(world.components[TestComponent2.id]?.size, 1);
+  t.is(world.components[TestComponent2.id]?.refs.length, 2);
+  t.is(entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], null);
+  t.is(TestComponent2.get(entity1), null);
+
+  t.is(world.components[TestComponent2.id]!.refs[0]!, entity2);
+  t.is(entity2.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], pre_position);
 });
 
 test("[World.query()]", (t) => {
@@ -36,23 +225,17 @@ test("[World.query()]", (t) => {
     t.is(component, component3);
   });
 
-  world.query(
-    [TestComponent1, TestComponent3],
-    (e, _component1, _component3) => {
-      t.is(entity, e);
-      t.is(_component1, component1);
-      t.is(_component3, component3);
-    }
-  );
+  world.query([TestComponent1, TestComponent3], (e, _component1, _component3) => {
+    t.is(entity, e);
+    t.is(_component1, component1);
+    t.is(_component3, component3);
+  });
 
-  world.query(
-    [TestComponent3, TestComponent1],
-    (e, _component3, _component1) => {
-      t.is(entity, e);
-      t.is(_component1, component1);
-      t.is(_component3, component3);
-    }
-  );
+  world.query([TestComponent3, TestComponent1], (e, _component3, _component1) => {
+    t.is(entity, e);
+    t.is(_component1, component1);
+    t.is(_component3, component3);
+  });
 
   world.query([TestComponent2], () => t.fail());
   world.query([TestComponent1, TestComponent2], () => t.fail());

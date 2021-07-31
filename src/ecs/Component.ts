@@ -10,11 +10,11 @@ const register_class_cache: {
 } = {};
 
 const ID_SEQ_START = -1;
-const CONTAINER_SIZE = 8;
+export const COMPONENT_CONTAINER_SIZE = 8;
 
 let global_id_seq = 0;
 let last_container_row_id = ID_SEQ_START;
-let last_storage_column_id = CONTAINER_SIZE;
+let last_storage_column_id = COMPONENT_CONTAINER_SIZE;
 
 export enum ComponentTypeID {}
 
@@ -41,27 +41,19 @@ export class IComponent {
   static storage_row_id = ID_SEQ_START;
   static container_column_id = ID_SEQ_START;
   static container_class: ComponentsContainer | undefined = undefined;
+  static register_class: ComponentsRegister | undefined = undefined;
 
   constructor(...args: any[]) {}
 
-  static get<T>(
-    this: (new (...args: any[]) => T) & typeof IComponent,
-    entity: Entity
-  ): T | undefined {
+  static get<T>(this: (new (...args: any[]) => T) & typeof IComponent, entity: Entity): T | undefined {
     return undefined;
   }
 
-  static clear<T>(
-    this: (new (...args: any[]) => T) & typeof IComponent,
-    entity: Entity
-  ): boolean {
+  static clear<T>(this: (new (...args: any[]) => T) & typeof IComponent, world: World, entity: Entity): boolean {
     return false;
   }
 
-  static clear_collection<T>(
-    this: (new (...args: any[]) => T) & typeof IComponent,
-    world: World
-  ): boolean {
+  static clear_collection<T>(this: (new (...args: any[]) => T) & typeof IComponent, world: World): boolean {
     return false;
   }
 
@@ -80,7 +72,7 @@ export class IComponent {
 }
 
 export function InitComponent() {
-  if (last_storage_column_id >= CONTAINER_SIZE) {
+  if (last_storage_column_id >= COMPONENT_CONTAINER_SIZE) {
     last_container_row_id += 1;
     last_storage_column_id = 0;
 
@@ -92,13 +84,9 @@ export function InitComponent() {
       [key: string]: number;
     }
 
-    container_class_cache[
-      `_${last_container_row_id}`
-    ] = ComponentsContainer as any;
+    container_class_cache[`_${last_container_row_id}`] = ComponentsContainer as any;
 
-    register_class_cache[
-      `_${last_container_row_id}`
-    ] = ComponentsRegister as any;
+    register_class_cache[`_${last_container_row_id}`] = ComponentsRegister as any;
   } else {
     last_storage_column_id += 1;
   }
@@ -124,14 +112,16 @@ export function InitComponent() {
     ) as typeof IComponent["get"];
 
     static clear = new Function("world", "entity", `
-      const id = entity.register._${column_id}?._${row_id};
-      const component = entity.components._${column_id}?._${row_id};
-      if (component != null) entity.components._${column_id}._${row_id} = null;
+      const id = entity.register._${row_id}?._${column_id};
+      const component = entity.components._${row_id}?._${column_id};
+      if (component != null) entity.components._${row_id}._${column_id} = null;
       if (id != null) {
-        entity.register._${column_id}._${row_id} = null;
+        entity.register._${row_id}._${column_id} = null;
         const collection = world.components[${id}];
         collection.size -= 1;
-        collection[id] = collection[collection.size];
+        var temp_entity = collection.refs[collection.size];
+        temp_entity.register._${row_id}._${column_id} = id;
+        collection.refs[id] = temp_entity;
       }
 
       return entity;
@@ -147,7 +137,7 @@ export function InitComponent() {
         entity.components._${row_id}._${column_id} = null;
         entity.register._${row_id}._${column_id} = null;
       }
-      refs.length = collection.size = 0;
+      collection.size = 0;
 
       return true;
     `) as typeof IComponent["clear_collection"];
@@ -155,22 +145,33 @@ export function InitComponent() {
     static attach = new Function(
       ...["RegisterClass", "ContainerClass", "ComponentsCollection"],
       `return function(world, entity, component) {
+        var container = entity.components._${row_id};
+        if (container === undefined) {
+          container = new ContainerClass();
+          container._${column_id} = component;
+          entity.components._${row_id} = container;
+          entity.hash = entity.hash.add(component.constructor);
+        } else {
+          var value = container._${column_id};
+          container._${column_id} = component;
+          if (value != null) {
+            return entity;
+          } else if (value === undefined) {
+            entity.hash = entity.hash.add(component.constructor);
+          }
+        }
+        
         var collection = world.components[${id}] ?? (
           world.components[${id}] = new ComponentsCollection()
         );
-        
-        entity.hash = entity.hash.add(component.constructor);
-        
+
         var id = (collection.size += 1) - 1;
         collection.refs[id] = entity;
-
-        (entity.components._${row_id} || 
-          (entity.components._${row_id} = new ContainerClass()) 
-        )._${column_id} = component;
 
         (entity.register._${row_id} || 
           (entity.register._${row_id} = new RegisterClass()) 
         )._${column_id} = id;
+
 
         return entity;
       }`

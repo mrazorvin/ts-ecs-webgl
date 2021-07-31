@@ -61,3 +61,14 @@ export class TestComponent8 extends InitComponent() {
 export class TestComponent9 extends InitComponent() {
   type = TestComponent9;
 }
+export const test_components = [
+  TestComponent1,
+  TestComponent2,
+  TestComponent3,
+  TestComponent4,
+  TestComponent5,
+  TestComponent6,
+  TestComponent7,
+  TestComponent8,
+  TestComponent9,
+];
