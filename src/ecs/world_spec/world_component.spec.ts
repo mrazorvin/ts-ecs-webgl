@@ -1,5 +1,6 @@
 import { default as test, ExecutionContext } from "ava";
 import { IComponent } from "../Component";
+import { DeleteEntity } from "../DeleteEntity";
 import { Entity, World } from "../World";
 import { TestComponent3, TestComponent1, TestComponent2, TestComponent0, TestComponent9 } from "./world_spec_fixtures";
 
@@ -22,6 +23,20 @@ test("[InitComponent()] Component 9", (t) => {
   t.is(row_id, 1);
   t.is(column_id, 0);
 });
+
+const validate_deleted_entity = (t: ExecutionContext, entity: Entity) => {
+  t.true(Object.values(entity.components).flatMap((container) => Object.values(container)).length !== 0);
+  t.true(Object.values(entity.register).flatMap((register) => Object.values(register)).length !== 0);
+
+  for (const row_id in entity.components) {
+    for (const column_id in entity.components[row_id]) {
+      const pos_in_collection = entity.register[row_id]![column_id]!;
+      const component = entity.components[row_id]![column_id]!;
+      t.is(pos_in_collection, null);
+      t.is(component, null);
+    }
+  }
+};
 
 const validate_component = <T extends typeof IComponent>(
   t: ExecutionContext,
@@ -275,45 +290,80 @@ test("[World.delete_entity()]", (t) => {
 
   world.entity([new TestComponent1()]);
   world.entity([new TestComponent1()]);
+
   const entity1 = world.entity([new TestComponent2()]);
   const entity2 = world.entity([new TestComponent2()]);
-  const entity3 = world.entity([new TestComponent1(), new TestComponent2()]);
+  const entity3 = world.entity([new TestComponent1(), new TestComponent9()]);
 
-  t.is(world.components[TestComponent1.id]?.size, 3);
-  t.is(world.components[TestComponent1.id]?.refs?.length, 3);
-  t.is(world.components[TestComponent2.id]?.size, 3);
-  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+  validate_component(t, world, entity3, TestComponent9.get(entity3)!, {
+    Constructor: TestComponent9,
+    columns: 1,
+    id: 0,
+    rows: 2,
+    size: 1,
+  });
 
-  // console.log(entity1);
-  // console.log(
-  //   DeleteEntity.generate_function(entity1.hash, undefined).toString()
-  // );
-  // const _delete = DeleteEntity.generate_function(entity1.hash, undefined);
+  validate_component(t, world, entity3, TestComponent1.get(entity3)!, {
+    Constructor: TestComponent1,
+    columns: 1,
+    rows: 2,
+    id: 2,
+    size: 3,
+  });
+
+  const prev_hash = entity1.hash;
+  const prev_ref = entity1.ref;
+  const prev_registers = entity1.register[`_${TestComponent2.storage_row_id}`]![
+    `_${TestComponent2.container_column_id}`
+  ];
 
   world.delete_entity(entity1);
-  t.is(world.components[TestComponent2.id]?.size, 2);
-  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+  validate_deleted_entity(t, entity1);
+  t.is(entity1.hash, prev_hash);
+  t.is(entity1.ref, prev_ref);
+  t.is(entity1.ref.entity, undefined);
+
+  t.is(world.components[TestComponent2.id]?.size, 1);
+  t.is(world.components[TestComponent2.id]?.refs?.length, 2);
+  t.is(world.components[TestComponent2.id]?.refs[0], entity2);
+  t.is(world.components[TestComponent2.id]?.refs[1], entity2);
+  t.is(
+    entity2.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`],
+    prev_registers
+  );
 
   world.delete_entity(entity2);
-  t.is(world.components[TestComponent2.id]?.size, 1);
-  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+  t.is(world.components[TestComponent2.id]?.size, 0);
+  t.is(world.components[TestComponent2.id]?.refs?.length, 2);
+  validate_deleted_entity(t, entity2);
+  t.is(world.components[TestComponent2.id]?.refs[0], entity2);
+  t.is(world.components[TestComponent2.id]?.refs[1], entity2);
 
-  world.query([TestComponent2, TestComponent1], () => null);
-  t.is(world.components[TestComponent2.id]?.size, 1);
-  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+  t.is(DeleteEntity.func_cache.size, 1);
+  t.not(DeleteEntity.func_cache.get(entity2.hash)?.["_"], undefined);
+
+  const new_entity4 = world.entity([new TestComponent2()]);
+  validate_component(t, world, new_entity4, TestComponent2.get(new_entity4)!, {
+    Constructor: TestComponent2,
+    columns: 1,
+    rows: 1,
+    id: 0,
+    size: 1,
+    length: 2,
+  });
 
   world.delete_entity(entity3);
-
-  world.entity([new TestComponent2()]);
-  world.entity([new TestComponent2()]);
-  world.entity([new TestComponent2()]);
-
+  validate_deleted_entity(t, entity3);
   t.is(world.components[TestComponent1.id]?.size, 2);
-  t.is(world.components[TestComponent1.id]?.refs?.length, 3);
-  t.is(world.components[TestComponent2.id]?.size, 3);
-  t.is(world.components[TestComponent2.id]?.refs?.length, 3);
+  t.is(world.components[TestComponent9.id]?.size, 0);
 
-  world.query([TestComponent2, TestComponent1], () => null);
-  t.is(world.components[TestComponent1.id]?.size, 2);
-  t.is(world.components[TestComponent1.id]?.refs?.length, 3);
+  t.is(DeleteEntity.func_cache.size, 2);
+  t.not(DeleteEntity.func_cache.get(entity3.hash)?.["_"], undefined);
+
+  const entity5 = world.entity([]);
+  new TestComponent9().attach(world, entity5);
+  new TestComponent1().attach(world, entity5);
+  world.delete_entity(entity5);
+  validate_deleted_entity(t, entity3);
+  t.is(DeleteEntity.func_cache.get(entity3.hash)?.["_"], DeleteEntity.func_cache.get(entity5.hash)?.["_"]);
 });

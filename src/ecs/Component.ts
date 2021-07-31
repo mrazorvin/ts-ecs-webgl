@@ -112,7 +112,7 @@ export function InitComponent() {
     ) as typeof IComponent["get"];
 
     static clear = new Function("world", "entity", `
-      // we must have this check, otherwise we might create property that we don't wan't on deletion 
+      // we must have this check, otherwise we might create property that we don't want on deletion 
       const container = entity.components._${row_id};
       if (container._${column_id} != null) {
         container._${column_id} = null;
