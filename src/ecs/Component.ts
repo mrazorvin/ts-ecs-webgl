@@ -51,14 +51,14 @@ export class IComponent {
     return undefined;
   }
 
-  static delete<T>(
+  static clear<T>(
     this: (new (...args: any[]) => T) & typeof IComponent,
     entity: Entity
   ): boolean {
     return false;
   }
 
-  static clear<T>(
+  static clear_collection<T>(
     this: (new (...args: any[]) => T) & typeof IComponent,
     world: World
   ): boolean {
@@ -123,7 +123,7 @@ export function InitComponent() {
       `return entity.components._${row_id} && entity.components._${row_id}._${column_id}`
     ) as typeof IComponent["get"];
 
-    static delete = new Function("world", "entity", `
+    static clear = new Function("world", "entity", `
       const id = entity.register._${column_id}?._${row_id};
       const component = entity.components._${column_id}?._${row_id};
       if (component != null) entity.components._${column_id}._${row_id} = null;
@@ -135,10 +135,10 @@ export function InitComponent() {
       }
 
       return entity;
-    `) as typeof IComponent["delete"];
+    `) as typeof IComponent["clear"];
 
     // if entity has single component, return entity to pool and   
-    static clear = new Function("world", `
+    static clear_collection = new Function("world", `
       const collection = world.components[${id}];
       if (collection === undefined) return false;
       const refs = collection.refs;
@@ -150,7 +150,7 @@ export function InitComponent() {
       refs.length = collection.size = 0;
 
       return true;
-    `) as typeof IComponent["clear"];
+    `) as typeof IComponent["clear_collection"];
 
     static attach = new Function(
       ...["RegisterClass", "ContainerClass", "ComponentsCollection"],

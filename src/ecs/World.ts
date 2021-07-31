@@ -213,7 +213,7 @@ export class World implements WorldShape {
   }
 
   clear_collection(Constructor: typeof IComponent) {
-    Constructor.clear(this);
+    Constructor.clear_collection(this);
   }
 
   attach_component(entity: Entity, component: IComponent) {

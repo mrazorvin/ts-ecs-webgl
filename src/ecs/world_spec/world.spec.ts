@@ -1,59 +1,11 @@
 import { default as test } from "ava";
 import { Resource, Scheduler, SubWorld, System, World, sys } from "../World";
 import { InitComponent } from "../Component";
-
-class TestComponent1 extends InitComponent() {}
-
-test("[World.resource()] cache", (t) => {
-  const world = new World();
-
-  world.resource(new TestResource());
-  t.is(world.resources[0]!["_0"]!.constructor, TestResource);
-  class R1 extends Resource {}
-  class R2 extends Resource {}
-  class R3 extends Resource {}
-  class R4 extends Resource {}
-  class R5 extends Resource {}
-  class R6 extends Resource {}
-  class R7 extends Resource {}
-  class R8 extends Resource {}
-  class R9 extends Resource {}
-  class R10 extends Resource {}
-  class R11 extends Resource {}
-
-  world.resource(new R1());
-  t.is(world.resources[0]!!["_1"]!!.constructor, R1);
-
-  world.resource(new R2());
-  t.is(world.resources[0]!!["_2"]!!.constructor, R2);
-
-  world.resource(new R3());
-  t.is(world.resources[0]!["_3"]!.constructor, R3);
-
-  world.resource(new R4());
-  t.is(world.resources[0]!["_4"]!.constructor, R4);
-
-  world.resource(new R5());
-  t.is(world.resources[0]!["_5"]!.constructor, R5);
-
-  world.resource(new R6());
-  t.is(world.resources[0]!["_6"]!.constructor, R6);
-
-  world.resource(new R7());
-  t.is(world.resources[0]!["_7"]!.constructor, R7);
-
-  world.resource(new R8());
-  t.is(world.resources[0]!["_8"]!.constructor, R8);
-
-  // world.resource(new R9());
-  // t.is(world.resources._0._9.constructor, R9);
-
-  // world.resource(new R10());
-  // t.is(world.resources._0._10.constructor, R10);
-
-  // world.resource(new R11());
-  // t.is(world.resources._1._0.constructor, R11);
-});
+import {
+  TestComponent1,
+  TestComponent2,
+  TestComponent3,
+} from "./world_spec_fixtures";
 
 test("[World.entity()]", (t) => {
   const world = new World();
@@ -67,9 +19,6 @@ test("[World.entity()]", (t) => {
   );
   t.is(TestComponent1.get(expected_entity), component);
 });
-
-class TestComponent2 extends InitComponent() {}
-class TestComponent3 extends InitComponent() {}
 
 test("[World.query()]", (t) => {
   t.plan(10);
