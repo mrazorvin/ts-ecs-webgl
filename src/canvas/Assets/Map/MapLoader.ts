@@ -73,29 +73,23 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
       });
 
       // TOOD: prettu ugle that we need to use transform in such way
-      const entity = world.origin_world.entity([
+      const entity = world.entity([
         new Sprite(SPRITE_SHADER, tile_mesh, bg_texture),
         transform,
-        new Static(
-          meta.rect[0]! / tiles_properties.grid_width,
-          meta.rect[1]! / tiles_properties.grid_height
-        ),
+        new Static(meta.rect[0]! / tiles_properties.grid_width, meta.rect[1]! / tiles_properties.grid_height),
       ]);
 
       const shape = sscd.attach(
         entity.ref,
         new SSCDRectangle(
-          new SSCDVector(
-            transform.position![0]! + transform.width / 2,
-            transform.position![1]! + transform.width / 2
-          ),
+          new SSCDVector(transform.position![0]! + transform.width / 2, transform.position![1]! + transform.width / 2),
           new SSCDVector(transform.width, transform.width)
         )
       );
 
       // attach component is slow, add a method that will create attach function
       // or something similar for such bulk operation
-      world.origin_world.attach_component(entity, shape);
+      world.attach_component(entity, shape);
     }
   }
 });

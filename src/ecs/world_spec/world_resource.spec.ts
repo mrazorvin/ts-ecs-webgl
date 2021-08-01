@@ -1,5 +1,5 @@
 import { default as test } from "ava";
-import { World, Resource, Scheduler, SubWorld, System, sys } from "../World";
+import { World, Resource, Scheduler, System, sys } from "../World";
 import {
   TestResource0,
   TestResource1,
@@ -49,7 +49,7 @@ test("[World.resource()] cache", (t) => {
 
 class TestSystem extends System {
   dependencies = [];
-  exec(world: SubWorld) {
+  exec() {
     this.fn();
   }
   constructor(public fn: () => void) {
@@ -60,9 +60,7 @@ class TestSystem extends System {
 test("[World.system()]", async (t) => {
   let iterations = 0;
   const world = new World();
-  const system = new TestSystem(() =>
-    iterations++ < 10 ? t.true(true) : null
-  );
+  const system = new TestSystem(() => (iterations++ < 10 ? t.true(true) : null));
   const scheduler = new Scheduler(world);
 
   await new Promise((resolve) => {
@@ -182,30 +180,6 @@ test("[World -> SubWorld.system]", async (t) => {
       )
     );
 
-    scheduler.start();
-  });
-});
-
-test("[World -> SubWorld.finish] finishing parent SubWorld stop system propagation", async (t) => {
-  t.timeout(100);
-  t.plan(0);
-
-  const world = new World();
-  const scheduler = new Scheduler(world);
-
-  await new Promise((resolve) => {
-    world.system_once(
-      sys([], (s_parent_world) =>
-        s_parent_world.system(
-          sys([], (s_world) => {
-            s_parent_world.finish();
-            s_world.system_once(sys([], () => t.fail()));
-          })
-        )
-      )
-    );
-
-    setTimeout(resolve, 50);
     scheduler.start();
   });
 });

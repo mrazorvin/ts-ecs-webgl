@@ -1,10 +1,7 @@
 import { glMatrix, vec2 } from "gl-matrix";
 import { EntityRef, LoopInfo, RafScheduler, sys } from "@mr/ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
-import {
-  SpriteShader,
-  SPRITE_SHADER,
-} from "./Assets/View/Sprite/Sprite.shader";
+import { SpriteShader, SPRITE_SHADER } from "./Assets/View/Sprite/Sprite.shader";
 import { WebGL } from "./Render/WebGL";
 import { Texture } from "./Render/Texture";
 import { Sprite } from "./Sprite";
@@ -16,22 +13,14 @@ import { Screen } from "./Screen";
 // @ts-ignore
 import * as ogre_sprite from "url:./Assets/Monsters/Ogre/Ogre.png";
 import * as atlas from "./Assets/Monsters/Ogre/Atlas.json";
-import {
-  PostPassShader,
-  POST_PASS_SHADER,
-} from "./Assets/View/PostPass/PostPass.shader";
+import { PostPassShader, POST_PASS_SHADER } from "./Assets/View/PostPass/PostPass.shader";
 import { PostPass, POST_PASS_CONTEXT } from "./Assets/View/PostPass/PostPass";
 import { Input } from "./Input";
 import { Creature } from "./Creature";
 import { Static } from "./Static";
 import { camera, Camera, camera_entity } from "./Camera";
 import { Modification } from "./Modification";
-import {
-  MapLoader,
-  map_mesh,
-  map_shader,
-  map_texture,
-} from "./Assets/Map/MapLoader";
+import { MapLoader, map_mesh, map_shader, map_texture } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
 import { world_transform_component } from "./WorldView";
 import { CollisionWorld } from "./CollisionWorld";
@@ -65,19 +54,12 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   // in development mode on the end of systems, we will iterate over all contracts and check of they still valid
   // in production mode contracts will be no-op
 
-  world_transform_component.scale = new Float32Array([
-    1 / width_ratio,
-    -1 / ROWS,
-  ]);
+  world_transform_component.scale = new Float32Array([1 / width_ratio, -1 / ROWS]);
   screen.height = height;
   screen.width = width;
   ctx.create_context(BACKGROUND_CONTEXT, { width, height }, Context.create);
   ctx.create_context(MONSTER_CONTEXT, { width, height }, Context.create);
-  ctx.create_context(
-    POST_PASS_CONTEXT,
-    { width, height, shader: POST_PASS_SHADER },
-    PostPass.create
-  );
+  ctx.create_context(POST_PASS_CONTEXT, { width, height, shader: POST_PASS_SHADER }, PostPass.create);
 
   input.container_offset_x = gl.canvas.offsetLeft;
   input.container_offset_y = gl.canvas.offsetTop;
@@ -154,35 +136,29 @@ let current_frame = 0;
 
 main_world.system(
   sys([Input, Camera], (sub_world, input, camera) => {
-    sub_world.query(
-      [Transform, Modification, Creature],
-      (_, transform, modification) => {
-        if (input.click_x && input.click_y) {
-          // part of contract even if we don't move camera, we still need to call function at least once
-          camera.set_position(
-            input.click_x - camera.transform.width / 2,
-            input.click_y - camera.transform.height / 2
-          );
+    sub_world.query([Transform, Modification, Creature], (_, transform, modification) => {
+      if (input.click_x && input.click_y) {
+        // part of contract even if we don't move camera, we still need to call function at least once
+        camera.set_position(input.click_x - camera.transform.width / 2, input.click_y - camera.transform.height / 2);
 
-          // part of contract camera position synchronization
-          if (camera.transform.position) {
-            input.camera_x = -camera.transform.position[0];
-            input.camera_y = -camera.transform.position[1];
-          }
-
-          input.click_x = 0;
-          input.click_y = 0;
+        // part of contract camera position synchronization
+        if (camera.transform.position) {
+          input.camera_x = -camera.transform.position[0];
+          input.camera_y = -camera.transform.position[1];
         }
 
-        // make a static method from Modification class
-        const target_x = input.current_x - transform.width / 2;
-        const target_y = input.current_y - transform.height / 2;
-        const direction_x = transform.position[0] - target_x;
-        const direction_y = transform.position[1] - target_y;
-        modification.movement_target[0] = direction_x;
-        modification.movement_target[1] = direction_y;
+        input.click_x = 0;
+        input.click_y = 0;
       }
-    );
+
+      // make a static method from Modification class
+      const target_x = input.current_x - transform.width / 2;
+      const target_y = input.current_y - transform.height / 2;
+      const direction_x = transform.position[0] - target_x;
+      const direction_y = transform.position[1] - target_y;
+      modification.movement_target[0] = direction_x;
+      modification.movement_target[1] = direction_y;
+    });
   })
 );
 
@@ -205,14 +181,8 @@ main_world.system(
     // }
     sscd.world.test_collision<SSCDShape<EntityRef>>(
       new SSCDRectangle(
-        new SSCDVector(
-          -Math.min(camera.transform.position![0], 0),
-          -Math.min(camera.transform.position![1], 0)
-        ),
-        new SSCDVector(
-          camera.transform.width + 64,
-          camera.transform.height + 64
-        )
+        new SSCDVector(-Math.min(camera.transform.position![0], 0), -Math.min(camera.transform.position![1], 0)),
+        new SSCDVector(camera.transform.width + 64, camera.transform.height + 64)
       ),
       undefined,
       (shape) => {
@@ -272,41 +242,34 @@ main_world.system(
 
 main_world.system(
   sys([], (sub_world) => {
-    sub_world.query(
-      [Transform, Modification, Creature],
-      (_, transform, modification) => {
-        // those code some how connected to animation chain + movement behavior
-        // think a better way to organize it
-        if (
-          !(
-            modification.movement_target[0] > -0.5 &&
-            modification.movement_target[0] < 0.5 &&
-            modification.movement_target[1] > -0.5 &&
-            modification.movement_target[1] < 0.5
-          )
-        ) {
-          // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
-          const pos = new Float32Array(2);
-          vec2.normalize(pos, modification.movement_target as [number, number]);
-          const direction = pos[0];
-          transform.position = vec2.subtract(
-            pos,
-            transform.position,
-            pos
-          ) as Float32Array;
-          transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
-          if (selected_animation === "idle") {
-            selected_animation = "run";
-            sec = 0;
-          }
-        } else {
-          if (selected_animation === "run" && current_frame === 4) {
-            selected_animation = "idle";
-            sec = 0;
-          }
+    sub_world.query([Transform, Modification, Creature], (_, transform, modification) => {
+      // those code some how connected to animation chain + movement behavior
+      // think a better way to organize it
+      if (
+        !(
+          modification.movement_target[0] > -0.5 &&
+          modification.movement_target[0] < 0.5 &&
+          modification.movement_target[1] > -0.5 &&
+          modification.movement_target[1] < 0.5
+        )
+      ) {
+        // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
+        const pos = new Float32Array(2);
+        vec2.normalize(pos, modification.movement_target as [number, number]);
+        const direction = pos[0];
+        transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
+        transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
+        if (selected_animation === "idle") {
+          selected_animation = "run";
+          sec = 0;
+        }
+      } else {
+        if (selected_animation === "run" && current_frame === 4) {
+          selected_animation = "idle";
+          sec = 0;
         }
       }
-    );
+    });
   })
 );
 

@@ -225,66 +225,15 @@ export class World implements WorldShape {
   }
 }
 
-// TODO: inject world directly into SubWorld, and allow us to call his methods
-export class SubWorld implements WorldShape {
-  origin_world: World;
-  private world: WorldShape;
-  private finished: boolean;
-
-  constructor(world: WorldShape, origin_world: World) {
-    this.finished = false;
-    this.world = world;
-    this.origin_world = origin_world;
-  }
-
-  system(system: System) {
-    if (this.finished === true) return;
-    if (system.world === undefined) system.world = this;
-
-    this.world.system(system);
-  }
-
-  system_once(system: System) {
-    if (this.finished === true) return;
-    if (system.world === undefined) {
-      system.world = this;
-    }
-
-    this.world.system_once(system);
-  }
-
-  query<T extends Array<typeof IComponent>>(
-    components: [...T],
-    reduce: (
-      entity: Entity<
-        {
-          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-            ? A
-            : IComponent;
-        }
-      >,
-      ...args: {
-        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-          ? A
-          : IComponent;
-      }
-    ) => void
-  ) {
-    return this.world.query(components, reduce);
-  }
-
-  finish() {
-    this.finished = true;
-  }
-}
-
 export abstract class System<R extends Resource[] = Resource[]> {
   abstract dependencies: {
     [K in keyof R]: (new (...args: any[]) => R[K]) & typeof Resource;
   };
-  abstract exec(world: SubWorld, ...resources: R): void;
+  abstract exec(world: World, ...resources: R): void;
   world: WorldShape | undefined;
 }
+
+let QUERIES: { [key: string]: any } = {};
 
 export abstract class BaseScheduler {
   constructor(public world: World) {}
@@ -385,9 +334,7 @@ const resource_injector_variables = Array(9)
   .map((_, i) => `_${i}`);
 
 // it's possible to generate more optimized code
-const resource_injector = new Function(`return (SubWorld) => {
-  return (world, system) => {
-    const sub_world = new SubWorld(system.world ?? world, world);
+const resource_injector = new Function("world", "system", `
     switch (system.dependencies.length) {
       ${resource_injector_variables
         .map((_, i) => {
@@ -402,7 +349,7 @@ const resource_injector = new Function(`return (SubWorld) => {
              )
              .join("\n")}
 
-            system.exec(${["sub_world"]
+            system.exec(${["world"]
               .concat(resource_injector_variables.slice(0, i))
               .join(",")});
             return true;
@@ -413,8 +360,7 @@ const resource_injector = new Function(`return (SubWorld) => {
         throw new Error("Can't inject more than 9 resource");
       }
     }
-  }
-}`)()(SubWorld);
+`);
 
 function inject_resources_and_sub_world(world: World, system: System) {
   return resource_injector(world, system);
@@ -562,7 +508,7 @@ export class DynamicSystem extends System {
 export function sys<T extends Array<new (...args: any[]) => Resource>>(
   args: [...T],
   fn: (
-    world: SubWorld,
+    world: World,
     ...args: {
       [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : void;
     }
