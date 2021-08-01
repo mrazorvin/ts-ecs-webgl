@@ -118,15 +118,8 @@ export class ComponentsCollection {
 }
 
 export class World {
-  // IMPORTANT: Don't add more than 12 properties otherwise, V8 will use dictionary mode fot this object
-  // IMPORTANT: Try to keep as less as possible methods in world, and it namespace
-  //            because prototype chain also subject for dictionary mode optimization
-  //            for example: generate functions for adding entities and components
-  //                         add_entity1(world, ...), add_entity2(world, ...)
-  //                         add_component1(world, entity, ...), add_component2(world, entity, ...)
-  //            i.e it's mean that world should left only method that needed for hierarchy calls
-  //                system, system_once ...
-  components: Map<ComponentTypeID, ComponentsCollection> = new Map();
+  components: Map<ComponentTypeID, ComponentsCollection>;
+  collection_cache: Map<string, { [key: string]: ComponentsCollection}>; 
   resources: Array<{ [key: string]: Resource }>;
   systems: System[];
   systems_once: System[];
@@ -134,6 +127,7 @@ export class World {
 
   constructor() {
     this.components = new Map();
+    this.collection_cache = new Map();
     this.resources = [];
     this.systems = [];
     this.systems_once = [];
@@ -167,16 +161,26 @@ export class World {
     return entity;
   }
 
-  clear_collection(Constructor: typeof IComponent) {
-    Constructor.clear_collection(this);
-  }
-
-  attach_component(entity: Entity, component: IComponent) {
-    component.attach(this, entity);
-  }
-
   delete_entity(entity: Entity) {
     DeleteEntity.delete(this, entity);
+  }
+
+  get_collections(hash: string, components: Array<typeof IComponent>) {
+    let collections = this.collection_cache.get(hash);
+    if (collections === undefined) {
+      collections = {};
+      for (const component of components) {
+        let collection = this.components.get(component.id);
+        if (collection === undefined) {
+          collection = new ComponentsCollection();
+          this.components.set(component.id, collection)
+        } 
+        collections[`_${component.id}`] = collection;
+      }
+      this.collection_cache.set(hash, collections);
+    } 
+
+    return collections;
   }
 }
 
@@ -348,107 +352,55 @@ class Cacher {
   static get_func(components: Array<typeof IComponent>) {
     let id = "";
     for (const component of components) {
-      if (component.id === undefined) return noop;
       id += `_${component.id}`;
     }
     let fn = this.storage.get(id);
     if (fn === undefined) {
-      fn = new Function(
-        "entity",
-        "fn",
-        `
-        ${[...new Set(components.map((v) => v.storage_row_id))]
-          .map(
-            (id) => `
-            const __${id} = entity.components._${id}
-            ${components
-              .filter((v) => v.storage_row_id === id)
-              .map(
-                (v) =>
-                  `const _${v.id} = __${v.storage_row_id}?._${v.container_column_id};
-                  if (_${v.id} === undefined) return;`
-              )
-              .join("\n")}
-            `
-          )
-          .join(";")}
-       
-          
-          fn(${["entity"]
-            .concat(components.map(({ id }) => `_${id}`))
-            .join(",")});
-        `
-      );
+      const body = `return (world, fn) => {
+        const collections = world.get_collections("${id}", components);
+        let size = Infinity;
+        let components_collection;
+        ${components.map(({ id }) => `
+          if (collections._${id}.size < size) {
+            size = collections._${id}.size;
+            components_collection = collections._${id}.refs;
+          }
+        `).join("\n")}; 
+      
 
-      this.storage.set(id, fn);
+        for (let i = 0; i < size; i++) {
+          const entity = components_collection[i];
+          const e_components = entity.components;
+          ${[...new Set(components.map((v) => v.storage_row_id))]
+            .map(
+              (id) => `
+              const __${id} = e_components._${id}
+              ${components
+                .filter((v) => v.storage_row_id === id)
+                .map(
+                  (v) =>
+                    `const _${v.id} = __${v.storage_row_id}?._${v.container_column_id};
+                    if (_${v.id} === undefined || _${v.id} === null) continue;`
+                )
+                .join("\n")}
+              `
+            )
+            .join(";")}
+        
+            fn(${["entity"]
+              .concat(components.map(({ id }) => `_${id}`))
+              .join(",")});
+        }
+      }`;
+      fn = new Function("components", body)(components);
+
+
+      this.storage.set(id, fn!);
     }
 
-    return fn;
+    return fn!;
   }
 }
-
-// TOOD: refactor names
-// TOOD: we need more test for this function
-
-// in case of less than 9 we could fn call + cache object
-let component_injector = new Function(
-  "cacher",
-  `
-  ${resource_injector_variables
-    .map((_, i) => {
-      return `
-        function inject${i}(world, fn, components) {
-          ${resource_injector_variables
-            .slice(0, i)
-            .map((v, i) => {
-              return `
-                 var _t${v} = world.components.get(components[${i}].id);
-                 var _${v} = _t${v}?.refs;
-              `;
-            })
-            .join("\n")}
-          var size = Infinity;
-          var components_collection = ${
-            i > 0 ? `_${resource_injector_variables[0]}` : `undefined`
-          };
-          ${resource_injector_variables
-            .slice(0, i)
-            .map((v) => {
-              return `
-                if (_t${v}?.size < size) {
-                  components_collection = _${v};
-                  size = _t${v}.size;
-                }`;
-            })
-            .join("\n")}
-
-            if (!components_collection) return;
-
-            const inject = cacher.get_func(components);
-            for (let head = 0; head < size; head++) {
-              inject(components_collection[head], fn);
-            }
-        }`;
-    })
-    .join("\n")}
-
-  return (world, fn, components) => {
-    switch (components.length) {
-      ${resource_injector_variables
-        .map((_, i) => {
-          return `
-            case ${i}: {
-              return inject${i}(world, fn, components);
-            }`;
-        })
-        .join("\n")}
-      default: {
-        "[Injector -> FastID] more than 9 dependencies don't supported";
-      }
-    }
-  }
-  `
-)(Cacher);
 
 // TODO: think about logging / statistic in development mode
 //       for actions like add / remove resource, entity
@@ -464,7 +416,10 @@ function inject_entity_and_component(
   components: Array<typeof IComponent>,
   fn: (entity: Entity, ...components: IComponent[]) => void
 ) {
-  return component_injector(world, fn, components);
+  const inject = Cacher.get_func(components)!;
+
+
+  return inject(world, fn);
 }
 
 export class DynamicSystem extends System {

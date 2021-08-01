@@ -77,7 +77,7 @@ export class DeleteEntity {
       ${components
         .map(
           (component) => `
-            if (reg_${component.id} != null) {
+            if (reg_${component.id} !== undefined && reg_${component.id} !== null) {
               coll_${component.id}.size -= 1
               const temp_entity = coll_${component.id}.refs[coll_${component.id}.size];
               temp_entity.register._${component.storage_row_id}._${component.container_column_id} = coll_${component.id}.size === 0 || coll_${component.id}.size === reg_${component.id} ?  null : reg_${component.id};

@@ -293,28 +293,38 @@ test("[World.query()] multiple entities", (t) => {
   t.plan(12);
   const world = new World();
 
-  world.query([TestComponent1], () => t.fail());
-
   world.entity([new TestComponent1(), new TestComponent3()]);
   world.entity([new TestComponent1(), new TestComponent3()]);
 
-  world.query([TestComponent3], (_, component) => {
-    t.true(component instanceof TestComponent3);
-  });
+  // prettier-ignore
+  world.query($("q7", (c) => class {
+    query = c([TestComponent3], (e, component) => {
+      t.true(component instanceof TestComponent3);
+    });
+  }).prep());
 
-  world.query([TestComponent1], (_, component) => {
-    t.true(component instanceof TestComponent1);
-  });
+  // prettier-ignore
+  world.query($("q8", (c) => class {
+    query = c([TestComponent1], (e, component) => {
+      t.true(component instanceof TestComponent1);
+    });
+  }).prep());
 
-  world.query([TestComponent3, TestComponent1], (_, component2, component1) => {
-    t.true(component1 instanceof TestComponent1);
-    t.true(component2 instanceof TestComponent3);
-  });
+  // prettier-ignore
+  world.query($("q9", (c) => class {
+    query = c([TestComponent1, TestComponent3], (e, component1, component2) => {
+      t.true(component1 instanceof TestComponent1);
+      t.true(component2 instanceof TestComponent3);
+    });
+  }).prep());
 
-  world.query([TestComponent1, TestComponent3], (_, component1, component2) => {
-    t.true(component1 instanceof TestComponent1);
-    t.true(component2 instanceof TestComponent3);
-  });
+  // prettier-ignore
+  world.query($("q10", (c) => class {
+    query = c([TestComponent3, TestComponent1], (e, component2, component1) => {
+      t.true(component1 instanceof TestComponent1);
+      t.true(component2 instanceof TestComponent3);
+    });
+  }).prep());
 });
 
 test("[World.delete_entity()]", (t) => {

@@ -114,11 +114,11 @@ export function InitComponent() {
     static clear = new Function("world", "entity", `
       // we must have this check, otherwise we might create property that we don't want on deletion 
       const container = entity.components._${row_id};
-      if (container._${column_id} != null) {
+      if (container._${column_id} !== undefined && container._${column_id} !== null) {
         container._${column_id} = null;
         const register = entity.register._${row_id};
         const id = register?._${column_id};
-        if (id != null) {
+        if (id !== undefined && id !== null) {
           register._${column_id} = null;
           const collection = world.components.get(${id});
           collection.size -= 1;
@@ -158,13 +158,12 @@ export function InitComponent() {
         } else {
           var value = container._${column_id};
           container._${column_id} = component;
-          if (value != null) {
+          if (value !== undefined && value !== null) {
             return entity;
           } else if (value === undefined) {
             entity.hash = entity.hash.add(component.constructor);
           }
-        }
-        
+        } 
 
         var collection = world.components.get(${id});
         if (collection === undefined) {

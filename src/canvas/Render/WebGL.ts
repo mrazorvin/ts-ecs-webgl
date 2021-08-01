@@ -4,10 +4,7 @@ import { t } from "./WebGLUtils";
 import { Mesh, MeshID } from "./Mesh";
 import { Texture, TextureID } from "./Texture";
 import { Context, ContextID } from "./Context";
-import {
-  ScreenShader,
-  SCREEN_SHADER,
-} from "../Assets/View/Screen/Screen.shader";
+import { ScreenShader, SCREEN_SHADER } from "../Assets/View/Screen/Screen.shader";
 import { ScreenMesh, SCREEN_MESH } from "../Assets/View/Screen/Screen.mesh";
 
 export class WebGL extends Resource {
@@ -31,16 +28,13 @@ export class WebGL extends Resource {
     return new WebGL(gl, canvas);
   }
 
-  constructor(
-    public gl: WebGL2RenderingContext,
-    public canvas: HTMLCanvasElement
-  ) {
+  constructor(public gl: WebGL2RenderingContext, public canvas: HTMLCanvasElement) {
     super();
   }
 
   create_mesh(factory: (gl: WebGL2RenderingContext) => Mesh, id?: MeshID) {
     const mesh = factory(this.gl);
-    if (id != null) mesh.id = id;
+    if (id !== undefined) mesh.id = id;
 
     this.meshes.set(mesh.id, mesh);
 
@@ -55,12 +49,9 @@ export class WebGL extends Resource {
   ) {
     const shader = factory(
       this.gl,
-      t.program(this.gl, [
-        t.shader(this.gl, fragment_shader, "FRAGMENT"),
-        t.shader(this.gl, vertex_shader, "VERTEX"),
-      ])
+      t.program(this.gl, [t.shader(this.gl, fragment_shader, "FRAGMENT"), t.shader(this.gl, vertex_shader, "VERTEX")])
     );
-    if (id != null) shader.id = id;
+    if (id !== undefined) shader.id = id;
 
     this.shaders.set(shader.id, shader);
 
@@ -73,7 +64,7 @@ export class WebGL extends Resource {
     id?: TextureID
   ) {
     const texture = factory(this.gl, image);
-    if (id != null) texture.id = id;
+    if (id !== undefined) texture.id = id;
 
     this.textures.set(texture.id, texture);
 
@@ -82,12 +73,8 @@ export class WebGL extends Resource {
 
   create_context(
     id: ContextID,
-    options: Pick<Context, "width" | "height"> &
-      Partial<Pick<Context, "shader" | "mesh">>,
-    factory: (
-      gl: WebGL2RenderingContext,
-      params: Parameters<typeof Context.create>[1]
-    ) => Context
+    options: Pick<Context, "width" | "height"> & Partial<Pick<Context, "shader" | "mesh">>,
+    factory: (gl: WebGL2RenderingContext, params: Parameters<typeof Context.create>[1]) => Context
   ) {
     const prev = this.context.get(id);
     if (prev) {
@@ -95,12 +82,7 @@ export class WebGL extends Resource {
     }
 
     if (!this.shaders.has(SCREEN_SHADER)) {
-      this.create_shader(
-        ScreenShader.fragment_shader,
-        ScreenShader.vertex_shader,
-        ScreenShader.create,
-        SCREEN_SHADER
-      );
+      this.create_shader(ScreenShader.fragment_shader, ScreenShader.vertex_shader, ScreenShader.create, SCREEN_SHADER);
 
       this.create_mesh(ScreenMesh.create_screen, SCREEN_MESH);
     }
