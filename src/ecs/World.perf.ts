@@ -1,4 +1,4 @@
-import { World } from "./World";
+import { $, World } from "./World";
 import { InitComponent } from "./Component";
 
 const world = new World();
@@ -19,7 +19,7 @@ class TestComponent7 extends InitComponent() {}
 class TestComponent8 extends InitComponent() {}
 
 for (let i = 0; i < 400; i++) {
-  for (let z = 0; z < 100; z++)
+  for (let z = 0; z < 5; z++)
     world.entity([
       new TestComponent(),
       new TestComponent1(),
@@ -36,36 +36,40 @@ for (let i = 0; i < 400; i++) {
     ]);
 }
 
-const query = [
-  TestComponent,
-  TestComponent1,
-  TestComponent2,
-  TestComponent3,
-  TestComponent4,
-  TestComponent5,
-  TestComponent6,
-  TestComponent7,
-];
-
 query: {
   console.time("query");
   let y = [] as any;
-  function x() {
-    world.query(query, (entity, t1, t2, t3, t4) => {
-      y[0] = t1;
-      y[1] = t2;
-      y[2] = t3;
-      y[3] = entity;
-      y[4] = y[4] != null ? y[4] + 1 : 0;
-    });
-  }
 
-  for (let i = 0; i < 10; i++) {
-    x();
+  for (let i = 0; i < 1000; i++) {
+    // prettier-ignore
+    const query =  $("fn") ?? $("fn", (create) => class {
+      constructor(public y: any[]) {}
+      query = create(
+        [
+          TestComponent,
+          TestComponent1,
+          TestComponent2,
+          TestComponent3,
+          TestComponent4,
+          TestComponent5,
+          TestComponent6,
+          TestComponent7,
+        ],
+        (entity, t1, t2, t3, t4) => {
+          this.y[0] = t1;
+          this.y[1] = t2;
+          this.y[2] = t3;
+          this.y[3] = entity;
+          this.y[4] = this.y[4] != null ? this.y[4] + 1 : 0;
+        }
+      )
+    });
+
+    world.query(query.prep(y));
   }
 
   console.log(y.map((x: any) => (x instanceof Object ? {} : x)));
-  // console.log(console.log(y[3].components));
+  console.log(console.log(y[3].components));
   console.timeEnd("query");
 }
 

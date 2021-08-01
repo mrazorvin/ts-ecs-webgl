@@ -1,7 +1,7 @@
 import { default as test, ExecutionContext } from "ava";
 import { IComponent } from "../Component";
 import { DeleteEntity } from "../DeleteEntity";
-import { Entity, World } from "../World";
+import { $, Entity, World } from "../World";
 import { TestComponent3, TestComponent1, TestComponent2, TestComponent0, TestComponent9 } from "./world_spec_fixtures";
 
 // test that TestComponent1 has expected container class, register class, row_id, column id
@@ -239,31 +239,54 @@ test("[World.query()]", (t) => {
   const component3 = new TestComponent3();
   const entity = world.entity([component1, component3]);
 
-  world.query([TestComponent1], (e, component) => {
-    t.is(entity, e);
-    t.is(component, component1);
-  });
+  // prettier-ignore
+  world.query($("q1", (c) => class {
+    query = c([TestComponent1], (e, component) => {
+      t.is(entity, e);
+      t.is(component, component1);
+    });
+  }).prep());
 
-  world.query([TestComponent3], (e, component) => {
-    t.is(entity, e);
-    t.is(component, component3);
-  });
+  // prettier-ignore
+  world.query($("q2", (c) => class {
+    query = c([TestComponent3], (e, component) => {
+      t.is(entity, e);
+      t.is(component, component3);
+    });
+  }).prep());
 
-  world.query([TestComponent1, TestComponent3], (e, _component1, _component3) => {
-    t.is(entity, e);
-    t.is(_component1, component1);
-    t.is(_component3, component3);
-  });
+  // prettier-ignore
+  world.query($("q3", (c) => class {
+    query = c([TestComponent1, TestComponent3], (e, _component1, _component3) => {
+      t.is(entity, e);
+      t.is(_component1, component1);
+      t.is(_component3, component3);
+    });
+  }).prep());
 
-  world.query([TestComponent3, TestComponent1], (e, _component3, _component1) => {
-    t.is(entity, e);
-    t.is(_component1, component1);
-    t.is(_component3, component3);
-  });
+  // prettier-ignore
+  world.query($("q4", (c) => class {
+    query = c([TestComponent3, TestComponent1], (e, _component3, _component1) => {
+      t.is(entity, e);
+      t.is(_component1, component1);
+      t.is(_component3, component3);
+    });
+  }).prep());
 
-  world.query([TestComponent2], () => t.fail());
-  world.query([TestComponent1, TestComponent2], () => t.fail());
-  world.query([TestComponent1, TestComponent2, TestComponent3], () => t.fail());
+  // prettier-ignore
+  world.query($("q5", (c) => class {
+    query = c([TestComponent2], () => t.fail());
+  }).prep());
+
+  // prettier-ignore
+  world.query($("q6", (c) => class {
+    query = c([TestComponent1, TestComponent2], () => t.fail());
+  }).prep());
+
+  // prettier-ignore
+  world.query($("q7", (c) => class {
+    query = c([TestComponent1, TestComponent2, TestComponent3], () => t.fail());
+  }).prep());
 });
 
 test("[World.query()] multiple entities", (t) => {

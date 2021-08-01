@@ -2,6 +2,7 @@ import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HAS
 import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
+import { Query } from "./Query";
 
 export const ID_SEQ_START = -1;
 export const CONTAINER_SIZE = 8; // TODO: set to 32 after normalizing container locations
@@ -106,29 +107,6 @@ export namespace Resource {
   } = {};
 }
 
-// TODO: add_entity, delete_entity, add_component, delete_component, add_resource, delete_resource
-interface WorldShape {
-  system(system: System): void;
-  system_once(system: System): void;
-  query<T extends Array<typeof IComponent>>(
-    components: [...T],
-    reduce: (
-      entity: Entity<
-        {
-          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-            ? A
-            : IComponent;
-        }
-      >,
-      ...args: {
-        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-          ? A
-          : IComponent;
-      }
-    ) => void
-  ): void;
-}
-
 export class ComponentsCollection {
   refs: Entity[];
   size: number;
@@ -139,7 +117,7 @@ export class ComponentsCollection {
   }
 }
 
-export class World implements WorldShape {
+export class World {
   // IMPORTANT: Don't add more than 12 properties otherwise, V8 will use dictionary mode fot this object
   // IMPORTANT: Try to keep as less as possible methods in world, and it namespace
   //            because prototype chain also subject for dictionary mode optimization
@@ -162,31 +140,8 @@ export class World implements WorldShape {
     this.on_tick_end = [];
   }
 
-  /**
-   * it's possible to optimize engine even more:
-   * - when user request single component we could iterate over map without additional requests
-   * - we could link entities with their components and reduce total map access count to 1
-   *    - drawback = multiple component owners,
-   * - similar optimization could be applied to resource with similar drawback
-   */
-  query<T extends Array<typeof IComponent>>(
-    components: [...T],
-    fn: (
-      entity: Entity<
-        {
-          [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-            ? A
-            : IComponent;
-        }
-      >,
-      ...args: {
-        [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-          ? A
-          : IComponent;
-      }
-    ) => void
-  ) {
-    inject_entity_and_component(this, components, fn as any);
+  query(query: Query.Prepared) {
+    inject_entity_and_component(this, query.components, query.cb as any);
   }
 
   system(system: System) {
@@ -225,15 +180,27 @@ export class World implements WorldShape {
   }
 }
 
+export interface Queries {
+  [key: string]: Query 
+}
+
 export abstract class System<R extends Resource[] = Resource[]> {
   abstract dependencies: {
     [K in keyof R]: (new (...args: any[]) => R[K]) & typeof Resource;
   };
+  queries: Queries;
   abstract exec(world: World, ...resources: R): void;
-  world: WorldShape | undefined;
+  constructor(...args: any[]) {
+    this.queries = {};
+  }
 }
 
-let QUERIES: { [key: string]: any } = {};
+let GLOBAL_QUERIES: Queries = {};
+let QUERIES: Queries = GLOBAL_QUERIES;
+
+export const $ = (function $(name: string, query?: (factory: typeof Query.Factory) => typeof Query) {
+  return query === undefined ? QUERIES[name] : (QUERIES[name] = Query.Constructor(query(Query.Factory)));
+} as unknown as Query.$)
 
 export abstract class BaseScheduler {
   constructor(public world: World) {}
@@ -242,14 +209,20 @@ export abstract class BaseScheduler {
 
   tick() {
     for (const system of this.world.systems) {
+      QUERIES = system.queries;
       inject_resources_and_sub_world(this.world, system);
     }
 
     if (this.world.systems_once.length > 0) {
       this.world.systems_once = this.world.systems_once.filter(
-        (system) => !inject_resources_and_sub_world(this.world, system)
+        (system) => {
+          QUERIES = system.queries;
+          return !inject_resources_and_sub_world(this.world, system);
+        }
       );
     }
+
+    QUERIES = GLOBAL_QUERIES;
 
     if (this.world.on_tick_end.length > 0) {
       for (const fn of this.world.on_tick_end) {
@@ -257,6 +230,7 @@ export abstract class BaseScheduler {
       }
       this.world.on_tick_end = [];
     }
+
   }
 }
 

@@ -1,5 +1,5 @@
 import { glMatrix, vec2 } from "gl-matrix";
-import { EntityRef, LoopInfo, RafScheduler, sys } from "@mr/ecs/World";
+import { $, EntityRef, LoopInfo, RafScheduler, sys, World } from "@mr/ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import { SpriteShader, SPRITE_SHADER } from "./Assets/View/Sprite/Sprite.shader";
 import { WebGL } from "./Render/WebGL";
@@ -135,30 +135,36 @@ let sec = 0;
 let current_frame = 0;
 
 main_world.system(
-  sys([Input, Camera], (sub_world, input, camera) => {
-    sub_world.query([Transform, Modification, Creature], (_, transform, modification) => {
-      if (input.click_x && input.click_y) {
-        // part of contract even if we don't move camera, we still need to call function at least once
-        camera.set_position(input.click_x - camera.transform.width / 2, input.click_y - camera.transform.height / 2);
+  sys([Input, Camera], (world, input, camera) => {
+    // prettier-ignore
+    const move_hero = $("mh") || $("mh", (create) => class {
+      constructor(public input: Input, public camera: Camera) {}
+      query = create([Transform, Modification, Creature], (_, transform, modification) => {
+        if (this.input.click_x && this.input.click_y) {
+          // part of contract even if we don't move camera, we still need to call function at least once
+          this.camera.set_position(this.input.click_x - this.camera.transform.width / 2, this.input.click_y - this.camera.transform.height / 2);
 
-        // part of contract camera position synchronization
-        if (camera.transform.position) {
-          input.camera_x = -camera.transform.position[0];
-          input.camera_y = -camera.transform.position[1];
+          // part of contract camera position synchronization
+          if (this.camera.transform.position) {
+            this.input.camera_x = -this.camera.transform.position[0];
+            this.input.camera_y = -this.camera.transform.position[1];
+          }
+
+          this.input.click_x = 0;
+          this.input.click_y = 0;
         }
 
-        input.click_x = 0;
-        input.click_y = 0;
-      }
+        // make a static method from Modification class
+        const target_x = this.input.current_x - transform.width / 2;
+        const target_y = this.input.current_y - transform.height / 2;
+        const direction_x = transform.position[0] - target_x;
+        const direction_y = transform.position[1] - target_y;
+        modification.movement_target[0] = direction_x;
+        modification.movement_target[1] = direction_y;
+      })
+    })
 
-      // make a static method from Modification class
-      const target_x = input.current_x - transform.width / 2;
-      const target_y = input.current_y - transform.height / 2;
-      const direction_x = transform.position[0] - target_x;
-      const direction_y = transform.position[1] - target_y;
-      modification.movement_target[0] = direction_x;
-      modification.movement_target[1] = direction_y;
-    });
+    world.query(move_hero.prep(input, camera));
   })
 );
 
@@ -204,23 +210,28 @@ main_world.system(
 
     const bg_texture = ctx.textures.get(map_texture)!.texture;
 
-    let idx = 0;
-    sub_world.query([Sprite, Transform, Static], (_, __, transform, ___) => {
-      const view = Transform.view(main_world, transform);
-      const data = map_mesh.transformation_data;
+    // prettier-ignore
+    const render_tiles = $("rt") ?? $("rt", (fn) => class {
+      constructor (public idx: number) {}
+      query = fn([Sprite, Transform, Static], (_, __, transform, ___) => {
+        const view = Transform.view(main_world, transform);
+        const data = map_mesh.transformation_data;
 
-      data[idx * 9 + 0] = view[0];
-      data[idx * 9 + 1] = view[1];
-      data[idx * 9 + 2] = view[2];
-      data[idx * 9 + 3] = view[3];
-      data[idx * 9 + 4] = view[4];
-      data[idx * 9 + 5] = view[5];
-      data[idx * 9 + 6] = view[6];
-      data[idx * 9 + 7] = view[7];
-      data[idx * 9 + 8] = view[8];
+        data[this.idx * 9 + 0] = view[0];
+        data[this.idx * 9 + 1] = view[1];
+        data[this.idx * 9 + 2] = view[2];
+        data[this.idx * 9 + 3] = view[3];
+        data[this.idx * 9 + 4] = view[4];
+        data[this.idx * 9 + 5] = view[5];
+        data[this.idx * 9 + 6] = view[6];
+        data[this.idx * 9 + 7] = view[7];
+        data[this.idx * 9 + 8] = view[8];
 
-      idx++;
+        this.idx++;
+      })
     });
+
+    sub_world.query(render_tiles.prep(0));
 
     gl.useProgram(map_shader.program);
     gl.activeTexture(gl.TEXTURE0);
@@ -233,7 +244,7 @@ main_world.system(
       gl.TRIANGLE_STRIP,
       0, // offset
       6, // num vertices per instance
-      idx - 1 // num instances
+      render_tiles.idx - 1 // num instances
     );
     gl.bindVertexArray(null);
     gl.useProgram(null);
@@ -241,40 +252,45 @@ main_world.system(
 );
 
 main_world.system(
-  sys([], (sub_world) => {
-    sub_world.query([Transform, Modification, Creature], (_, transform, modification) => {
-      // those code some how connected to animation chain + movement behavior
-      // think a better way to organize it
-      if (
-        !(
-          modification.movement_target[0] > -0.5 &&
-          modification.movement_target[0] < 0.5 &&
-          modification.movement_target[1] > -0.5 &&
-          modification.movement_target[1] < 0.5
-        )
-      ) {
-        // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
-        const pos = new Float32Array(2);
-        vec2.normalize(pos, modification.movement_target as [number, number]);
-        const direction = pos[0];
-        transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
-        transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
-        if (selected_animation === "idle") {
-          selected_animation = "run";
-          sec = 0;
+  sys([], (world) => {
+    // prettier-ignore
+    const play_animation = $("animation") ?? $("animation", (fn) => class {
+      query = fn([Transform, Modification, Creature], (_, transform, modification) => {
+        // those code some how connected to animation chain + movement behavior
+        // think a better way to organize it
+        if (
+          !(
+            modification.movement_target[0] > -0.5 &&
+            modification.movement_target[0] < 0.5 &&
+            modification.movement_target[1] > -0.5 &&
+            modification.movement_target[1] < 0.5
+          )
+        ) {
+          // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
+          const pos = new Float32Array(2);
+          vec2.normalize(pos, modification.movement_target as [number, number]);
+          const direction = pos[0];
+          transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
+          transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
+          if (selected_animation === "idle") {
+            selected_animation = "run";
+            sec = 0;
+          }
+        } else {
+          if (selected_animation === "run" && current_frame === 4) {
+            selected_animation = "idle";
+            sec = 0;
+          }
         }
-      } else {
-        if (selected_animation === "run" && current_frame === 4) {
-          selected_animation = "idle";
-          sec = 0;
-        }
-      }
+      })
     });
+
+    world.query(play_animation.prep());
   })
 );
 
 main_world.system(
-  sys([WebGL, LoopInfo, Input], (sub_world, ctx, loop, input) => {
+  sys([WebGL, LoopInfo, Input], (world, ctx, loop, input) => {
     const run_frames = animation[selected_animation as "run"];
     const time_per_frame = 1 / run_frames.length;
 
@@ -287,15 +303,23 @@ main_world.system(
     if (m_ctx === undefined) return;
     else t.buffer(ctx.gl, m_ctx);
 
-    sub_world.query([Sprite, Transform, Creature], (_, sprite, transform) => {
-      Sprite.render(
-        ctx,
-        sprite,
-        Transform.view(main_world, transform),
-        frame.rect[0] / atlas.grid_width,
-        frame.rect[1] / atlas.grid_height
-      );
-    });
+    // prettier-ignore
+    const Render = $("Render") ?? $("Render", (fn) => class {
+      constructor(public _atlas: typeof atlas, public ctx: WebGL, public world: World, public _frame: typeof frame) {}
+      query = fn(
+        [Sprite, Transform, Creature],
+        (_, sprite, transform) => {
+          Sprite.render(
+            this.ctx,
+            sprite,
+            Transform.view(this.world, transform),
+            this._frame!.rect[0]! / this._atlas.grid_width,
+            this._frame!.rect[1]! / this._atlas.grid_height
+        );
+      })
+    })
+
+    world.query(Render.prep(atlas, ctx, world, frame));
   })
 );
 
