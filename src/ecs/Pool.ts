@@ -7,9 +7,7 @@ type PoolInstances<T extends Array<typeof IComponent>> = {
 };
 
 type PoolInstancesUndef<T extends Array<typeof IComponent>> = {
-  [K in keyof T]: T[K] extends new (...args: any[]) => infer A
-    ? A | undefined
-    : never;
+  [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A | undefined : never;
 };
 
 export class EntityPool<T extends Array<typeof IComponent>> {
@@ -34,17 +32,12 @@ export class EntityPool<T extends Array<typeof IComponent>> {
   instantiate:
     | ((
         world: World,
-        instantiate: (
-          create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
-        ) => Entity<PoolInstances<T>>
+        instantiate: (create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>) => Entity<PoolInstances<T>>
       ) => Entity<PoolInstances<T>>)
     | undefined;
 
   constructor(components: [...T]) {
-    this.hash = components.reduce(
-      (acc, component) => acc.add(component),
-      HASH_HEAD
-    );
+    this.hash = components.reduce((acc, component) => acc.add(component), HASH_HEAD);
     this.id = EntityPool.global_id++;
     this.entities = [];
     this.components = components;
@@ -63,9 +56,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
 
   init() {
     const vars = this.components.map(({ id }) => `c${id}`);
-    const storages = Array.from(
-      new Set(this.components.map((c) => c.storage_row_id))
-    );
+    const storages = Array.from(new Set(this.components.map((c) => c.storage_row_id)));
 
     this.create = new Function(
       ...["Entity", "pool", "components", "EntityRef"],
@@ -81,10 +72,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
                 var s${storage_id} = components._${storage_id};
                 ${this.components
                   .filter((c) => c.storage_row_id === storage_id)
-                  .map(
-                    (c) =>
-                      `s${storage_id}._${c.container_column_id} = c${c.id};`
-                  )
+                  .map((c) => `s${storage_id}._${c.container_column_id} = c${c.id};`)
                   .join("\n")}
                 `
               )
@@ -102,9 +90,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
               )}].container_class();
               ${this.components
                 .filter((c) => c.storage_row_id === storage_id)
-                .map(
-                  (c) => `s${storage_id}._${c.container_column_id} = c${c.id}`
-                )
+                .map((c) => `s${storage_id}._${c.container_column_id} = c${c.id}`)
                 .join("\n")}
               `
             )
@@ -137,10 +123,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
               var s${storage_id} = entity.components._${storage_id};
               ${this.components
                 .filter((c) => c.storage_row_id === storage_id)
-                .map(
-                  (c) =>
-                    `var c${c.id} = s${storage_id}?._${c.container_column_id};`
-                )
+                .map((c) => `var c${c.id} = s${storage_id}?._${c.container_column_id};`)
                 .join("\n")}
               `
             )
@@ -154,10 +137,11 @@ export class EntityPool<T extends Array<typeof IComponent>> {
           ${this.components
             .map(
               (component, i) => `
-                let collection${i} = world.components[${component.id}];
+                var collection${i} = world.components.get(${component.id}) 
                 if (collection${i} === undefined) {
-                  collection${i} = world.components[${component.id}] = new ComponentsCollection();
-                }
+                  collection${i} = new ComponentsCollection();
+                  world.components.set(${component.id}, collection${i});
+                };
                 register._${component.storage_row_id}._${component.container_column_id} = collection${i}.size;
                 collection${i}.refs[collection${i}.size] = new_entity;
                 collection${i}.size += 1;
@@ -169,11 +153,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
           return new_entity;
         }
       `
-    )(
-      this.create,
-      this.components,
-      ComponentsCollection
-    ) as EntityPool<T>["reuse"];
+    )(this.create, this.components, ComponentsCollection) as EntityPool<T>["reuse"];
 
     this.instantiate = new Function(
       ...["create", "components", "ComponentsCollection"],
@@ -193,10 +173,11 @@ export class EntityPool<T extends Array<typeof IComponent>> {
           ${this.components
             .map(
               (component, i) => `
-                let collection${i} = world.components[${component.id}];
+                var collection${i} = world.components.get(${component.id}) 
                 if (collection${i} === undefined) {
-                  collection${i} = world.components[${component.id}] = new ComponentsCollection();
-                }
+                  collection${i} = new ComponentsCollection();
+                  world.components.set(${component.id}, collection${i});
+                };
                 register._${component.storage_row_id}._${component.container_column_id} = collection${i}.size;
                 collection${i}.refs[collection${i}.size] = new_entity;
                 collection${i}.size += 1;
@@ -207,11 +188,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
           return new_entity;
         }
       `
-    )(
-      this.create,
-      this.components,
-      ComponentsCollection
-    ) as EntityPool<T>["instantiate"];
+    )(this.create, this.components, ComponentsCollection) as EntityPool<T>["instantiate"];
   }
 
   push(entity: Entity) {
@@ -224,9 +201,7 @@ export namespace EntityPool {
 }
 
 export class Pool<T extends Array<typeof IComponent>> {
-  instantiate: (
-    create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
-  ) => Entity<PoolInstances<T>>;
+  instantiate: (create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>) => Entity<PoolInstances<T>>;
 
   reuse: (
     create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
@@ -235,11 +210,7 @@ export class Pool<T extends Array<typeof IComponent>> {
 
   pool: EntityPool<T>;
 
-  constructor(
-    pool: EntityPool<T>,
-    instantiate: Pool<T>["instantiate"],
-    reuse: Pool<T>["reuse"]
-  ) {
+  constructor(pool: EntityPool<T>, instantiate: Pool<T>["instantiate"], reuse: Pool<T>["reuse"]) {
     this.pool = pool;
     this.reuse = reuse;
     this.instantiate = instantiate;

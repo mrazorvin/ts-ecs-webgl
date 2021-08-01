@@ -44,7 +44,7 @@ export class DeleteEntity {
     const body = `return (world, entity) => {
       ${components
         .map((component) => `
-          var coll_${component.id} = world.components[${component.id}];`
+          var coll_${component.id} = world.components.get(${component.id});`
         ).join("")
       }
         

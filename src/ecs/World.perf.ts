@@ -73,7 +73,7 @@ console.time("manual-query");
 let y = [] as any;
 
 function x() {
-  for (const entity of world.components[TestComponent1.id]!.refs) {
+  for (const entity of world.components.get(TestComponent1.id)!.refs) {
     y[0] = TestComponent1.get(entity);
     y[1] = TestComponent2.get(entity);
     y[2] = TestComponent3.get(entity);
@@ -120,7 +120,7 @@ iteration: {
   };
 
   function x() {
-    for (const entity of world.components[TestComponent1.id]!.refs) {
+    for (const entity of world.components.get(TestComponent1.id)!.refs) {
       y[0] = y1.x();
       y[1] = y2.x();
       y[2] = y3.x();

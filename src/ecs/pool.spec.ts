@@ -168,13 +168,13 @@ test("[Pool.get()]", (t) => {
 
   const entity = pool.get(world);
 
-  t.is(world.components[TestComponent1.id]?.refs[0]!, entity);
-  t.is(world.components[TestComponent1.id]?.refs.length, 1);
-  t.is(world.components[TestComponent1.id]?.size, 1);
+  t.is(world.components.get(TestComponent1.id)?.refs[0]!, entity);
+  t.is(world.components.get(TestComponent1.id)?.refs.length, 1);
+  t.is(world.components.get(TestComponent1.id)?.size, 1);
 
-  t.is(world.components[TestComponent9.id]?.refs[0]!, entity);
-  t.is(world.components[TestComponent9.id]?.refs.length, 1);
-  t.is(world.components[TestComponent9.id]?.size, 1);
+  t.is(world.components.get(TestComponent9.id)?.refs[0]!, entity);
+  t.is(world.components.get(TestComponent9.id)?.refs.length, 1);
+  t.is(world.components.get(TestComponent9.id)?.size, 1);
 
   t.is(created, true);
   t.is(updated, false);
@@ -191,13 +191,13 @@ test("[Pool.get()]", (t) => {
   t.is(entity_pool.entities.length, 0);
   t.is(new_entity, entity);
 
-  t.is(world.components[TestComponent1.id]?.refs[0]!, new_entity);
-  t.is(world.components[TestComponent1.id]?.refs[1]!, undefined);
-  t.is(world.components[TestComponent1.id]?.refs.length, 1);
-  t.is(world.components[TestComponent1.id]?.size, 1);
+  t.is(world.components.get(TestComponent1.id)?.refs[0]!, new_entity);
+  t.is(world.components.get(TestComponent1.id)?.refs[1]!, undefined);
+  t.is(world.components.get(TestComponent1.id)?.refs.length, 1);
+  t.is(world.components.get(TestComponent1.id)?.size, 1);
 
-  t.is(world.components[TestComponent9.id]?.refs[0]!, new_entity);
-  t.is(world.components[TestComponent9.id]?.refs[1]!, undefined);
-  t.is(world.components[TestComponent9.id]?.refs.length, 1);
-  t.is(world.components[TestComponent9.id]?.size, 1);
+  t.is(world.components.get(TestComponent9.id)?.refs[0]!, new_entity);
+  t.is(world.components.get(TestComponent9.id)?.refs[1]!, undefined);
+  t.is(world.components.get(TestComponent9.id)?.refs.length, 1);
+  t.is(world.components.get(TestComponent9.id)?.size, 1);
 });

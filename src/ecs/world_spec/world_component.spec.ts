@@ -68,9 +68,9 @@ export const validate_component = <T extends typeof IComponent>(
   t.is(TestComponent0.get(entity), undefined);
 
   // collection must changed exactly, one time
-  t.is(world.components[Constructor.id]?.size, size);
-  t.is(world.components[Constructor.id]?.refs.length, length ?? size);
-  t.is(world.components[Constructor.id]?.refs[id], entity);
+  t.is(world.components.get(Constructor.id)?.size, size);
+  t.is(world.components.get(Constructor.id)?.refs.length, length ?? size);
+  t.is(world.components.get(Constructor.id)?.refs[id], entity);
 
   const row = `_${Constructor.storage_row_id}`;
   const column = `_${Constructor.container_column_id}`;
@@ -96,7 +96,7 @@ test("[World.entity(), Component.attach(), Component.get()]", (t) => {
   const world = new World();
   const component1 = new TestComponent1();
   // creating new component's don't magically add new collection to the world
-  t.is(world.components[TestComponent1.id], undefined);
+  t.is(world.components.get(TestComponent1.id), undefined);
 
   const entity = world.entity([component1]);
   validate_component(t, world, entity, component1, {
@@ -200,8 +200,8 @@ test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
     t.is(entity.pool, undefined);
     t.is(entity.hash, hashes[i]);
   });
-  t.is(world.components[TestComponent1.id]?.size, 0);
-  t.is(world.components[TestComponent1.id]?.refs.length, entities.length);
+  t.is(world.components.get(TestComponent1.id)?.size, 0);
+  t.is(world.components.get(TestComponent1.id)?.refs.length, entities.length);
 
   const entity1 = world.entity([new TestComponent2()]);
   const entity2 = world.entity([new TestComponent2()]);
@@ -217,18 +217,18 @@ test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
   const pre_position = entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`];
 
   TestComponent2.clear(world, entity1);
-  t.is(world.components[TestComponent2.id]?.size, 1);
-  t.is(world.components[TestComponent2.id]?.refs.length, 2);
+  t.is(world.components.get(TestComponent2.id)?.size, 1);
+  t.is(world.components.get(TestComponent2.id)?.refs.length, 2);
   t.is(entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], null);
   t.is(TestComponent2.get(entity1), null);
 
   TestComponent2.clear(world, entity1);
-  t.is(world.components[TestComponent2.id]?.size, 1);
-  t.is(world.components[TestComponent2.id]?.refs.length, 2);
+  t.is(world.components.get(TestComponent2.id)?.size, 1);
+  t.is(world.components.get(TestComponent2.id)?.refs.length, 2);
   t.is(entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], null);
   t.is(TestComponent2.get(entity1), null);
 
-  t.is(world.components[TestComponent2.id]!.refs[0]!, entity2);
+  t.is(world.components.get(TestComponent2.id)!.refs[0]!, entity2);
   t.is(entity2.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], pre_position);
 });
 
@@ -332,21 +332,21 @@ test("[World.delete_entity()]", (t) => {
   t.is(entity1.ref, prev_ref);
   t.is(entity1.ref.entity, undefined);
 
-  t.is(world.components[TestComponent2.id]?.size, 1);
-  t.is(world.components[TestComponent2.id]?.refs?.length, 2);
-  t.is(world.components[TestComponent2.id]?.refs[0], entity2);
-  t.is(world.components[TestComponent2.id]?.refs[1], entity2);
+  t.is(world.components.get(TestComponent2.id)?.size, 1);
+  t.is(world.components.get(TestComponent2.id)?.refs?.length, 2);
+  t.is(world.components.get(TestComponent2.id)?.refs[0], entity2);
+  t.is(world.components.get(TestComponent2.id)?.refs[1], entity2);
   t.is(
     entity2.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`],
     prev_registers
   );
 
   world.delete_entity(entity2);
-  t.is(world.components[TestComponent2.id]?.size, 0);
-  t.is(world.components[TestComponent2.id]?.refs?.length, 2);
+  t.is(world.components.get(TestComponent2.id)?.size, 0);
+  t.is(world.components.get(TestComponent2.id)?.refs?.length, 2);
   validate_deleted_entity(t, entity2);
-  t.is(world.components[TestComponent2.id]?.refs[0], entity2);
-  t.is(world.components[TestComponent2.id]?.refs[1], entity2);
+  t.is(world.components.get(TestComponent2.id)?.refs[0], entity2);
+  t.is(world.components.get(TestComponent2.id)?.refs[1], entity2);
 
   t.is(DeleteEntity.func_cache.size, 1);
   t.not(DeleteEntity.func_cache.get(entity2.hash)?.["_"], undefined);
@@ -363,8 +363,8 @@ test("[World.delete_entity()]", (t) => {
 
   world.delete_entity(entity3);
   validate_deleted_entity(t, entity3);
-  t.is(world.components[TestComponent1.id]?.size, 2);
-  t.is(world.components[TestComponent9.id]?.size, 0);
+  t.is(world.components.get(TestComponent1.id)?.size, 2);
+  t.is(world.components.get(TestComponent9.id)?.size, 0);
 
   t.is(DeleteEntity.func_cache.size, 2);
   t.not(DeleteEntity.func_cache.get(entity3.hash)?.["_"], undefined);

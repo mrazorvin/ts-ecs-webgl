@@ -120,7 +120,7 @@ export function InitComponent() {
         const id = register?._${column_id};
         if (id != null) {
           register._${column_id} = null;
-          const collection = world.components[${id}];
+          const collection = world.components.get(${id});
           collection.size -= 1;
           var temp_entity = collection.refs[collection.size];
           temp_entity.register._${row_id}._${column_id} = id;
@@ -133,7 +133,7 @@ export function InitComponent() {
 
     // if entity has single component, return entity to pool and   
     static clear_collection = new Function("world", `
-      const collection = world.components[${id}];
+      const collection = world.components.get(${id});
       if (collection === undefined) return false;
       const refs = collection.refs;
       for (let i = 0; i < collection.size; i++) {
@@ -165,9 +165,12 @@ export function InitComponent() {
           }
         }
         
-        var collection = world.components[${id}] ?? (
-          world.components[${id}] = new ComponentsCollection()
-        );
+
+        var collection = world.components.get(${id});
+        if (collection === undefined) {
+          collection = new ComponentsCollection();
+          world.components.set(${id}, collection);
+        };
 
         var id = (collection.size += 1) - 1;
         collection.refs[id] = entity;

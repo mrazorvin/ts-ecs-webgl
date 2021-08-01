@@ -1,4 +1,4 @@
-import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD } from "./Component";
+import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD, ComponentTypeID } from "./Component";
 import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
@@ -148,14 +148,14 @@ export class World implements WorldShape {
   //                         add_component1(world, entity, ...), add_component2(world, entity, ...)
   //            i.e it's mean that world should left only method that needed for hierarchy calls
   //                system, system_once ...
-  components: ComponentsCollection[] = [];
+  components: Map<ComponentTypeID, ComponentsCollection> = new Map();
   resources: Array<{ [key: string]: Resource }>;
   systems: System[];
   systems_once: System[];
   on_tick_end: Array<() => void>;
 
   constructor() {
-    this.components = [];
+    this.components = new Map();
     this.resources = [];
     this.systems = [];
     this.systems_once = [];
@@ -469,6 +469,8 @@ class Cacher {
 
 // TOOD: refactor names
 // TOOD: we need more test for this function
+
+// in case of less than 9 we could fn call + cache object
 let component_injector = new Function(
   "cacher",
   `
@@ -480,7 +482,7 @@ let component_injector = new Function(
             .slice(0, i)
             .map((v, i) => {
               return `
-                 var _t${v} = world.components[components[${i}].id];
+                 var _t${v} = world.components.get(components[${i}].id);
                  var _${v} = _t${v}?.refs;
               `;
             })
