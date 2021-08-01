@@ -49,21 +49,18 @@ export class IComponent {
     return undefined;
   }
 
-  static clear<T>(this: (new (...args: any[]) => T) & typeof IComponent, world: World, entity: Entity): boolean {
-    return false;
+  static manager<T>(
+    this: (new (...args: any[]) => T) & typeof IComponent,
+    world: World
+  ): {
+    clear(entity: Entity): boolean;
+    attach(entity: Entity, component: T): Entity;
+  } {
+    return null as any;
   }
 
   static clear_collection<T>(this: (new (...args: any[]) => T) & typeof IComponent, world: World): boolean {
     return false;
-  }
-
-  static attach<T>(
-    this: (new (...args: any[]) => T) & typeof IComponent,
-    world: World,
-    entity: Entity,
-    component: T
-  ): Entity {
-    return entity;
   }
 
   attach(world: World, entity: Entity): Entity {
@@ -111,7 +108,16 @@ export function InitComponent() {
       `return entity.components._${row_id} && entity.components._${row_id}._${column_id}`
     ) as typeof IComponent["get"];
 
-    static clear = new Function("world", "entity", `
+    static manager = new Function("Component", "components", `return (world) => {
+      const manager = world.get_collections("_${id}", components)._${id};
+      if (manager.clear === undefined) {
+        manager.clear = Component.clear;
+        manager.attach = Component.attach;
+      } 
+      return manager;
+    }`)(Component, [Component]) as typeof IComponent["manager"];;
+
+    private static clear = new Function("entity", `
       // we must have this check, otherwise we might create property that we don't want on deletion 
       const container = entity.components._${row_id};
       if (container._${column_id} !== undefined && container._${column_id} !== null) {
@@ -120,16 +126,15 @@ export function InitComponent() {
         const id = register?._${column_id};
         if (id !== undefined && id !== null) {
           register._${column_id} = null;
-          const collection = world.components.get(${id});
-          collection.size -= 1;
-          var temp_entity = collection.refs[collection.size];
+          this.size -= 1;
+          var temp_entity = this.refs[this.size];
           temp_entity.register._${row_id}._${column_id} = id;
-          collection.refs[id] = temp_entity;
+          this.refs[id] = temp_entity;
         }
       }
 
       return entity;
-    `) as typeof IComponent["clear"];
+    `) 
 
     // if entity has single component, return entity to pool and   
     static clear_collection = new Function("world", `
@@ -146,9 +151,9 @@ export function InitComponent() {
       return true;
     `) as typeof IComponent["clear_collection"];
 
-    static attach = new Function(
+    private static attach = new Function(
       ...["RegisterClass", "ContainerClass", "ComponentsCollection"],
-      `return function(world, entity, component) {
+      `return function(entity, component) {
         var container = entity.components._${row_id};
         if (container === undefined) {
           container = new ContainerClass();
@@ -165,28 +170,21 @@ export function InitComponent() {
           }
         } 
 
-        var collection = world.components.get(${id});
-        if (collection === undefined) {
-          collection = new ComponentsCollection();
-          world.components.set(${id}, collection);
-        };
-
-        var id = (collection.size += 1) - 1;
-        collection.refs[id] = entity;
+        var id = (this.size += 1) - 1;
+        this.refs[id] = entity;
 
         (entity.register._${row_id} || 
           (entity.register._${row_id} = new RegisterClass()) 
         )._${column_id} = id;
 
-
         return entity;
       }`
     )(register_class_cache[`_${row_id}`], 
       container_class_cache[`_${row_id}`],
-      ComponentsCollection) as typeof IComponent["attach"];
+      ComponentsCollection)
     
     attach(world: World, entity: Entity): Entity  {
-      return Component.attach(world, entity, this);
+      return Component.manager(world).attach(entity, this);
     }
   }
 

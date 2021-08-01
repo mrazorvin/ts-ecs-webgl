@@ -205,7 +205,7 @@ test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
 
   const entity1 = world.entity([new TestComponent2()]);
   const entity2 = world.entity([new TestComponent2()]);
-  TestComponent1.clear(world, entity1);
+  TestComponent1.manager(world).clear(entity1);
   validate_component(t, world, entity1, TestComponent2.get(entity1)!, {
     id: 0,
     Constructor: TestComponent2,
@@ -216,13 +216,13 @@ test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
 
   const pre_position = entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`];
 
-  TestComponent2.clear(world, entity1);
+  TestComponent2.manager(world).clear(entity1);
   t.is(world.components.get(TestComponent2.id)?.size, 1);
   t.is(world.components.get(TestComponent2.id)?.refs.length, 2);
   t.is(entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], null);
   t.is(TestComponent2.get(entity1), null);
 
-  TestComponent2.clear(world, entity1);
+  TestComponent2.manager(world).clear(entity1);
   t.is(world.components.get(TestComponent2.id)?.size, 1);
   t.is(world.components.get(TestComponent2.id)?.refs.length, 2);
   t.is(entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`], null);
