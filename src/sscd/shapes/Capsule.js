@@ -19,30 +19,15 @@ class SSCDCapsule extends SSCDShape {
     if (standing) {
       size = size.clone();
       size.y -= size.x;
-      objects.push(
-        new SSCDRectangle(new SSCDVector(-size.x * 0.5, -size.y * 0.5), size)
-      );
-      objects.push(
-        new SSCDCircle(new SSCDVector(0, -size.y * 0.5), size.x * 0.5)
-      );
-      objects.push(
-        new SSCDCircle(new SSCDVector(0, size.y * 0.5), size.x * 0.5)
-      );
+      objects.push(new SSCDRectangle(new SSCDVector(-size.x * 0.5, -size.y * 0.5), size));
+      objects.push(new SSCDCircle(new SSCDVector(0, -size.y * 0.5), size.x * 0.5));
+      objects.push(new SSCDCircle(new SSCDVector(0, size.y * 0.5), size.x * 0.5));
     } else {
       size = size.clone();
       size.y -= size.x;
-      objects.push(
-        new SSCDRectangle(
-          new SSCDVector(-size.y * 0.5, -size.x * 0.5),
-          size.flip()
-        )
-      );
-      objects.push(
-        new SSCDCircle(new SSCDVector(-size.y * 0.5, 0), size.x * 0.5)
-      );
-      objects.push(
-        new SSCDCircle(new SSCDVector(size.y * 0.5, 0), size.x * 0.5)
-      );
+      objects.push(new SSCDRectangle(new SSCDVector(-size.y * 0.5, -size.x * 0.5), size.flip()));
+      objects.push(new SSCDCircle(new SSCDVector(-size.y * 0.5, 0), size.x * 0.5));
+      objects.push(new SSCDCircle(new SSCDVector(size.y * 0.5, 0), size.x * 0.5));
     }
 
     // init composite shape

@@ -15,9 +15,7 @@ class SSCDLineStrip extends SSCDShape {
 
     // if not enough points assert
     if (points.length <= 1) {
-      throw new SSCDIllegalActionError(
-        "Not enough vectors for LineStrip (got to have at least two vectors)"
-      );
+      throw new SSCDIllegalActionError("Not enough vectors for LineStrip (got to have at least two vectors)");
     }
 
     // close shape

@@ -62,12 +62,8 @@ SSCDMath.line_intersects = function (p0, p1, p2, p3) {
   s2_y = p3.y - p2.y;
 
   var s, t;
-  s =
-    (-s1_y * (p0.x - p2.x) + s1_x * (p0.y - p2.y)) /
-    (-s2_x * s1_y + s1_x * s2_y);
-  t =
-    (s2_x * (p0.y - p2.y) - s2_y * (p0.x - p2.x)) /
-    (-s2_x * s1_y + s1_x * s2_y);
+  s = (-s1_y * (p0.x - p2.x) + s1_x * (p0.y - p2.y)) / (-s2_x * s1_y + s1_x * s2_y);
+  t = (s2_x * (p0.y - p2.y) - s2_y * (p0.x - p2.x)) / (-s2_x * s1_y + s1_x * s2_y);
 
   if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
     // Collision detected

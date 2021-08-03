@@ -169,7 +169,7 @@ main_world.system(
 );
 
 main_world.system(
-  sys([CollisionWorld, Camera], (_, sscd) => {
+  sys([CollisionWorld, Camera], (world, sscd) => {
     // amazing method for debbug add more such utils
     // if (sec >= 0.98) {
     //   console.log(
@@ -185,6 +185,8 @@ main_world.system(
     //     new SSCDVector(camera.transform.width, camera.transform.height)
     //   );
     // }
+    const manager = Visible.manager(world);
+
     sscd.world.test_collision<SSCDShape<EntityRef>>(
       new SSCDRectangle(
         new SSCDVector(-Math.min(camera.transform.position![0], 0), -Math.min(camera.transform.position![1], 0)),
@@ -194,7 +196,7 @@ main_world.system(
       (shape) => {
         const { entity } = shape.get_data();
         if (entity !== undefined) {
-          main_world.attach_component(entity, visible);
+          manager.attach(entity, visible);
         }
       }
     );
@@ -212,26 +214,25 @@ main_world.system(
 
     // prettier-ignore
     const render_tiles = $("rt") ?? $("rt", (fn) => class {
-      constructor (public idx: number) {}
+      constructor (public idx: number, public data: typeof map_mesh.transformation_data) {}
       query = fn([Sprite, Transform, Static], (_, __, transform, ___) => {
         const view = Transform.view(main_world, transform);
-        const data = map_mesh.transformation_data;
 
-        data[this.idx * 9 + 0] = view[0];
-        data[this.idx * 9 + 1] = view[1];
-        data[this.idx * 9 + 2] = view[2];
-        data[this.idx * 9 + 3] = view[3];
-        data[this.idx * 9 + 4] = view[4];
-        data[this.idx * 9 + 5] = view[5];
-        data[this.idx * 9 + 6] = view[6];
-        data[this.idx * 9 + 7] = view[7];
-        data[this.idx * 9 + 8] = view[8];
+        this.data[this.idx * 9 + 0] = view[0];
+        this.data[this.idx * 9 + 1] = view[1];
+        this.data[this.idx * 9 + 2] = view[2];
+        this.data[this.idx * 9 + 3] = view[3];
+        this.data[this.idx * 9 + 4] = view[4];
+        this.data[this.idx * 9 + 5] = view[5];
+        this.data[this.idx * 9 + 6] = view[6];
+        this.data[this.idx * 9 + 7] = view[7];
+        this.data[this.idx * 9 + 8] = view[8];
 
         this.idx++;
       })
     });
 
-    sub_world.query(render_tiles.prep(0));
+    sub_world.query(render_tiles.prep(0, map_mesh.transformation_data));
 
     gl.useProgram(map_shader.program);
     gl.activeTexture(gl.TEXTURE0);
@@ -346,8 +347,8 @@ main_world.system(
 );
 
 main_world.system(
-  sys([], () => {
-    main_world.clear_collection(Visible);
+  sys([], (world) => {
+    Visible.clear_collection(world);
   })
 );
 

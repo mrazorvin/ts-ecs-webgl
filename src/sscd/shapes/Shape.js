@@ -62,9 +62,7 @@ Object.assign(SSCDShape.prototype, {
   set_collision_tags: function (tags) {
     // can't set tags without world instance
     if (this.__world === null) {
-      throw new SSCDIllegalActionError(
-        "Can't set tags for a shape that is not inside a collision world!"
-      );
+      throw new SSCDIllegalActionError("Can't set tags for a shape that is not inside a collision world!");
     }
 
     // special case - if tags is null, reset tags
@@ -146,10 +144,8 @@ Object.assign(SSCDShape.prototype, {
     // get push vectors
     var push_vector_other, push_vector_self;
     var push_vector = this.get_repel_direction(obj).multiply_scalar_self(force);
-    if (factor_other)
-      push_vector_other = push_vector.multiply_scalar(factor_other);
-    if (factor_self)
-      push_vector_self = push_vector.multiply_scalar(factor_self * -1);
+    if (factor_other) push_vector_other = push_vector.multiply_scalar(factor_other);
+    if (factor_self) push_vector_self = push_vector.multiply_scalar(factor_self * -1);
 
     // for return value
     var ret = SSCDVector.ZERO.clone();
@@ -263,12 +259,7 @@ Object.assign(SSCDShape.prototype, {
 
     // draw the rect
     ctx.beginPath();
-    ctx.rect(
-      box.position.x - camera_pos.x,
-      box.position.y - camera_pos.y,
-      box.size.x,
-      box.size.y
-    );
+    ctx.rect(box.position.x - camera_pos.x, box.position.y - camera_pos.y, box.size.x, box.size.y);
 
     // draw stroke
     ctx.lineWidth = "1";

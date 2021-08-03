@@ -12,7 +12,7 @@ import { SPRITE_SHADER } from "../View/Sprite/Sprite.shader";
 // @ts-expect-error
 import * as ground_sprite from "url:./ground_tiled.png";
 import { camera_entity } from "../../Camera";
-import { CollisionWorld } from "../../CollisionWorld";
+import { CollisionShape, CollisionWorld } from "../../CollisionWorld";
 import { SSCDRectangle, SSCDVector } from "@mr/sscd";
 import { SpriteInstancingMesh } from "../View/SpriteInstancing/SpriteInstancing.mesh";
 import { SpriteInstancingShader } from "../View/SpriteInstancing/SpriteInstancing.shader";
@@ -58,6 +58,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
   const rows_amount = tiled_map.height;
   const columns_amount = tiled_map.width;
   const layer = tiled_map.layers[0]!.data;
+  const shape_manager = CollisionShape.manager(world);
   for (let row = 0; row < rows_amount; row++) {
     for (let column = 0; column < columns_amount; column++) {
       const tile_id = row * columns_amount + column;
@@ -89,7 +90,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
 
       // attach component is slow, add a method that will create attach function
       // or something similar for such bulk operation
-      world.attach_component(entity, shape);
+      shape_manager.attach(entity, shape);
     }
   }
 });

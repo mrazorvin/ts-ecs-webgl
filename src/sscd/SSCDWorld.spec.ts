@@ -8,7 +8,7 @@ test("[SSCDWorld vs SSCD]", (t) => {
   const new_world = new SSCDWorld({ grid_size: 16 });
   new_world.add(new_circle);
 
-  const old_circle = new SSCD_OLD.Circle(new SSCD_OLD.Vector(22, 22), 10);
+  const old_circle = new SSCD_OLD.Circle(new SSCD_OLD.Vector(10, 10), 10);
   const old_world = new SSCD_OLD.World({ grid_size: 16 });
   old_world.add(old_circle);
 

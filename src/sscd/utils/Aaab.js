@@ -16,14 +16,8 @@ Object.assign(SSCDAabb.prototype, {
     // get new bounds
     var min_x = Math.min(this.position.x, other.position.x);
     var min_y = Math.min(this.position.y, other.position.y);
-    var max_x = Math.max(
-      this.position.x + this.size.x,
-      other.position.x + other.size.x
-    );
-    var max_y = Math.max(
-      this.position.y + this.size.y,
-      other.position.y + other.size.y
-    );
+    var max_x = Math.max(this.position.x + this.size.x, other.position.x + other.size.x);
+    var max_y = Math.max(this.position.y + this.size.y, other.position.y + other.size.y);
 
     // set them
     this.position.x = min_x;

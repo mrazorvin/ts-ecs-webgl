@@ -72,18 +72,12 @@ module.exports = {
     }
 
     // rect-rect collision
-    if (
-      a.__collision_type == "rectangle" &&
-      b.__collision_type == "rectangle"
-    ) {
+    if (a.__collision_type == "rectangle" && b.__collision_type == "rectangle") {
       return this._test_collision_rect_rect(b, a);
     }
 
     // line-strip with line-strip collision
-    if (
-      a.__collision_type == "line-strip" &&
-      b.__collision_type == "line-strip"
-    ) {
+    if (a.__collision_type == "line-strip" && b.__collision_type == "line-strip") {
       return this._test_collision_linestrip_linestrip(a, b);
     }
 
@@ -96,16 +90,10 @@ module.exports = {
     }
 
     // rect-linestrip collision
-    if (
-      a.__collision_type == "line-strip" &&
-      b.__collision_type == "rectangle"
-    ) {
+    if (a.__collision_type == "line-strip" && b.__collision_type == "rectangle") {
       return this._test_collision_rect_linestrip(b, a);
     }
-    if (
-      a.__collision_type == "rectangle" &&
-      b.__collision_type == "line-strip"
-    ) {
+    if (a.__collision_type == "rectangle" && b.__collision_type == "line-strip") {
       return this._test_collision_rect_linestrip(a, b);
     }
 
@@ -146,9 +134,7 @@ module.exports = {
 
   // test collision between circle and another circle
   _test_collision_circle_circle: function (a, b) {
-    return (
-      SSCDMath.distance(a.__position, b.__position) <= a.__radius + b.__radius
-    );
+    return SSCDMath.distance(a.__position, b.__position) <= a.__radius + b.__radius;
   },
 
   // test collision between rectangle and vector
@@ -179,26 +165,14 @@ module.exports = {
 
   // test collision between circle and line
   _test_collision_circle_line: function (circle, line) {
-    return (
-      SSCDMath.distance_to_line(
-        circle.__position,
-        line.get_p1(),
-        line.get_p2()
-      ) <= circle.__radius
-    );
+    return SSCDMath.distance_to_line(circle.__position, line.get_p1(), line.get_p2()) <= circle.__radius;
   },
 
   // test collision between circle and line-strip
   _test_collision_circle_linestrip: function (circle, linestrip) {
     var lines = linestrip.get_abs_lines();
     for (var i = 0; i < lines.length; ++i) {
-      if (
-        SSCDMath.distance_to_line(
-          circle.__position,
-          lines[i][0],
-          lines[i][1]
-        ) <= circle.__radius
-      ) {
+      if (SSCDMath.distance_to_line(circle.__position, lines[i][0], lines[i][1]) <= circle.__radius) {
         return true;
       }
     }
@@ -220,12 +194,7 @@ module.exports = {
 
   // check collision line with line
   _test_collision_line_line: function (a, b) {
-    return SSCDMath.line_intersects(
-      a.get_p1(),
-      a.get_p2(),
-      b.get_p1(),
-      b.get_p2()
-    );
+    return SSCDMath.line_intersects(a.get_p1(), a.get_p2(), b.get_p1(), b.get_p2());
   },
 
   // check collision between rectangle and line
@@ -325,14 +294,7 @@ module.exports = {
     var lines2 = strip2.get_abs_lines();
     for (var i = 0; i < lines1.length; ++i) {
       for (var j = 0; j < lines2.length; ++j) {
-        if (
-          SSCDMath.line_intersects(
-            lines1[i][0],
-            lines1[i][1],
-            lines2[j][0],
-            lines2[j][1]
-          )
-        ) {
+        if (SSCDMath.line_intersects(lines1[i][0], lines1[i][1], lines2[j][0], lines2[j][1])) {
           return true;
         }
       }
@@ -350,9 +312,7 @@ module.exports = {
       var other_shapes = other.get_shapes();
       for (var i = 0; i < comp_shapes.length; ++i) {
         for (var j = 0; j < other_shapes.length; ++j) {
-          if (
-            SSCDCollisionManager.test_collision(comp_shapes[i], other_shapes[j])
-          ) {
+          if (SSCDCollisionManager.test_collision(comp_shapes[i], other_shapes[j])) {
             return true;
           }
         }
@@ -377,10 +337,7 @@ module.exports = {
     var circle_pos = circle.__position;
 
     // first check if circle center is inside the rectangle - easy case
-    var collide = SSCDCollisionManager._test_collision_rect_vector(
-      rect,
-      circle_pos
-    );
+    var collide = SSCDCollisionManager._test_collision_rect_vector(rect, circle_pos);
     if (collide) {
       return true;
     }
@@ -389,10 +346,7 @@ module.exports = {
     var rect_center = rect.get_abs_center();
 
     // now check other simple case - collision between rect center and circle
-    var collide = SSCDCollisionManager._test_collision_circle_vector(
-      circle,
-      rect_center
-    );
+    var collide = SSCDCollisionManager._test_collision_circle_vector(circle, rect_center);
     if (collide) {
       return true;
     }
@@ -412,11 +366,7 @@ module.exports = {
 
     // now check intersection between circle and each of the rectangle lines
     for (var i = 0; i < lines.length; ++i) {
-      var dist_to_line = SSCDMath.distance_to_line(
-        circle_pos,
-        lines[i][0],
-        lines[i][1]
-      );
+      var dist_to_line = SSCDMath.distance_to_line(circle_pos, lines[i][0], lines[i][1]);
       if (dist_to_line <= circle.__radius) {
         return true;
       }
@@ -440,12 +390,7 @@ module.exports = {
       top: b.__position.y,
       bottom: b.__position.y + b.__size.y,
     };
-    return !(
-      r2.left > r1.right ||
-      r2.right < r1.left ||
-      r2.top > r1.bottom ||
-      r2.bottom < r1.top
-    );
+    return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
   },
 };
 
@@ -454,11 +399,6 @@ class SSCDUnsupportedShapes extends Error {
   constructor(a, b) {
     super();
     this.name = "Unsupported Shapes";
-    this.message =
-      "Unsupported shapes collision test! '" +
-      a.get_name() +
-      "' <-> '" +
-      b.get_name() +
-      "'.";
+    this.message = "Unsupported shapes collision test! '" + a.get_name() + "' <-> '" + b.get_name() + "'.";
   }
 }

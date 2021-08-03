@@ -28,7 +28,7 @@ Object.assign(SSCDWorld.prototype, {
     params.grid_error = params.grid_error !== undefined ? params.grid_error : 2;
 
     // create grid and set params
-    this.__grid = {};
+    this.__grid = [];
     this.__params = params;
 
     // all the shapes currently in this world
@@ -43,9 +43,7 @@ Object.assign(SSCDWorld.prototype, {
   __create_collision_tag: function (name) {
     // if already exist throw exception
     if (this.__collision_tags[name]) {
-      throw new SSCDIllegalActionError(
-        "Collision tag named '" + name + "' already exist!"
-      );
+      throw new SSCDIllegalActionError("Collision tag named '" + name + "' already exist!");
     }
 
     // set collision tag
@@ -120,12 +118,8 @@ Object.assign(SSCDWorld.prototype, {
     // calc all grid chunks this shape touches
     var min_i = Math.floor(aabb.position.x / this.__params.grid_size);
     var min_j = Math.floor(aabb.position.y / this.__params.grid_size);
-    var max_i = Math.floor(
-      (aabb.position.x + aabb.size.x) / this.__params.grid_size
-    );
-    var max_j = Math.floor(
-      (aabb.position.y + aabb.size.y) / this.__params.grid_size
-    );
+    var max_i = Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size);
+    var max_j = Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size);
 
     // return grid range
     return {
@@ -140,9 +134,7 @@ Object.assign(SSCDWorld.prototype, {
   add: function (obj) {
     // if object already in world throw exception
     if (obj.__world) {
-      throw new SSCDIllegalActionError(
-        "Object to add is already in a collision world!"
-      );
+      throw new SSCDIllegalActionError("Object to add is already in a collision world!");
     }
 
     // get grid range
@@ -152,7 +144,7 @@ Object.assign(SSCDWorld.prototype, {
     for (var i = grids.min_x; i <= grids.max_x; ++i) {
       for (var j = grids.min_y; j <= grids.max_y; ++j) {
         // make sure lists exist
-        this.__grid[i] = this.__grid[i] || {};
+        this.__grid[i] = this.__grid[i] || [];
         this.__grid[i][j] = this.__grid[i][j] || [];
 
         // get current grid chunk
@@ -193,9 +185,7 @@ Object.assign(SSCDWorld.prototype, {
   remove: function (obj) {
     // if object is not in this world throw exception
     if (obj.__world !== this) {
-      throw new SSCDIllegalActionError(
-        "Object to remove is not in this collision world!"
-      );
+      throw new SSCDIllegalActionError("Object to remove is not in this collision world!");
     }
 
     // remove from all the grid chunks
@@ -228,14 +218,10 @@ Object.assign(SSCDWorld.prototype, {
     var curr_aabb = obj.get_aabb();
     if (
       this.__params.grid_error === 0 ||
-      Math.abs(curr_aabb.position.x - obj.__last_insert_aabb.position.x) >
-        this.__params.grid_error ||
-      Math.abs(curr_aabb.position.y - obj.__last_insert_aabb.position.y) >
-        this.__params.grid_error ||
-      Math.abs(curr_aabb.size.x - obj.__last_insert_aabb.size.x) >
-        this.__params.grid_error ||
-      Math.abs(curr_aabb.size.y - obj.__last_insert_aabb.size.y) >
-        this.__params.grid_error
+      Math.abs(curr_aabb.position.x - obj.__last_insert_aabb.position.x) > this.__params.grid_error ||
+      Math.abs(curr_aabb.position.y - obj.__last_insert_aabb.position.y) > this.__params.grid_error ||
+      Math.abs(curr_aabb.size.x - obj.__last_insert_aabb.size.x) > this.__params.grid_error ||
+      Math.abs(curr_aabb.size.y - obj.__last_insert_aabb.size.y) > this.__params.grid_error
     ) {
       this.remove(obj);
       this.add(obj);
@@ -266,21 +252,11 @@ Object.assign(SSCDWorld.prototype, {
 
     // handle vector
     if (obj instanceof SSCDVector) {
-      return this.__test_collision_point(
-        obj,
-        collision_tags,
-        out_list,
-        ret_objs_count
-      );
+      return this.__test_collision_point(obj, collision_tags, out_list, ret_objs_count);
     }
     // handle collision with shape
     if (obj.is_shape) {
-      return this.__test_collision_shape(
-        obj,
-        collision_tags,
-        out_list,
-        ret_objs_count
-      );
+      return this.__test_collision_shape(obj, collision_tags, out_list, ret_objs_count);
     }
   },
 
@@ -293,14 +269,7 @@ Object.assign(SSCDWorld.prototype, {
   // @param collision_tags: optional string or list of strings of tags to match collision with. if undefined will accept all tags
   // @param out_list: optional output list. if provided, will be filled with all objects collided with. note: collision is more efficient if not provided.
   // @return true if collided with anything, false otherwise.
-  test_fov: function (
-    position,
-    distance,
-    direction,
-    fov_angle,
-    collision_tags,
-    out_list
-  ) {
+  test_fov: function (position, distance, direction, fov_angle, collision_tags, out_list) {
     // default collision flags
     collision_tags = this.__get_tags_value(collision_tags);
 
@@ -326,12 +295,7 @@ Object.assign(SSCDWorld.prototype, {
 
   // test collision for given point
   // see test_collision comment for more info
-  __test_collision_point: function (
-    vector,
-    collision_tags_val,
-    out_list,
-    ret_objs_count
-  ) {
+  __test_collision_point: function (vector, collision_tags_val, out_list, ret_objs_count) {
     // get current grid size
     var grid_size = this.__params.grid_size;
 
@@ -506,9 +470,7 @@ Object.assign(SSCDWorld.prototype, {
 
         // render current grid chunk
         if (show_grid) {
-          var position = new SSCDVector(i * grid_size, j * grid_size).sub_self(
-            camera_pos
-          );
+          var position = new SSCDVector(i * grid_size, j * grid_size).sub_self(camera_pos);
           ctx.beginPath();
           ctx.rect(position.x, position.y, grid_size - 1, grid_size - 1);
           ctx.lineWidth = "1";

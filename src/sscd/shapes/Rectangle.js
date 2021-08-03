@@ -64,32 +64,25 @@ Object.assign(SSCDRectangle.prototype, {
 
   // return absolute bottom-left corner
   get_bottom_left: function () {
-    this.__bottom_left_c =
-      this.__bottom_left_c ||
-      this.__position.add(new SSCDVector(0, this.__size.y));
+    this.__bottom_left_c = this.__bottom_left_c || this.__position.add(new SSCDVector(0, this.__size.y));
     return this.__bottom_left_c;
   },
 
   // return absolute top-right corner
   get_top_right: function () {
-    this.__top_right_c =
-      this.__top_right_c ||
-      this.__position.add(new SSCDVector(this.__size.x, 0));
+    this.__top_right_c = this.__top_right_c || this.__position.add(new SSCDVector(this.__size.x, 0));
     return this.__top_right_c;
   },
 
   // return absolute bottom-right corner
   get_bottom_right: function () {
-    this.__bottom_right_c =
-      this.__bottom_right_c ||
-      this.__position.add(new SSCDVector(this.__size.x, this.__size.y));
+    this.__bottom_right_c = this.__bottom_right_c || this.__position.add(new SSCDVector(this.__size.x, this.__size.y));
     return this.__bottom_right_c;
   },
 
   // return absolute center
   get_abs_center: function () {
-    this.__abs_center_c =
-      this.__abs_center_c || this.__position.add(this.__size.divide_scalar(2));
+    this.__abs_center_c = this.__abs_center_c || this.__position.add(this.__size.divide_scalar(2));
     return this.__abs_center_c;
   },
 

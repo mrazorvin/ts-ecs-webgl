@@ -135,9 +135,7 @@ Object.assign(SSCDCompositeShape.prototype, {
   add: function (shape) {
     // make sure shape don't have a collision world
     if (shape.__world) {
-      throw new SSCDIllegalActionError(
-        "Can't add shape with collision world to a composite shape!"
-      );
+      throw new SSCDIllegalActionError("Can't add shape with collision world to a composite shape!");
     }
 
     // store shape offset
@@ -190,17 +188,13 @@ Object.assign(SSCDCompositeShape.prototype, {
       }
     }
 
-    throw new SSCDIllegalActionError(
-      "Shape to remove is not in composite shape!"
-    );
+    throw new SSCDIllegalActionError("Shape to remove is not in composite shape!");
   },
 
   // on position change - update all shapes.
   __update_position_hook: function () {
     for (var i = 0; i < this.__shapes.length; ++i) {
-      this.__shapes[i].shape.set_position(
-        this.__position.add(this.__shapes[i].offset)
-      );
+      this.__shapes[i].shape.set_position(this.__position.add(this.__shapes[i].offset));
     }
   },
 });
