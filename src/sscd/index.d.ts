@@ -10,14 +10,21 @@ export class SSCDShape<T = {}> {
   get_data(): T;
 }
 
+interface SmartCollection {
+  elements: SSCDShape[];
+  size: number;
+}
+
 export class SSCDWorld {
-  constructor(config: { grid_size: number });
+  constructor(config: { grid_size: number; size?: number });
   add<T extends SSCDShape>(component: T): T;
+  remove<T extends SSCDShape>(component: T): T;
   test_collision<T extends SSCDShape>(
     shape: SSCDShape,
     tags: string[] | undefined,
     cb: (shape: T) => undefined | void | boolean
   ): boolean;
+  __grid: Array<Array<SmartCollection>>;
 }
 
 export class SSCDVector {
@@ -26,6 +33,7 @@ export class SSCDVector {
 
 export class SSCDCircle extends SSCDShape {
   constructor(pos: SSCDVector, radius: number);
+  __grid_chunks: { size: number; chunks: Array<SmartCollection> };
 }
 
 export class SSCDCompositeShape {}

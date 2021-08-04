@@ -3,6 +3,11 @@ const SSCDVector = require("../utils/Vector");
 const SSCDCollisionManager = require("./ShapesCollider");
 const SSCDWorld = require("../World");
 
+class GridChunks {
+  chunks = [];
+  size = 0;
+}
+
 // base shape class
 class SSCDShape {
   constructor() {
@@ -10,13 +15,13 @@ class SSCDShape {
     this.__position = new SSCDVector();
 
     // for collision-world internal usage
-    this.__grid_chunks = []; // list with world chunks this shape is in
-    this.__world = null; // the parent collision world
-    this.__grid_bounderies = null; // grid bounderies
+    this.__grid_chunks = new GridChunks(); //        list with world chunks this shape is in
+    this.__world = null; //  the parent collision world
+    this.__grid_bounderies = null; //  grid bounderies
     this.__last_insert_aabb = null; // will store the aabb at the last time this shape grid was last updated
 
-    // set unique ids
-    this.__id = SSCDShape.prototype.__next_id++;
+    this.__found = -1;
+    this.__deleted = false;
   }
 }
 
@@ -42,11 +47,6 @@ Object.assign(SSCDShape.prototype, {
   // default type flags: everything
   __collision_tags: [],
   __collision_tags_val: SSCDWorld.prototype._ALL_TAGS_VAL,
-
-  // return the shape unique id
-  get_id: function () {
-    return this.__id;
-  },
 
   // set the collision tags of this shape.
   // for example, if you want this shape to be tagged as "wall", use:

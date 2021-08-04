@@ -16,6 +16,28 @@ class SSCDWorld {
   }
 }
 
+class Row {
+  elements = [];
+  cleared = true;
+  size = 0;
+}
+
+// 1. track added cells - collections
+// 2. on delete keep everything as it is, add deleted tag
+// 3. on re-adding, clear tracked cells, if they not cleared yet
+// 3.1 it's possible to has something like clearing id adn if if > than delete id, then don't clear collection
+// 4. clear remains cells
+
+// in fact the only place when we need guaranty that elements was removed is pool
+// for such case we must set the special_id - when element was removed
+// then we need to iterate over collections and check if they was cleared after
+// or before element removing
+// for example if world.id = 3;
+// deleting element will set __deleted = 3;
+// adding this element again required to check if all collections was cleared after 3
+// so we will check if collection.cleared was 3 or higher, if so then add element to collection
+// if not then clear collection and set cleared to 4
+
 module.exports = SSCDWorld;
 
 // collision world prototype
@@ -30,6 +52,14 @@ Object.assign(SSCDWorld.prototype, {
     // create grid and set params
     this.__grid = [];
     this.__params = params;
+
+    const size = params.size ?? 50;
+    for (let i = 0; i < size; i++) {
+      for (let z = 0; z < size; z++) {
+        this.__grid[i] = this.__grid[i] ?? [];
+        this.__grid[i][z] = new Row();
+      }
+    }
 
     // all the shapes currently in this world
     this.__all_shapes = {};
@@ -133,38 +163,59 @@ Object.assign(SSCDWorld.prototype, {
   // add collision object to world
   add: function (obj) {
     // if object already in world throw exception
-    if (obj.__world) {
+    if (obj.__world !== null && obj.__world !== this && obj.__deleted === false) {
       throw new SSCDIllegalActionError("Object to add is already in a collision world!");
     }
 
     // get grid range
     var grids = this.__get_grid_range(obj);
+    if (grids.min_x < 0 || grids.min_y < 0) {
+      throw new Error(`Negative world coordinates not supported ${JSON.stringify(grids)}`);
+    }
+
+    // let chunks_amount = 0;
+    // const obj_grid = obj.__grid_chunks;
+    // for (let y = 0; y < obj_grid.size; y++) {
+    //   var chunk = obj_grid.chunks[y];
+    //   var size = chunk.size;
+    //   var elements = chunk.elements;
+    //   for (var x = 0; x < size; x++) {
+    //     var current_element = elements[x];
+    //     if (current_element.__deleted === false) continue;
+    //     for (var tail_x = size - 1; tail_x >= 0; tail_x--) {
+    //       current_element = elements[tail_x];
+    //       size = tail_x;
+    //       if (current_element.__deleted === false) {
+    //         elements[x] = current_element;
+    //         break;
+    //       }
+    //     }
+    //   }
+    //   chunk.size = size;
+    // }
 
     // add shape to all grid parts
     for (var i = grids.min_x; i <= grids.max_x; ++i) {
       for (var j = grids.min_y; j <= grids.max_y; ++j) {
         // make sure lists exist
         this.__grid[i] = this.__grid[i] || [];
-        this.__grid[i][j] = this.__grid[i][j] || [];
+        var curr_grid_chunk = (this.__grid[i][j] = this.__grid[i][j] || new Row());
 
-        // get current grid chunk
-        var curr_grid_chunk = this.__grid[i][j];
-
-        // add object to grid chunk
-        curr_grid_chunk.push(obj);
+        curr_grid_chunk.elements[curr_grid_chunk.size] = obj;
+        curr_grid_chunk.size += 1;
 
         // add chunk to shape chunks list
-        obj.__grid_chunks.push(curr_grid_chunk);
+        obj_grid.chunks[chunks_amount] = curr_grid_chunk;
+        chunks_amount += 1;
       }
     }
+
+    obj_grid.size = chunks_amount;
 
     // set world and grid chunks boundaries
     obj.__world = this;
     obj.__grid_bounderies = grids;
     obj.__last_insert_aabb = obj.get_aabb().clone();
-
-    // add to list of all shapes
-    this.__all_shapes[obj.get_id()] = obj;
 
     // return the newly added object
     return obj;
@@ -188,28 +239,7 @@ Object.assign(SSCDWorld.prototype, {
       throw new SSCDIllegalActionError("Object to remove is not in this collision world!");
     }
 
-    // remove from all the grid chunks
-    for (var i = 0; i < obj.__grid_chunks.length; ++i) {
-      // get current grid chunk
-      var grid_chunk = obj.__grid_chunks[i];
-
-      // remove object from grid
-      for (var j = 0; j < grid_chunk.length; ++j) {
-        if (grid_chunk[j] === obj) {
-          grid_chunk.splice(j, 1);
-          break;
-        }
-      }
-    }
-
-    // remove from list of all shapes
-    delete this.__all_shapes[obj.get_id()];
-
-    // clear shape world chunks and world pointer
-    obj.__grid_chunks = [];
-    obj.__world = null;
-    obj.__grid_bounderies = null;
-    obj.__last_insert_aabb = null;
+    obj.__deleted = true;
   },
 
   // update object grid when it moves or resize etc.
@@ -250,10 +280,6 @@ Object.assign(SSCDWorld.prototype, {
     // default collision flags
     collision_tags = this.__get_tags_value(collision_tags);
 
-    // handle vector
-    if (obj instanceof SSCDVector) {
-      return this.__test_collision_point(obj, collision_tags, out_list, ret_objs_count);
-    }
     // handle collision with shape
     if (obj.is_shape) {
       return this.__test_collision_shape(obj, collision_tags, out_list, ret_objs_count);
@@ -293,58 +319,6 @@ Object.assign(SSCDWorld.prototype, {
     return out_list.length > 0;
   },
 
-  // test collision for given point
-  // see test_collision comment for more info
-  __test_collision_point: function (vector, collision_tags_val, out_list, ret_objs_count) {
-    // get current grid size
-    var grid_size = this.__params.grid_size;
-
-    // get the grid chunk to test collision with
-    var i = Math.floor(vector.x / grid_size);
-    var j = Math.floor(vector.y / grid_size);
-
-    // if grid chunk is not in use return empty list
-    if (this.__grid[i] === undefined || this.__grid[i][j] === undefined) {
-      return false;
-    }
-
-    // get current grid chunk
-    var grid_chunk = this.__grid[i][j];
-
-    // iterate over all objects in current grid chunk and add them to render list
-    var found = 0;
-    for (var i = 0; i < grid_chunk.length; ++i) {
-      // get current object to test
-      var curr_obj = grid_chunk[i];
-
-      // if collision tags don't match skip this object
-      if (!curr_obj.collision_tags_match(collision_tags_val)) {
-        continue;
-      }
-
-      // if collide with object:
-      if (this.__do_collision(curr_obj, vector)) {
-        // if got collision list to fill, add object and set return value to true
-        if (out_list) {
-          found++;
-          out_list.push(curr_obj);
-          if (ret_objs_count && found >= ret_objs_count) {
-            return true;
-          }
-        }
-        // if don't have collision list to fill simply return true
-        else {
-          return true;
-        }
-      }
-    }
-
-    // return if collided
-    // note: get here only if got list to fill or if no collision found
-    return found > 0;
-  },
-
-  __tested_object_cache: new Map(),
   __search_id: 0,
 
   // test collision with other shape
@@ -361,11 +335,6 @@ Object.assign(SSCDWorld.prototype, {
       grid = this.__get_grid_range(obj);
     }
 
-    // for return value
-    var found = 0;
-
-    // so we won't test same objects multiple times
-    const already_tests = this.__tested_object_cache;
     const current_search = this.__search_id++;
 
     // iterate over grid this shape touches
@@ -384,21 +353,38 @@ Object.assign(SSCDWorld.prototype, {
           continue;
         }
 
-        // iterate over objects in grid chunk and check collision
-        for (var x = 0; x < curr_grid_chunk.length; ++x) {
-          // get current object
-          var curr_obj = curr_grid_chunk[x];
+        // // iterate over objects in cell
+        // let size = curr_grid_chunk.size;
+        // let elements = curr_grid_chunk.elements;
+        // for (var x = 0; x < size; x++) {
+        //   // get current object
+        //   var curr_obj = elements[x];
+        //   if (curr_obj.__deleted === true) {
+        //     // handle situations when x single or last element of collection
+        //     if (x === size - 1) {
+        //       size -= 1;
+        //       continue;
+        //     }
+        //     for (let tail_x = size - 1; tail_x >= 0; tail_x--) {
+        //       curr_obj = elements[tail_x];
+        //       size = tail_x;
+        //       if (curr_obj.__deleted === false) {
+        //         elements[x] = curr_obj;
+        //         break;
+        //       }
+        //     }
+        //   }
 
           // make sure object is not self
-          if (curr_obj === obj) {
+          if (curr_obj === obj || curr_obj.__deleted === true) {
             continue;
           }
 
           // check if this object was already tested
-          if (already_tests.get(curr_obj) === current_search) {
+          if (curr_obj.__found === current_search) {
             continue;
           } else {
-            already_tests.set(curr_obj, current_search);
+            curr_obj.__found = current_search;
           }
 
           // if collision tags don't match skip this object
@@ -411,12 +397,10 @@ Object.assign(SSCDWorld.prototype, {
             if (cb(curr_obj) === false) return true;
           }
         }
+        curr_grid_chunk.size = size;
+        curr_grid_chunk.cleared = true;
       }
     }
-
-    // return if collided
-    // note: get here only if got list to fill or if no collision found
-    return found > 0;
   },
 
   // do actual collision check between source and target
