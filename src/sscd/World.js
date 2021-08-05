@@ -173,27 +173,6 @@ Object.assign(SSCDWorld.prototype, {
       throw new Error(`Negative world coordinates not supported ${JSON.stringify(grids)}`);
     }
 
-    // let chunks_amount = 0;
-    // const obj_grid = obj.__grid_chunks;
-    // for (let y = 0; y < obj_grid.size; y++) {
-    //   var chunk = obj_grid.chunks[y];
-    //   var size = chunk.size;
-    //   var elements = chunk.elements;
-    //   for (var x = 0; x < size; x++) {
-    //     var current_element = elements[x];
-    //     if (current_element.__deleted === false) continue;
-    //     for (var tail_x = size - 1; tail_x >= 0; tail_x--) {
-    //       current_element = elements[tail_x];
-    //       size = tail_x;
-    //       if (current_element.__deleted === false) {
-    //         elements[x] = current_element;
-    //         break;
-    //       }
-    //     }
-    //   }
-    //   chunk.size = size;
-    // }
-
     // add shape to all grid parts
     for (var i = grids.min_x; i <= grids.max_x; ++i) {
       for (var j = grids.min_y; j <= grids.max_y; ++j) {
@@ -203,14 +182,8 @@ Object.assign(SSCDWorld.prototype, {
 
         curr_grid_chunk.elements[curr_grid_chunk.size] = obj;
         curr_grid_chunk.size += 1;
-
-        // add chunk to shape chunks list
-        obj_grid.chunks[chunks_amount] = curr_grid_chunk;
-        chunks_amount += 1;
       }
     }
-
-    obj_grid.size = chunks_amount;
 
     // set world and grid chunks boundaries
     obj.__world = this;
@@ -239,7 +212,18 @@ Object.assign(SSCDWorld.prototype, {
       throw new SSCDIllegalActionError("Object to remove is not in this collision world!");
     }
 
-    obj.__deleted = true;
+    const grid = this.__get_grid_range(obj);
+    for (var i = grid.min_x; i <= grid.max_x; ++i) {
+      for (var j = grid.min_y; j <= grid.max_y; ++j) {
+        const chunk = this.__grid[i][j];
+        const idx = chunk.elements.indexOf(obj);
+        if (idx === 0) {
+          chunk.size = 0;
+          continue;
+        }
+        chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
+      }
+    }
   },
 
   // update object grid when it moves or resize etc.
@@ -286,39 +270,6 @@ Object.assign(SSCDWorld.prototype, {
     }
   },
 
-  // test collision with a field of view.
-  // a field of view is basically a pizza-like shape starting from the center.
-  // @param position: source position (vector).
-  // @param distance: fov distance.
-  // @param direction: look-at direction in degrees (0 = looking right, 90 = looking down, etc.).
-  // @param fov_angle: angle range in degrees.
-  // @param collision_tags: optional string or list of strings of tags to match collision with. if undefined will accept all tags
-  // @param out_list: optional output list. if provided, will be filled with all objects collided with. note: collision is more efficient if not provided.
-  // @return true if collided with anything, false otherwise.
-  test_fov: function (position, distance, direction, fov_angle, collision_tags, out_list) {
-    // default collision flags
-    collision_tags = this.__get_tags_value(collision_tags);
-
-    // default out-list if not provided
-    out_list = out_list || [];
-
-    // create a circle and check basic collision with it
-    var circle = new SSCDCircle(position, distance);
-    this.__test_collision_shape(circle, collision_tags, out_list);
-
-    // now iterate over collided objects and check angle
-    for (var i = out_list.length - 1; i >= 0; --i) {
-      // get angle between source position and the body
-      var angle = position.angle_from(out_list[i].__position);
-      if (SSCDMath.angles_dis(direction, angle) > fov_angle) {
-        out_list.splice(i, 1);
-      }
-    }
-
-    // return if got collision
-    return out_list.length > 0;
-  },
-
   __search_id: 0,
 
   // test collision with other shape
@@ -340,48 +291,24 @@ Object.assign(SSCDWorld.prototype, {
     // iterate over grid this shape touches
     for (var i = grid.min_x; i <= grid.max_x; ++i) {
       // skip empty rows
-      if (this.__grid[i] === undefined) {
-        continue;
-      }
+      if (this.__grid[i] === undefined) continue;
 
       // iterate on current grid row
       for (var j = grid.min_y; j <= grid.max_y; ++j) {
         var curr_grid_chunk = this.__grid[i][j];
 
         // skip empty grid chunks
-        if (curr_grid_chunk === undefined) {
-          continue;
-        }
+        if (curr_grid_chunk === undefined) continue;
 
-        // // iterate over objects in cell
-        // let size = curr_grid_chunk.size;
-        // let elements = curr_grid_chunk.elements;
-        // for (var x = 0; x < size; x++) {
-        //   // get current object
-        //   var curr_obj = elements[x];
-        //   if (curr_obj.__deleted === true) {
-        //     // handle situations when x single or last element of collection
-        //     if (x === size - 1) {
-        //       size -= 1;
-        //       continue;
-        //     }
-        //     for (let tail_x = size - 1; tail_x >= 0; tail_x--) {
-        //       curr_obj = elements[tail_x];
-        //       size = tail_x;
-        //       if (curr_obj.__deleted === false) {
-        //         elements[x] = curr_obj;
-        //         break;
-        //       }
-        //     }
-        //   }
-
-          // make sure object is not self
-          if (curr_obj === obj || curr_obj.__deleted === true) {
-            continue;
-          }
+        // iterate over objects in cell
+        let size = curr_grid_chunk.size;
+        let elements = curr_grid_chunk.elements;
+        for (var x = 0; x < size; x++) {
+          // get current object
+          var curr_obj = elements[x];
 
           // check if this object was already tested
-          if (curr_obj.__found === current_search) {
+          if (curr_obj === obj || curr_obj.__found === current_search) {
             continue;
           } else {
             curr_obj.__found = current_search;
@@ -397,8 +324,6 @@ Object.assign(SSCDWorld.prototype, {
             if (cb(curr_obj) === false) return true;
           }
         }
-        curr_grid_chunk.size = size;
-        curr_grid_chunk.cleared = true;
       }
     }
   },

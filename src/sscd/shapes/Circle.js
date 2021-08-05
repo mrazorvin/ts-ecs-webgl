@@ -57,6 +57,11 @@ Object.assign(SSCDCircle.prototype, {
     this.__aabb.position = this.__position.sub_scalar(this.__radius);
   },
 
+  __update_aabb_pos_fast: function (next_x, next_y) {
+    this.__aabb.position.x = next_x - this.__radius;
+    this.__aabb.position.y = next_y - this.__radius;
+  },
+
   // return axis-aligned-bounding-box
   build_aabb: function () {
     return new SSCDAabb(this.__position.sub_scalar(this.__radius), this.__size);

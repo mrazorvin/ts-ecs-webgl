@@ -3,25 +3,17 @@ const SSCDVector = require("../utils/Vector");
 const SSCDCollisionManager = require("./ShapesCollider");
 const SSCDWorld = require("../World");
 
-class GridChunks {
-  chunks = [];
-  size = 0;
-}
-
 // base shape class
 class SSCDShape {
   constructor() {
     // create position and set default type
     this.__position = new SSCDVector();
 
-    // for collision-world internal usage
-    this.__grid_chunks = new GridChunks(); //        list with world chunks this shape is in
     this.__world = null; //  the parent collision world
     this.__grid_bounderies = null; //  grid bounderies
     this.__last_insert_aabb = null; // will store the aabb at the last time this shape grid was last updated
 
     this.__found = -1;
-    this.__deleted = false;
   }
 }
 
@@ -288,6 +280,94 @@ Object.assign(SSCDShape.prototype, {
     return this;
   },
 
+  // move the shape from its current position.
+  // @param vector - vector to move the shape.
+  move_to: function (next_x, next_y) {
+    // copy of set_position()
+    const obj = this;
+    const world = this.__world;
+    const prev_aabb_x = this.__aabb.position.x;
+    const prev_aabb_y = this.__aabb.position.y;
+
+    const prev_grid = world.__get_grid_range(obj);
+    this.__position.x = next_x;
+    this.__position.y = next_y;
+
+    // get grid range
+    if (this.__update_position_hook) {
+      this.__update_position_hook();
+    }
+
+    // copy of update_position() -> update_aabb_pos()
+    this.__update_aabb_pos_fast(next_x, next_y);
+
+    const next_grid = world.__get_grid_range(obj);
+    const curr_aabb = obj.get_aabb();
+    if (
+      Math.abs(curr_aabb.position.x - prev_aabb_x) <= world.__params.grid_error &&
+      Math.abs(curr_aabb.position.y - prev_aabb_y) <= world.__params.grid_error
+    ) {
+      return this;
+    }
+
+    const start_x = Math.min(prev_grid.min_x, next_grid.min_x);
+    const end_x = Math.max(prev_grid.max_x, next_grid.max_x);
+    const start_y = Math.min(prev_grid.min_y, next_grid.min_y);
+    const end_y = Math.max(prev_grid.max_y, next_grid.max_y);
+    const grid = world.__grid;
+
+    if (start_x < 0 || start_y < 0) {
+      throw new Error(`[SSCDWorld -> Shape.move_to()] can't move outside of world`);
+    }
+
+    // add shape to all grid parts
+    for (var x = start_x; x <= end_x; x++) {
+      for (var y = start_y; y <= end_y; y++) {
+        //
+        //
+        if (x >= next_grid.min_x && x <= next_grid.max_x) {
+          if (y >= next_grid.min_y && y <= prev_grid.min_y) {
+            if (x >= prev_grid.min_x && y <= prev_grid.max_x) {
+              if (y >= prev_grid.min_y && y <= prev_grid.max_y) {
+                continue;
+              } else {
+                this.__grid[x] = this.__grid[x] || [];
+                const curr_grid_chunk = (this.__grid[x][y] = this.__grid[x][y] || new Row());
+                curr_grid_chunk.elements[curr_grid_chunk.size] = obj;
+                curr_grid_chunk.size += 1;
+              }
+            } else {
+              this.__grid[x] = this.__grid[x] || [];
+              const curr_grid_chunk = (this.__grid[x][y] = this.__grid[x][y] || new Row());
+              curr_grid_chunk.elements[curr_grid_chunk.size] = obj;
+              curr_grid_chunk.size += 1;
+            }
+          } else {
+            // we need to remove this rows since they outside of new grid
+            const chunk = grid[x][y];
+            const idx = chunk.elements.indexOf(obj);
+            if (idx === 0) {
+              chunk.size = 0;
+              continue;
+            }
+            chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
+          }
+        } else {
+          // we need to remove this columns since X outside of new GRID
+          const chunk = grid[x][y];
+          const idx = chunk.elements.indexOf(obj);
+          if (idx === 0) {
+            chunk.size = 0;
+            continue;
+          }
+          chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
+        }
+      }
+    }
+
+    return this;
+  },
+
   // should be called whenever position changes.
   __update_position: function () {
     // call position-change hook
@@ -308,6 +388,10 @@ Object.assign(SSCDShape.prototype, {
   // this function called AFTER the position update, meaning new position applied.
   // this function only called if have aabb in cache.
   __update_aabb_pos: function () {
+    this.__aabb.position = this.__position;
+  },
+
+  __update_aabb_pos_fast: function (next_x, next_y) {
     this.__aabb.position = this.__position;
   },
 
@@ -346,7 +430,6 @@ Object.assign(SSCDShape.prototype, {
 
   // return the axis-aligned-bounding-box of this shape.
   get_aabb: function () {
-    this.__aabb = this.__aabb || this.build_aabb();
-    return this.__aabb;
+    return this.__aabb ?? (this.__aabb = this.build_aabb());
   },
 });
