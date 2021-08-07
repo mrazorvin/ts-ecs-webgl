@@ -58,41 +58,46 @@ Object.assign(SSCDRectangle.prototype, {
 
   // return absolute top-left corner
   get_top_left: function () {
+    throw new Error("[SSCDWorld -> Rectangle] non-optimized method call");
     this.__top_left_c = this.__top_left_c || this.__position.clone();
     return this.__top_left_c;
   },
 
   // return absolute bottom-left corner
   get_bottom_left: function () {
+    throw new Error("[SSCDWorld -> Rectangle] non-optimized method call, un-commit __update_position_hook");
     this.__bottom_left_c = this.__bottom_left_c || this.__position.add(new SSCDVector(0, this.__size.y));
     return this.__bottom_left_c;
   },
 
   // return absolute top-right corner
   get_top_right: function () {
+    throw new Error("[SSCDWorld -> Rectangle] non-optimized method call, un-commit __update_position_hook");
     this.__top_right_c = this.__top_right_c || this.__position.add(new SSCDVector(this.__size.x, 0));
     return this.__top_right_c;
   },
 
   // return absolute bottom-right corner
   get_bottom_right: function () {
+    throw new Error("[SSCDWorld -> Rectangle] non-optimized method call, un-commit __update_position_hook");
     this.__bottom_right_c = this.__bottom_right_c || this.__position.add(new SSCDVector(this.__size.x, this.__size.y));
     return this.__bottom_right_c;
   },
 
   // return absolute center
   get_abs_center: function () {
+    throw new Error("[SSCDWorld -> Rectangle] non-optimized method call, un-commit __update_position_hook");
     this.__abs_center_c = this.__abs_center_c || this.__position.add(this.__size.divide_scalar(2));
     return this.__abs_center_c;
   },
 
   // on position change
-  __update_position_hook: function () {
-    // clear corner cache
-    this.__top_left_c = undefined;
-    this.__top_right_c = undefined;
-    this.__bottom_left_c = undefined;
-    this.__bottom_right_c = undefined;
-    this.__abs_center_c = undefined;
-  },
+  // __update_position_hook: function () {
+  //   // clear corner cache
+  //   this.__top_left_c = undefined;
+  //   this.__top_right_c = undefined;
+  //   this.__bottom_left_c = undefined;
+  //   this.__bottom_right_c = undefined;
+  //   this.__abs_center_c = undefined;
+  // },
 });

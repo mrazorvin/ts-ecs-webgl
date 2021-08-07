@@ -8,16 +8,13 @@ class SSCDShape {
   constructor() {
     // create position and set default type
     this.__position = new SSCDVector();
-
-    this.__world = null; //  the parent collision world
-    this.__grid_bounderies = null; //  grid bounderies
     this.__last_insert_aabb = null; // will store the aabb at the last time this shape grid was last updated
-
     this.__found = -1;
   }
 }
 
 module.exports = SSCDShape;
+const ALL_TAGS_VAL = Number.MAX_SAFE_INTEGER;
 
 // base shape prototype
 Object.assign(SSCDShape.prototype, {
@@ -38,7 +35,7 @@ Object.assign(SSCDShape.prototype, {
 
   // default type flags: everything
   __collision_tags: [],
-  __collision_tags_val: SSCDWorld.prototype._ALL_TAGS_VAL,
+  __collision_tags_val: ALL_TAGS_VAL,
 
   // set the collision tags of this shape.
   // for example, if you want this shape to be tagged as "wall", use:
@@ -60,7 +57,7 @@ Object.assign(SSCDShape.prototype, {
     // special case - if tags is null, reset tags
     if (tags === null) {
       this.__collision_tags = [];
-      this.__collision_tags_val = SSCDWorld.prototype._ALL_TAGS_VAL;
+      this.__collision_tags_val = ALL_TAGS_VAL;
     }
     // else, set tags
     else {
@@ -286,10 +283,16 @@ Object.assign(SSCDShape.prototype, {
     // copy of set_position()
     const obj = this;
     const world = this.__world;
+    const aabb = this.aabb;
     const prev_aabb_x = this.__aabb.position.x;
     const prev_aabb_y = this.__aabb.position.y;
 
-    const prev_grid = world.__get_grid_range(obj);
+    const prev_grid = {
+      min_x: Math.floor(aabb.position.x / this.__params.grid_size),
+      min_y: Math.floor(aabb.position.y / this.__params.grid_size),
+      max_x: Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size),
+      max_y: Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size),
+    };
     this.__position.x = next_x;
     this.__position.y = next_y;
 
@@ -301,7 +304,12 @@ Object.assign(SSCDShape.prototype, {
     // copy of update_position() -> update_aabb_pos()
     this.__update_aabb_pos_fast(next_x, next_y);
 
-    const next_grid = world.__get_grid_range(obj);
+    const next_grid = {
+      min_x: Math.floor(aabb.position.x / this.__params.grid_size),
+      min_y: Math.floor(aabb.position.y / this.__params.grid_size),
+      max_x: Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size),
+      max_y: Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size),
+    };
     const curr_aabb = obj.get_aabb();
     if (
       Math.abs(curr_aabb.position.x - prev_aabb_x) <= world.__params.grid_error &&
@@ -309,6 +317,8 @@ Object.assign(SSCDShape.prototype, {
     ) {
       return this;
     }
+
+    this.__last_insert_aabb = this.__aabb;
 
     const start_x = Math.min(prev_grid.min_x, next_grid.min_x);
     const end_x = Math.max(prev_grid.max_x, next_grid.max_x);
@@ -320,43 +330,50 @@ Object.assign(SSCDShape.prototype, {
       throw new Error(`[SSCDWorld -> Shape.move_to()] can't move outside of world`);
     }
 
+    // adding row over max rows should also fill all remains rows
+    // adding new column over max should also fill
+
     // add shape to all grid parts
     for (var x = start_x; x <= end_x; x++) {
       for (var y = start_y; y <= end_y; y++) {
         //
         //
         if (x >= next_grid.min_x && x <= next_grid.max_x) {
-          if (y >= next_grid.min_y && y <= prev_grid.min_y) {
-            if (x >= prev_grid.min_x && y <= prev_grid.max_x) {
+          if (y >= next_grid.min_y && y <= next_grid.max_y) {
+            if (x >= prev_grid.min_x && x <= prev_grid.max_x) {
               if (y >= prev_grid.min_y && y <= prev_grid.max_y) {
                 continue;
               } else {
-                this.__grid[x] = this.__grid[x] || [];
-                const curr_grid_chunk = (this.__grid[x][y] = this.__grid[x][y] || new Row());
+                const row = grid[x] ?? world.fill_columns(x);
+                const curr_grid_chunk = row[y] ?? world.fill_rows(x, y);
                 curr_grid_chunk.elements[curr_grid_chunk.size] = obj;
                 curr_grid_chunk.size += 1;
               }
             } else {
-              this.__grid[x] = this.__grid[x] || [];
-              const curr_grid_chunk = (this.__grid[x][y] = this.__grid[x][y] || new Row());
+              const row = grid[x] ?? world.fill_columns(x);
+              const curr_grid_chunk = row[y] ?? world.fill_rows(x, y);
               curr_grid_chunk.elements[curr_grid_chunk.size] = obj;
               curr_grid_chunk.size += 1;
             }
           } else {
-            // we need to remove this rows since they outside of new grid
+            if (x < prev_grid.min_x || x > prev_grid.max_x || y < prev_grid.min_y || y > prev_grid.max_y) {
+              continue;
+            }
             const chunk = grid[x][y];
             const idx = chunk.elements.indexOf(obj);
-            if (idx === 0) {
+            if (chunk.size === 1 && idx === 0) {
               chunk.size = 0;
               continue;
             }
             chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
           }
         } else {
-          // we need to remove this columns since X outside of new GRID
+          if (x < prev_grid.min_x || x > prev_grid.max_x || y < prev_grid.min_y || y > prev_grid.max_y) {
+            continue;
+          }
           const chunk = grid[x][y];
           const idx = chunk.elements.indexOf(obj);
-          if (idx === 0) {
+          if (chunk.size === 1 && idx === 0) {
             chunk.size = 0;
             continue;
           }

@@ -204,10 +204,7 @@ module.exports = {
     var p2 = line.get_p2();
 
     // first check if one of the line points is contained inside the rectangle
-    if (
-      SSCDCollisionManager._test_collision_rect_vector(rect, p1) ||
-      SSCDCollisionManager._test_collision_rect_vector(rect, p2)
-    ) {
+    if (this._test_collision_rect_vector(rect, p1) || this._test_collision_rect_vector(rect, p2)) {
       return true;
     }
 
@@ -312,7 +309,7 @@ module.exports = {
       var other_shapes = other.get_shapes();
       for (var i = 0; i < comp_shapes.length; ++i) {
         for (var j = 0; j < other_shapes.length; ++j) {
-          if (SSCDCollisionManager.test_collision(comp_shapes[i], other_shapes[j])) {
+          if (this.test_collision(comp_shapes[i], other_shapes[j])) {
             return true;
           }
         }
@@ -321,7 +318,7 @@ module.exports = {
     // normal case - other shape is a normal shape
     else {
       for (var i = 0; i < comp_shapes.length; ++i) {
-        if (SSCDCollisionManager.test_collision(comp_shapes[i], other)) {
+        if (this.test_collision(comp_shapes[i], other)) {
           return true;
         }
       }
@@ -337,7 +334,7 @@ module.exports = {
     var circle_pos = circle.__position;
 
     // first check if circle center is inside the rectangle - easy case
-    var collide = SSCDCollisionManager._test_collision_rect_vector(rect, circle_pos);
+    var collide = this._test_collision_rect_vector(rect, circle_pos);
     if (collide) {
       return true;
     }
@@ -346,7 +343,7 @@ module.exports = {
     var rect_center = rect.get_abs_center();
 
     // now check other simple case - collision between rect center and circle
-    var collide = SSCDCollisionManager._test_collision_circle_vector(circle, rect_center);
+    var collide = this._test_collision_circle_vector(circle, rect_center);
     if (collide) {
       return true;
     }

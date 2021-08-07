@@ -5,9 +5,11 @@ export const SSCDMath: {};
 export class SSCDAabb {}
 
 export class SSCDShape<T = {}> {
+  __position: SSCDVector;
   set_collision_tags(tags: string[]): void;
   set_data<T>(data: T): void;
   get_data(): T;
+  move_to(x: number, y: number): void;
 }
 
 interface SmartCollection {
@@ -17,8 +19,9 @@ interface SmartCollection {
 
 export class SSCDWorld {
   constructor(config: { grid_size: number; size?: number });
-  add<T extends SSCDShape>(component: T): T;
+  add<T extends SSCDCircle | SSCDRectangle>(component: T): T;
   remove<T extends SSCDShape>(component: T): T;
+  move_to(x: number, y: number): void;
   test_collision<T extends SSCDShape>(
     shape: SSCDShape,
     tags: string[] | undefined,
@@ -28,6 +31,8 @@ export class SSCDWorld {
 }
 
 export class SSCDVector {
+  x: number;
+  y: number;
   constructor(x: number, y: number);
 }
 

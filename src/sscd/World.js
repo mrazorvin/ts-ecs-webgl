@@ -22,6 +22,12 @@ class Row {
   size = 0;
 }
 
+let __next_coll_tag = 0;
+const ALL_TAGS_VAL = Number.MAX_SAFE_INTEGER;
+class GlobalTagsCache {}
+
+SSCDWorld.Row = Row;
+
 // 1. track added cells - collections
 // 2. on delete keep everything as it is, add deleted tag
 // 3. on re-adding, clear tracked cells, if they not cleared yet
@@ -49,6 +55,8 @@ Object.assign(SSCDWorld.prototype, {
     params.grid_size = params.grid_size || 512;
     params.grid_error = params.grid_error !== undefined ? params.grid_error : 2;
 
+    this.__readonly = params.readonly ?? false;
+
     // create grid and set params
     this.__grid = [];
     this.__params = params;
@@ -60,28 +68,22 @@ Object.assign(SSCDWorld.prototype, {
         this.__grid[i][z] = new Row();
       }
     }
-
-    // all the shapes currently in this world
-    this.__all_shapes = {};
-
-    // create the empty collision flags dictionary
-    this.__collision_tags = {};
-    this.__next_coll_tag = 0;
   },
 
   // define a new collision tag
   __create_collision_tag: function (name) {
     // if already exist throw exception
-    if (this.__collision_tags[name]) {
+    if (GlobalTagsCache[name]) {
       throw new SSCDIllegalActionError("Collision tag named '" + name + "' already exist!");
     }
 
-    // set collision tag
-    this.__collision_tags[name] = 1 << this.__next_coll_tag++;
-  },
+    if (__next_coll_tag > 30) {
+      throw new Error(`[SSCDWold] max tag reached`);
+    }
 
-  // all-tags flags
-  _ALL_TAGS_VAL: Number.MAX_SAFE_INTEGER || 4294967295,
+    // set collision tag
+    GlobalTagsCache[name] = 1 << __next_coll_tag++;
+  },
 
   // clean-up world memory
   cleanup: function () {
@@ -113,7 +115,7 @@ Object.assign(SSCDWorld.prototype, {
   __get_tags_value: function (tags) {
     // special case: undefined return all possible tags
     if (tags === undefined) {
-      return this._ALL_TAGS_VAL;
+      return ALL_TAGS_VAL;
     }
 
     // single tag:
@@ -132,62 +134,48 @@ Object.assign(SSCDWorld.prototype, {
   // return the value of a single collision tag, define it if not exist
   __collision_tag: function (name) {
     // if tag doesn't exist create it
-    if (this.__collision_tags[name] === undefined) {
+    if (GlobalTagsCache[name] === undefined) {
       this.__create_collision_tag(name);
     }
 
     // return collision tag
-    return this.__collision_tags[name];
-  },
-
-  // get the grid range that this object touches
-  __get_grid_range: function (obj) {
-    // get bounding box
-    var aabb = obj.get_aabb();
-
-    // calc all grid chunks this shape touches
-    var min_i = Math.floor(aabb.position.x / this.__params.grid_size);
-    var min_j = Math.floor(aabb.position.y / this.__params.grid_size);
-    var max_i = Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size);
-    var max_j = Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size);
-
-    // return grid range
-    return {
-      min_x: min_i,
-      min_y: min_j,
-      max_x: max_i,
-      max_y: max_j,
-    };
+    return GlobalTagsCache[name];
   },
 
   // add collision object to world
   add: function (obj) {
     // if object already in world throw exception
-    if (obj.__world !== null && obj.__world !== this && obj.__deleted === false) {
+    if (obj.__world !== null && obj.__world !== this && this.__readonly === false) {
       throw new SSCDIllegalActionError("Object to add is already in a collision world!");
     }
 
     // get grid range
-    var grids = this.__get_grid_range(obj);
-    if (grids.min_x < 0 || grids.min_y < 0) {
-      throw new Error(`Negative world coordinates not supported ${JSON.stringify(grids)}`);
+    var aabb = obj.get_aabb();
+    var min_x = Math.floor(aabb.position.x / this.__params.grid_size);
+    var min_y = Math.floor(aabb.position.y / this.__params.grid_size);
+    var max_x = Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size);
+    var max_y = Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size);
+    if (min_x < 0 || min_y < 0) {
+      throw new Error(`Negative world coordinates not supported ${JSON.stringify({ min_x, min_y })}`);
     }
 
     // add shape to all grid parts
-    for (var i = grids.min_x; i <= grids.max_x; ++i) {
-      for (var j = grids.min_y; j <= grids.max_y; ++j) {
+    const grid = this.__grid;
+    for (var x = min_x; x <= max_x; ++x) {
+      for (var y = min_y; y <= max_y; ++y) {
         // make sure lists exist
-        this.__grid[i] = this.__grid[i] || [];
-        var curr_grid_chunk = (this.__grid[i][j] = this.__grid[i][j] || new Row());
+        var column = grid[x] ?? this.fill_columns(x);
+        var chunk = column[y] ?? this.fill_rows(x, y);
 
-        curr_grid_chunk.elements[curr_grid_chunk.size] = obj;
-        curr_grid_chunk.size += 1;
+        chunk.elements[chunk.size] = obj;
+        chunk.size += 1;
       }
     }
 
     // set world and grid chunks boundaries
     obj.__world = this;
-    obj.__grid_bounderies = grids;
+
+    // TODO: possible optimization - remove __last_insert_aabb and this call
     obj.__last_insert_aabb = obj.get_aabb().clone();
 
     // return the newly added object
@@ -212,9 +200,13 @@ Object.assign(SSCDWorld.prototype, {
       throw new SSCDIllegalActionError("Object to remove is not in this collision world!");
     }
 
-    const grid = this.__get_grid_range(obj);
-    for (var i = grid.min_x; i <= grid.max_x; ++i) {
-      for (var j = grid.min_y; j <= grid.max_y; ++j) {
+    var aabb = obj.get_aabb();
+    var min_x = Math.floor(aabb.position.x / this.__params.grid_size);
+    var min_y = Math.floor(aabb.position.y / this.__params.grid_size);
+    var max_x = Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size);
+    var max_y = Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size);
+    for (var i = min_x; i <= max_x; ++i) {
+      for (var j = min_y; j <= max_y; ++j) {
         const chunk = this.__grid[i][j];
         const idx = chunk.elements.indexOf(obj);
         if (idx === 0) {
@@ -240,6 +232,25 @@ Object.assign(SSCDWorld.prototype, {
       this.remove(obj);
       this.add(obj);
     }
+  },
+
+  fill_columns: function (x) {
+    const length = this.__grid.length;
+    for (let i = length; i <= x; i++) {
+      this.__grid[i] = [];
+    }
+
+    return this.__grid[x];
+  },
+
+  fill_rows: function (x, y) {
+    const row = this.__grid[x];
+    const length = row.length;
+    for (let i = length; i <= y; i++) {
+      row[i] = new Row();
+    }
+
+    return this.__grid[x][y];
   },
 
   // check collision and return first object found.
@@ -275,26 +286,21 @@ Object.assign(SSCDWorld.prototype, {
   // test collision with other shape
   // see test_collision comment for more info
   __test_collision_shape: function (obj, collision_tags_val, cb) {
-    var grid;
-
-    // if shape is in this world, use its grid range from cache
-    if (obj.__world === this) {
-      grid = obj.__grid_bounderies;
-    }
-    // if not in world, generate grid range
-    else {
-      grid = this.__get_grid_range(obj);
-    }
+    var aabb = obj.get_aabb();
+    var min_x = Math.floor(aabb.position.x / this.__params.grid_size);
+    var min_y = Math.floor(aabb.position.y / this.__params.grid_size);
+    var max_x = Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size);
+    var max_y = Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size);
 
     const current_search = this.__search_id++;
 
     // iterate over grid this shape touches
-    for (var i = grid.min_x; i <= grid.max_x; ++i) {
+    for (var i = min_x; i <= max_x; ++i) {
       // skip empty rows
       if (this.__grid[i] === undefined) continue;
 
       // iterate on current grid row
-      for (var j = grid.min_y; j <= grid.max_y; ++j) {
+      for (var j = min_y; j <= max_y; ++j) {
         var curr_grid_chunk = this.__grid[i][j];
 
         // skip empty grid chunks
