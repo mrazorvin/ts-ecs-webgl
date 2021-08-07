@@ -361,10 +361,6 @@ Object.assign(SSCDShape.prototype, {
             }
             const chunk = grid[x][y];
             const idx = chunk.elements.indexOf(obj);
-            if (chunk.size === 1 && idx === 0) {
-              chunk.size = 0;
-              continue;
-            }
             chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
           }
         } else {
@@ -373,10 +369,6 @@ Object.assign(SSCDShape.prototype, {
           }
           const chunk = grid[x][y];
           const idx = chunk.elements.indexOf(obj);
-          if (chunk.size === 1 && idx === 0) {
-            chunk.size = 0;
-            continue;
-          }
           chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
         }
       }

@@ -18,8 +18,22 @@ class SSCDWorld {
 
 class Row {
   elements = [];
-  cleared = true;
+  calculated = 0;
   size = 0;
+
+  getSize(revision) {
+    return revision > this.calculated ? 0 : this.size;
+  }
+
+  addElement(revision, element) {
+    if (revision > this.calculated) {
+      this.calculated = revision;
+      this.size = 0;
+    }
+
+    this.elements[this.size] = element;
+    this.size += 1;
+  }
 }
 
 let __next_coll_tag = 0;
@@ -27,22 +41,6 @@ const ALL_TAGS_VAL = Number.MAX_SAFE_INTEGER;
 class GlobalTagsCache {}
 
 SSCDWorld.Row = Row;
-
-// 1. track added cells - collections
-// 2. on delete keep everything as it is, add deleted tag
-// 3. on re-adding, clear tracked cells, if they not cleared yet
-// 3.1 it's possible to has something like clearing id adn if if > than delete id, then don't clear collection
-// 4. clear remains cells
-
-// in fact the only place when we need guaranty that elements was removed is pool
-// for such case we must set the special_id - when element was removed
-// then we need to iterate over collections and check if they was cleared after
-// or before element removing
-// for example if world.id = 3;
-// deleting element will set __deleted = 3;
-// adding this element again required to check if all collections was cleared after 3
-// so we will check if collection.cleared was 3 or higher, if so then add element to collection
-// if not then clear collection and set cleared to 4
 
 module.exports = SSCDWorld;
 
@@ -55,7 +53,7 @@ Object.assign(SSCDWorld.prototype, {
     params.grid_size = params.grid_size || 512;
     params.grid_error = params.grid_error !== undefined ? params.grid_error : 2;
 
-    this.__readonly = params.readonly ?? false;
+    this.__readonly = params.readonly ? 1 : 0;
 
     // create grid and set params
     this.__grid = [];
@@ -120,8 +118,10 @@ Object.assign(SSCDWorld.prototype, {
   // add collision object to world
   add: function (obj) {
     // if object already in world throw exception
-    if (obj.__world !== null && this.__readonly === false) {
-      throw new SSCDIllegalActionError("Object to add is already in a collision world!");
+    if ((obj.__world !== null && this.__readonly === 0) || (obj.__world === null && this.__readonly > 0)) {
+      throw new SSCDIllegalActionError(
+        "object is already in a collision world or you trying to add object to non-initialized world"
+      );
     }
 
     // get grid range
@@ -141,14 +141,12 @@ Object.assign(SSCDWorld.prototype, {
         // make sure lists exist
         var column = grid[x] ?? this.fill_columns(x);
         var chunk = column[y] ?? this.fill_rows(x, y);
-
-        chunk.elements[chunk.size] = obj;
-        chunk.size += 1;
+        chunk.addElement(this.__readonly, obj);
       }
     }
 
     // set world and grid chunks boundaries
-    if (this.__readonly === false) {
+    if (this.__readonly === 0) {
       obj.__world = this;
     }
 
@@ -182,14 +180,10 @@ Object.assign(SSCDWorld.prototype, {
     var min_y = Math.floor(aabb.position.y / this.__params.grid_size);
     var max_x = Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size);
     var max_y = Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size);
-    for (var i = min_x; i <= max_x; ++i) {
-      for (var j = min_y; j <= max_y; ++j) {
-        const chunk = this.__grid[i][j];
+    for (var x = min_x; x <= max_x; ++x) {
+      for (var y = min_y; y <= max_y; ++y) {
+        const chunk = this.__grid[x][y];
         const idx = chunk.elements.indexOf(obj);
-        if (idx === 0) {
-          chunk.size = 0;
-          continue;
-        }
         chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
       }
     }
@@ -274,7 +268,7 @@ Object.assign(SSCDWorld.prototype, {
         if (curr_grid_chunk === undefined) continue;
 
         // iterate over objects in cell
-        let size = curr_grid_chunk.size;
+        let size = curr_grid_chunk.getSize(this.__readonly);
         let elements = curr_grid_chunk.elements;
         for (var x = 0; x < size; x++) {
           // get current object

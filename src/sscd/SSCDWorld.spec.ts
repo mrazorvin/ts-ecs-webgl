@@ -385,10 +385,22 @@ test("[SSCDWorld -> SSCDRectangle.move_to()]", (t) => {
 
 test("[SSCDWorld -> add(), readonly]", (t) => {
   const world = new SSCDWorld({ grid_size: 16, size: 3 });
+  const readonly_world = new SSCDWorld({ grid_size: 16, size: 3, readonly: true });
   const rectangle = new SSCDRectangle(new SSCDVector(32, 32), new SSCDVector(16, 16));
+
+  // can't add non-initialized rectangle to read-only world
+  t.throws(() => {
+    readonly_world.add(rectangle);
+  });
+
   world.add(rectangle);
 
+  // can't add rectangle second time to mutable world
   t.throws(() => {
     world.add(rectangle);
   });
+
+  readonly_world.add(rectangle);
+
+  let collision: SSCDRectangle | undefined;
 });

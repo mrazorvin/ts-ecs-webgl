@@ -18,7 +18,7 @@ interface SmartCollection {
 }
 
 export class SSCDWorld {
-  constructor(config: { grid_size: number; size?: number });
+  constructor(config: { grid_size: number; size?: number; readonly?: boolean });
   add<T extends SSCDCircle | SSCDRectangle>(component: T): T;
   remove<T extends SSCDShape>(component: T): T;
   move_to(x: number, y: number): void;
