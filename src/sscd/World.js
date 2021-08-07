@@ -376,6 +376,13 @@ Object.assign(SSCDWorld.prototype, {
       }
     }
   },
+
+  clear: function () {
+    if (this.__readonly === 0) {
+      throw new SSCDIllegalActionError(`[SSCDWorld.clear()] you can't clear non-readonly world`);
+    }
+    this.__readonly += 1;
+  },
 });
 
 class SSCDIllegalActionError extends Error {

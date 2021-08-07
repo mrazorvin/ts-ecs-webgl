@@ -28,6 +28,7 @@ export class SSCDWorld {
     cb: (shape: T) => undefined | void | boolean
   ): boolean;
   __grid: Array<Array<SmartCollection>>;
+  clear(): void;
 }
 
 export class SSCDVector {

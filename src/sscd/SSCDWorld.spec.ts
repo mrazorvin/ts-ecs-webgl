@@ -400,7 +400,37 @@ test("[SSCDWorld -> add(), readonly]", (t) => {
     world.add(rectangle);
   });
 
+  t.throws(() => {
+    readonly_world.remove(rectangle);
+  });
+
   readonly_world.add(rectangle);
 
-  let collision: SSCDRectangle | undefined;
+  collision: {
+    let collision: SSCDRectangle | undefined;
+    readonly_world.test_collision(new SSCDCircle(rectangle.__position, 1), undefined, (shape) => {
+      collision = shape;
+    });
+    t.is(collision, rectangle);
+  }
+
+  readonly_world.clear();
+
+  no_collision: {
+    let collision: SSCDRectangle | undefined;
+    readonly_world.test_collision(new SSCDCircle(rectangle.__position, 1), undefined, (shape) => {
+      collision = shape;
+    });
+    t.is(collision, undefined);
+  }
+
+  readonly_world.add(rectangle);
+
+  collision: {
+    let collision: SSCDRectangle | undefined;
+    readonly_world.test_collision(new SSCDCircle(rectangle.__position, 1), undefined, (shape) => {
+      collision = shape;
+    });
+    t.is(collision, rectangle);
+  }
 });
