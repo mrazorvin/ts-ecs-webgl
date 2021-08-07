@@ -85,31 +85,6 @@ Object.assign(SSCDWorld.prototype, {
     GlobalTagsCache[name] = 1 << __next_coll_tag++;
   },
 
-  // clean-up world memory
-  cleanup: function () {
-    // iterate over grid rows
-    var rows = Object.keys(this.__grid);
-    for (var _i = 0; _i < rows.length; ++_i) {
-      var i = rows[_i];
-
-      // iterate over grid columns in current row:
-      var columns = Object.keys(this.__grid[i]);
-      for (var _j = 0; _j < columns.length; ++_j) {
-        var j = columns[_j];
-
-        // if empty grid chunk delete it
-        if (this.__grid[i][j].length === 0) {
-          delete this.__grid[i][j];
-        }
-      }
-
-      // if no more columns are left in current row delete the row itself
-      if (Object.keys(this.__grid[i]).length === 0) {
-        delete this.__grid[i];
-      }
-    }
-  },
-
   // get the hash value of a list of collision tags or individual tag
   // tags can either be a single string or a list of strings
   __get_tags_value: function (tags) {
@@ -145,7 +120,7 @@ Object.assign(SSCDWorld.prototype, {
   // add collision object to world
   add: function (obj) {
     // if object already in world throw exception
-    if (obj.__world !== null && obj.__world !== this && this.__readonly === false) {
+    if (obj.__world !== null && this.__readonly === false) {
       throw new SSCDIllegalActionError("Object to add is already in a collision world!");
     }
 
@@ -173,7 +148,9 @@ Object.assign(SSCDWorld.prototype, {
     }
 
     // set world and grid chunks boundaries
-    obj.__world = this;
+    if (this.__readonly === false) {
+      obj.__world = this;
+    }
 
     // TODO: possible optimization - remove __last_insert_aabb and this call
     obj.__last_insert_aabb = obj.get_aabb().clone();
@@ -216,6 +193,8 @@ Object.assign(SSCDWorld.prototype, {
         chunk.elements[idx] = chunk.elements[(chunk.size -= 1)];
       }
     }
+
+    obj.__world = null;
   },
 
   // update object grid when it moves or resize etc.
@@ -251,18 +230,6 @@ Object.assign(SSCDWorld.prototype, {
     }
 
     return this.__grid[x][y];
-  },
-
-  // check collision and return first object found.
-  // obj: object to check collision with (vector or collision shape)
-  // collision_tags: optional single or multiple tags to check collision with
-  // return: first object collided with, or null if don't collide with anything
-  pick_object: function (obj, collision_tags) {
-    var outlist = [];
-    if (this.test_collision(obj, collision_tags, outlist, 1)) {
-      return outlist[0];
-    }
-    return null;
   },
 
   // test collision with vector or object
@@ -326,17 +293,12 @@ Object.assign(SSCDWorld.prototype, {
           }
 
           // if collide with object:
-          if (this.__do_collision(curr_obj, obj)) {
+          if (curr_obj.test_collide_with(obj)) {
             if (cb(curr_obj) === false) return true;
           }
         }
       }
     }
-  },
-
-  // do actual collision check between source and target
-  __do_collision: function (src, target) {
-    return src.test_collide_with(target);
   },
 
   // debug-render all the objects in world
@@ -424,6 +386,7 @@ Object.assign(SSCDWorld.prototype, {
 
 class SSCDIllegalActionError extends Error {
   constructor(message) {
+    super();
     this.name = "Illegal Action";
     this.message = message || "";
   }

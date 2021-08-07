@@ -383,7 +383,12 @@ test("[SSCDWorld -> SSCDRectangle.move_to()]", (t) => {
   ), "");
 });
 
-test("[SSCDWorld -> remove(), pool()]", (t) => {
-  // if we delete __world, and grid_boundaries we could use same entity for both worlds
-  // otherwise on move we need to copy one entity from world to another world
+test("[SSCDWorld -> add(), readonly]", (t) => {
+  const world = new SSCDWorld({ grid_size: 16, size: 3 });
+  const rectangle = new SSCDRectangle(new SSCDVector(32, 32), new SSCDVector(16, 16));
+  world.add(rectangle);
+
+  t.throws(() => {
+    world.add(rectangle);
+  });
 });

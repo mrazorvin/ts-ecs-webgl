@@ -8,6 +8,7 @@ class SSCDShape {
   constructor() {
     // create position and set default type
     this.__position = new SSCDVector();
+    this.__world = null;
     this.__last_insert_aabb = null; // will store the aabb at the last time this shape grid was last updated
     this.__found = -1;
   }
@@ -283,15 +284,15 @@ Object.assign(SSCDShape.prototype, {
     // copy of set_position()
     const obj = this;
     const world = this.__world;
-    const aabb = this.aabb;
-    const prev_aabb_x = this.__aabb.position.x;
-    const prev_aabb_y = this.__aabb.position.y;
+    const aabb = this.__aabb;
+    const prev_aabb_x = aabb.position.x;
+    const prev_aabb_y = aabb.position.y;
 
     const prev_grid = {
-      min_x: Math.floor(aabb.position.x / this.__params.grid_size),
-      min_y: Math.floor(aabb.position.y / this.__params.grid_size),
-      max_x: Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size),
-      max_y: Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size),
+      min_x: Math.floor(aabb.position.x / world.__params.grid_size),
+      min_y: Math.floor(aabb.position.y / world.__params.grid_size),
+      max_x: Math.floor((aabb.position.x + aabb.size.x) / world.__params.grid_size),
+      max_y: Math.floor((aabb.position.y + aabb.size.y) / world.__params.grid_size),
     };
     this.__position.x = next_x;
     this.__position.y = next_y;
@@ -305,20 +306,19 @@ Object.assign(SSCDShape.prototype, {
     this.__update_aabb_pos_fast(next_x, next_y);
 
     const next_grid = {
-      min_x: Math.floor(aabb.position.x / this.__params.grid_size),
-      min_y: Math.floor(aabb.position.y / this.__params.grid_size),
-      max_x: Math.floor((aabb.position.x + aabb.size.x) / this.__params.grid_size),
-      max_y: Math.floor((aabb.position.y + aabb.size.y) / this.__params.grid_size),
+      min_x: Math.floor(aabb.position.x / world.__params.grid_size),
+      min_y: Math.floor(aabb.position.y / world.__params.grid_size),
+      max_x: Math.floor((aabb.position.x + aabb.size.x) / world.__params.grid_size),
+      max_y: Math.floor((aabb.position.y + aabb.size.y) / world.__params.grid_size),
     };
-    const curr_aabb = obj.get_aabb();
     if (
-      Math.abs(curr_aabb.position.x - prev_aabb_x) <= world.__params.grid_error &&
-      Math.abs(curr_aabb.position.y - prev_aabb_y) <= world.__params.grid_error
+      Math.abs(aabb.position.x - prev_aabb_x) <= world.__params.grid_error &&
+      Math.abs(aabb.position.y - prev_aabb_y) <= world.__params.grid_error
     ) {
       return this;
     }
 
-    this.__last_insert_aabb = this.__aabb;
+    this.__last_insert_aabb = aabb;
 
     const start_x = Math.min(prev_grid.min_x, next_grid.min_x);
     const end_x = Math.max(prev_grid.max_x, next_grid.max_x);
