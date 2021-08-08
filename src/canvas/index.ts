@@ -23,7 +23,7 @@ import { Modification } from "./Modification";
 import { MapLoader, map_mesh, map_shader, map_texture } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
 import { world_transform_component } from "./WorldView";
-import { CollisionWorld } from "./CollisionWorld";
+import { CollisionWorld, LocalCollisionWorld } from "./CollisionWorld";
 import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
 
@@ -43,6 +43,7 @@ main_world.resource(new Screen());
 main_world.resource(gl);
 main_world.resource(camera);
 main_world.resource(new CollisionWorld());
+main_world.resource(new LocalCollisionWorld());
 
 const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   const { width, height } = t.size(ctx.gl, "100%", "100%");
@@ -135,41 +136,25 @@ let sec = 0;
 let current_frame = 0;
 
 main_world.system(
-  sys([Input, Camera], (world, input, camera) => {
-    // prettier-ignore
-    const move_hero = $("mh") || $("mh", (create) => class {
-      constructor(public input: Input, public camera: Camera) {}
-      query = create([Transform, Modification, Creature], (_, transform, modification) => {
-        if (this.input.click_x && this.input.click_y) {
-          // part of contract even if we don't move camera, we still need to call function at least once
-          this.camera.set_position(this.input.click_x - this.camera.transform.width / 2, this.input.click_y - this.camera.transform.height / 2);
+  sys([Input, Camera], (_, input, camera) => {
+    if (input.click_x && input.click_y) {
+      // part of contract even if we don't move camera, we still need to call function at least once
+      camera.set_position(input.click_x - camera.transform.width / 2, input.click_y - camera.transform.height / 2);
 
-          // part of contract camera position synchronization
-          if (this.camera.transform.position) {
-            this.input.camera_x = -this.camera.transform.position[0];
-            this.input.camera_y = -this.camera.transform.position[1];
-          }
+      // part of contract camera position synchronization
+      if (camera.transform.position) {
+        input.camera_x = -camera.transform.position[0];
+        input.camera_y = -camera.transform.position[1];
+      }
 
-          this.input.click_x = 0;
-          this.input.click_y = 0;
-        }
-
-        // make a static method from Modification class
-        const target_x = this.input.current_x - transform.width / 2;
-        const target_y = this.input.current_y - transform.height / 2;
-        const direction_x = transform.position[0] - target_x;
-        const direction_y = transform.position[1] - target_y;
-        modification.movement_target[0] = direction_x;
-        modification.movement_target[1] = direction_y;
-      })
-    })
-
-    world.query(move_hero.prep(input, camera));
+      input.click_x = 0;
+      input.click_y = 0;
+    }
   })
 );
 
 main_world.system(
-  sys([CollisionWorld, Camera], (world, sscd) => {
+  sys([CollisionWorld, LocalCollisionWorld, Camera], (world, sscd, lcw, camera) => {
     // amazing method for debbug add more such utils
     // if (sec >= 0.98) {
     //   console.log(
@@ -194,12 +179,46 @@ main_world.system(
       ),
       undefined,
       (shape) => {
-        const { entity } = shape.get_data();
-        if (entity !== undefined) {
-          manager.attach(entity, visible);
-        }
+        const entity = shape.get_data().entity!;
+        manager.attach(entity, visible);
+        lcw.world.add(shape);
       }
     );
+  })
+);
+
+const MoveHero = $(
+  "mh",
+  (create) =>
+    class {
+      constructor(public world: World, public input: Input, public camera: Camera, public lcw: LocalCollisionWorld) {}
+      query = create([Transform, Modification, Creature], (_, transform, modification) => {
+        this.lcw.world.test_collision<SSCDShape<EntityRef>>(
+          new SSCDRectangle(
+            new SSCDVector(transform.position[0], transform.position[1]),
+            new SSCDVector(transform.width, transform.height)
+          ),
+          undefined,
+          (shape) => {
+            const entity = shape.get_data()?.entity;
+            if (entity) this.world.delete_entity(entity);
+          }
+        );
+
+        // make a static method from Modification class
+        const target_x = this.input.current_x - transform.width / 2;
+        const target_y = this.input.current_y - transform.height / 2;
+        const direction_x = transform.position[0] - target_x;
+        const direction_y = transform.position[1] - target_y;
+        modification.movement_target[0] = direction_x;
+        modification.movement_target[1] = direction_y;
+      });
+    }
+);
+
+main_world.system(
+  sys([Input, Camera, LocalCollisionWorld], (world, input, camera, lcw) => {
+    world.query(MoveHero.prep(world, input, camera, lcw));
   })
 );
 
@@ -215,7 +234,7 @@ main_world.system(
     // prettier-ignore
     const render_tiles = $("rt") ?? $("rt", (fn) => class {
       constructor (public idx: number, public data: typeof map_mesh.transformation_data) {}
-      query = fn([Sprite, Transform, Static], (_, __, transform, ___) => {
+      query = fn([Sprite, Transform, Static, Visible], (_, __, transform, ___) => {
         const view = Transform.view(main_world, transform);
 
         this.data[this.idx * 9 + 0] = view[0];
@@ -240,7 +259,7 @@ main_world.system(
     gl.uniform1i(map_shader.location.Image, 0);
     gl.bindVertexArray(map_mesh.vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, map_mesh.transformation_buffer.buffer);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, map_mesh.transformation_data);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, map_mesh.transformation_data.subarray(0, render_tiles.idx * 9));
     gl.drawArraysInstanced(
       gl.TRIANGLE_STRIP,
       0, // offset
@@ -347,8 +366,9 @@ main_world.system(
 );
 
 main_world.system(
-  sys([], (world) => {
+  sys([LocalCollisionWorld], (world, lcw) => {
     Visible.clear_collection(world);
+    lcw.world.clear();
   })
 );
 

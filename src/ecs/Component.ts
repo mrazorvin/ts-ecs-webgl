@@ -102,7 +102,7 @@ export function InitComponent() {
 
     constructor(...args: any[]) {}
 
-    static dispose: (world: World, entity: Entity, component: IComponent) => void;
+    static dispose: (world: World, entity: Entity, component: any) => void;
 
     // real code will be injected after initialization
     static get = new Function(
