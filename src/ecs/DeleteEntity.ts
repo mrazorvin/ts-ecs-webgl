@@ -56,7 +56,17 @@ export class DeleteEntity {
           ${components.filter((component) => storage_id === component.storage_row_id)
             .map(
               (component) => `
-                ${pool_components.includes(component) ?  "" : `s${storage_id}._${component.container_column_id} = null;`}
+                ${pool_components.includes(component) ?  "" : `
+                  ${component.hasOwnProperty("dispose") ? 
+                      ` 
+                        var vc${component.id} = s${storage_id}._${component.container_column_id};
+                        if (vc${component.id} !== null) {
+                          Components[${components.indexOf(component)}].dispose(world, entity, vc${component.id}); 
+                        }` 
+                      : ""
+                  }
+                  s${storage_id}._${component.container_column_id} = null;
+                `}
               `).join("\n")}
         `).join("\n")
       }
@@ -90,8 +100,8 @@ export class DeleteEntity {
         ${pool_hash !== undefined ? `entity.pool.push(entity);` : undefined}
     }`;
 
-    const func = new Function("pool_hash", body);
+    const func = new Function("pool_hash", "Components", body);
 
-    return func(pool_hash) as DeleteFunction;
+    return func(pool_hash, components) as DeleteFunction;
   }
 }

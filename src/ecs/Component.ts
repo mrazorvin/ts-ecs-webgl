@@ -102,25 +102,31 @@ export function InitComponent() {
 
     constructor(...args: any[]) {}
 
+    static dispose: (world: World, entity: Entity, component: IComponent) => void;
+
     // real code will be injected after initialization
     static get = new Function(
       "entity",
       `return entity.components._${row_id} && entity.components._${row_id}._${column_id}`
     ) as typeof IComponent["get"];
 
-    static manager = new Function("Component", "components", `return (world) => {
+    
+    static manager = new Function("Component", "components", `return function (world) {
       const manager = world.get_collections("_${id}", components)._${id};
       if (manager.clear === undefined) {
-        manager.clear = Component.clear;
+        manager.clear = Component.clear(this);
         manager.attach = Component.attach;
+        manager.world = world;
       } 
       return manager;
-    }`)(Component, [Component]) as typeof IComponent["manager"];;
+    }`)(Component, [Component]) as typeof IComponent["manager"];
 
-    private static clear = new Function("entity", `
+    private static clear = (Constructor: Component) => (new Function("Constructor", `return function(entity) { 
       // we must have this check, otherwise we might create property that we don't want on deletion 
       const container = entity.components._${row_id};
-      if (container._${column_id} !== undefined && container._${column_id} !== null) {
+      const value = container._${column_id};
+      if (value !== undefined && value !== null) {
+        ${Constructor.hasOwnProperty("dispose") ? `Constructor.dispose(this.world, entity, value);`: ""}
         container._${column_id} = null;
         const register = entity.register._${row_id};
         const id = register?._${column_id};
@@ -134,15 +140,20 @@ export function InitComponent() {
       }
 
       return entity;
-    `) 
+    }`)(Constructor));
 
     // if entity has single component, return entity to pool and   
     static clear_collection = new Function("world", `
       const collection = world.components.get(${id});
       if (collection === undefined) return false;
       const refs = collection.refs;
+      const isDispose = this.dispose !== undefined; 
       for (let i = 0; i < collection.size; i++) {
         const entity = refs[i];
+        if (isDispose) {
+          const component = entity.components._${row_id}._${column_id};
+          this.dispose(world, entity, component);
+        }
         entity.components._${row_id}._${column_id} = null;
         entity.register._${row_id}._${column_id} = null;
       }
@@ -184,7 +195,8 @@ export function InitComponent() {
       ComponentsCollection)
     
     attach(world: World, entity: Entity): Entity  {
-      return Component.manager(world).attach(entity, this);
+      // @ts-expect-error
+      return this.constructor.manager(world).attach(entity, this);
     }
   }
 

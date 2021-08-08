@@ -1,7 +1,7 @@
 import { default as test, ExecutionContext } from "ava";
 import { IComponent } from "../Component";
 import { DeleteEntity } from "../DeleteEntity";
-import { $, Entity, World } from "../World";
+import { $, Entity, InitComponent, World } from "../World";
 import { TestComponent3, TestComponent1, TestComponent2, TestComponent0, TestComponent9 } from "./world_spec_fixtures";
 
 // test that TestComponent1 has expected container class, register class, row_id, column id
@@ -408,4 +408,88 @@ test("[World.delete_entity()]", (t) => {
   world.delete_entity(entity5);
   validate_deleted_entity(t, entity3);
   t.is(DeleteEntity.func_cache.get(entity3.hash)?.["_"], DeleteEntity.func_cache.get(entity5.hash)?.["_"]);
+});
+
+test(`[World.delete_entity()] dispose`, (t) => {
+  const world = new World();
+  let dispose_count = 0;
+  let disposed_entity: Entity | undefined;
+  let disposed_world: World | undefined;
+  let disposed_component: IComponent | undefined;
+  class DisposableComponent extends InitComponent() {
+    static override dispose(world: World, entity: Entity, component: IComponent) {
+      disposed_entity = entity;
+      disposed_world = world;
+      disposed_component = component;
+      dispose_count += 1;
+    }
+  }
+
+  const component = new DisposableComponent();
+  const entity = world.entity([component]);
+  world.delete_entity(entity);
+  t.is(dispose_count, 1);
+  t.is(disposed_world, world);
+  t.is(disposed_entity, entity);
+  t.is(disposed_component, component);
+
+  world.delete_entity(entity);
+  t.is(dispose_count, 1);
+});
+
+test(`[World -> Component.clear()] dispose`, (t) => {
+  const world = new World();
+  let dispose_count = 0;
+  let disposed_entity: Entity | undefined;
+  let disposed_world: World | undefined;
+  let disposed_component: IComponent | undefined;
+  class DisposableComponent extends InitComponent() {
+    static override dispose(world: World, entity: Entity, component: IComponent) {
+      disposed_entity = entity;
+      disposed_world = world;
+      disposed_component = component;
+      dispose_count += 1;
+    }
+  }
+
+  const component = new DisposableComponent();
+  const entity = world.entity([component]);
+  const manager = DisposableComponent.manager(world)
+  manager.clear(entity);
+  t.is(dispose_count, 1);
+  t.is(disposed_world, world);
+  t.is(disposed_entity, entity);
+  t.is(disposed_component, component);
+
+  manager.clear(entity);
+  t.is(dispose_count, 1);
+});
+
+
+test(`[World -> Component.clear_collection()] dispose`, (t) => {
+  const world = new World();
+  let dispose_count = 0;
+  let disposed_entity: Entity | undefined;
+  let disposed_world: World | undefined;
+  let disposed_component: IComponent | undefined;
+  class DisposableComponent extends InitComponent() {
+    static override dispose(world: World, entity: Entity, component: IComponent) {
+      disposed_entity = entity;
+      disposed_world = world;
+      disposed_component = component;
+      dispose_count += 1;
+    }
+  }
+
+  world.entity([new DisposableComponent()]);
+  const component = new DisposableComponent();
+  const entity = world.entity([component]);
+  DisposableComponent.clear_collection(world);
+  t.is(dispose_count, 2);
+  t.is(disposed_world, world);
+  t.is(disposed_entity, entity);
+  t.is(disposed_component, component);
+
+  DisposableComponent.clear_collection(world);
+  t.is(dispose_count, 2);
 });
