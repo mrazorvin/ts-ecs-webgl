@@ -3,7 +3,7 @@ import { Entity, World } from "./World";
 import { EntityPool, Pool } from "./Pool";
 import { TestComponent1, TestComponent2, TestComponent7, TestComponent9 } from "./world_spec/world_spec_fixtures";
 import { HASH_HEAD } from "./Component";
-import { validate_component, validate_deleted_entity } from "./world_spec/world_component.spec";
+import { validate_component, validate_deleted_entity } from "./world_spec/world_spec_utils";
 
 test("[EntityPool.pop()]", (t) => {
   const pool = new EntityPool([TestComponent2, TestComponent1]!);
@@ -202,3 +202,5 @@ test("[Pool.get()]", (t) => {
   t.is(world.components.get(TestComponent9.id)?.refs.length, 1);
   t.is(world.components.get(TestComponent9.id)?.size, 1);
 });
+
+test("[World -> Pool.instance()] non-conflict & synergy with generic components pool", (t) => {});

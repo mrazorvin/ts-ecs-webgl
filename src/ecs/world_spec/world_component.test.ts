@@ -1,7 +1,8 @@
-import { default as test, ExecutionContext } from "ava";
+import { default as test } from "ava";
 import { ComponentFactory, IComponent } from "../Component";
 import { DeleteEntity } from "../DeleteEntity";
 import { $, Entity, InitComponent, World } from "../World";
+import { validate_component, validate_deleted_entity } from "./world_spec_utils";
 import { TestComponent3, TestComponent1, TestComponent2, TestComponent0, TestComponent9 } from "./world_spec_fixtures";
 
 // test that TestComponent1 has expected container class, register class, row_id, column id
@@ -23,73 +24,6 @@ test("[InitComponent()] Component 9", (t) => {
   t.is(row_id, 1);
   t.is(column_id, 0);
 });
-
-export const validate_deleted_entity = (t: ExecutionContext, world: World, entity: Entity, exceptions?: Array<typeof IComponent>) => {
-  t.true(Object.values(entity.components).flatMap((container) => Object.values(container)).length !== 0);
-  t.true(Object.values(entity.register).flatMap((register) => Object.values(register)).length !== 0);
-
-  for (const row_id in entity.components) {
-    for (const column_id in entity.components[row_id]) {
-      const pos_in_collection = entity.register[row_id]![column_id]!;
-      const component = entity.components[row_id]![column_id]!;
-      t.is(pos_in_collection, null);
-
-      if (component != null && exceptions !== undefined) {
-        if (exceptions.find((Constructor) => component.constructor === Constructor)) {
-          t.not(component, null);
-          t.false(world.components.get((component.constructor as typeof IComponent).id)?.pool.includes(component));
-        } else {
-          t.is(component, null);
-        }
-      } else {
-        t.is(component, null);
-      }
-    }
-  }
-};
-
-export const validate_component = <T extends typeof IComponent>(
-  t: ExecutionContext,
-  world: World,
-  entity: Entity,
-  component: IComponent,
-  props: {
-    Constructor: T;
-    size: number;
-    length?: number;
-    rows: number;
-    columns: number;
-    id: number;
-  }
-) => {
-  const { Constructor, size, length, rows, columns, id } = props;
-
-  // getting, un-exist component on entity, must return undefined
-  // and shouldn't cause any side effect (creating new properties in entity)
-  t.is(TestComponent0.get(entity), undefined);
-
-  // collection must changed exactly, one time
-  t.is(world.components.get(Constructor.id)?.size, size);
-  t.is(world.components.get(Constructor.id)?.refs.length, length ?? size);
-  t.is(world.components.get(Constructor.id)?.refs[id], entity);
-
-  const row = `_${Constructor.storage_row_id}`;
-  const column = `_${Constructor.container_column_id}`;
-
-  // entity must have exactly one record about new component
-  t.is(entity.register[row]?.constructor, Constructor.register_class as unknown);
-  t.is(entity.register[row]?.[column], id);
-  t.is(Object.keys(entity.register).length, rows);
-  t.is(Object.keys(entity.register[row]!).length, columns);
-
-  // entity must have exactly one record about it position in collection
-  t.is(entity.components[row]?.constructor, Constructor.container_class as unknown);
-  t.is(entity.components[row]?.[column], component);
-  t.is(Object.keys(entity.components).length, rows);
-  t.is(Object.keys(entity.components[row]!).length, columns);
-
-  t.is(Constructor.get(entity), component);
-};
 
 // test that after attaching all affecting values such as collection.refs, collection.size
 // entity.hash, entity.register, entity.components
@@ -504,4 +438,57 @@ test(`[World -> Component.clear_collection()] dispose`, (t) => {
 
   DisposableComponent.clear_collection(world);
   t.is(dispose_count, 2);
+});
+
+test(`[World -> Component.clear_collection(), clear(), delete_entity()] pooling`, (t) => {
+  class ExpensiveComponent extends InitComponent() {
+    position: Float32Array;
+    static create = ComponentFactory(ExpensiveComponent, (prev_component, x, y) => {
+      if (prev_component  !== undefined) {
+        prev_component.position[0] = x;
+        prev_component.position[1] = y;
+        
+        return prev_component;
+      }
+      return new ExpensiveComponent(x, y);
+    });
+
+    constructor(x: number, y: number) {
+      super();
+      this.position = new Float32Array([x, y]);
+    }
+  }
+
+  const validate_pool = (clear: (world: World, entity: Entity) => void) => {
+    const world = new World(); 
+    const component = ExpensiveComponent.create(world, 1, 2);
+    const entity = world.entity([component]);
+    const collection = world.components.get(ExpensiveComponent.id)!;
+    const pool = collection.pool;
+  
+    t.is(pool.length, 0);
+    t.is(collection.size, 1);
+
+    clear(world, entity);
+  
+    t.is(pool.length, 1);
+    t.is(collection.size, 0);
+    t.is(pool[0], component);
+    t.is(ExpensiveComponent.get(entity), null);
+
+    const component2 = ExpensiveComponent.create(world, 3, 4);
+    t.is(pool.length, 0);
+    t.is(collection.size, 0)
+    t.is(component2, component);
+    t.is(component2.position, component.position);
+    t.is(component2.position[0], 3);
+
+    const component3 = ExpensiveComponent.create(world, 3, 4);
+    t.not(component2, component3);
+    t.not(component2.position, component3.position);
+  }
+
+  validate_pool((world, entity) => world.delete_entity(entity));
+  validate_pool((world, entity) => ExpensiveComponent.manager(world).clear(entity));
+  validate_pool((world, entity) => ExpensiveComponent.clear_collection(world));
 });
