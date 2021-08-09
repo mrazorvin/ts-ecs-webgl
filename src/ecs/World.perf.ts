@@ -1,38 +1,43 @@
 import { $, World } from "./World";
-import { InitComponent } from "./Component";
+import { ComponentFactory, InitComponent } from "./Component";
+import {
+  TestComponent0,
+  TestComponent1,
+  TestComponent2,
+  TestComponent3,
+  TestComponent4,
+  TestComponent5,
+  TestComponent6,
+  TestComponent7,
+  TestComponent8,
+} from "./world_spec/world_spec_fixtures";
 
 const world = new World();
 // @ts-expect-error
 const clases = [];
 for (let i = 0; i < 6000; i++) {
-  clases.push(class _c extends InitComponent() {});
-  world.entity([new clases[clases.length - 1]!()]);
+  class _C extends InitComponent() {
+    static create = ComponentFactory(_C, () => new _C());
+  }
+  clases.push(_C);
+  world.entity([clases[clases.length - 1]!.create(world)]);
 }
-class TestComponent extends InitComponent() {}
-class TestComponent1 extends InitComponent() {}
-class TestComponent2 extends InitComponent() {}
-class TestComponent3 extends InitComponent() {}
-class TestComponent4 extends InitComponent() {}
-class TestComponent5 extends InitComponent() {}
-class TestComponent6 extends InitComponent() {}
-class TestComponent7 extends InitComponent() {}
-class TestComponent8 extends InitComponent() {}
 
 for (let i = 0; i < 400; i++) {
   for (let z = 0; z < 5; z++)
     world.entity([
-      new TestComponent(),
-      new TestComponent1(),
-      new TestComponent2(),
-      new TestComponent3(),
-      new TestComponent4(),
-      new TestComponent5(),
-      new TestComponent6(),
-      new TestComponent7(),
+      TestComponent0.create(world),
+      TestComponent1.create(world),
+      TestComponent2.create(world),
+      TestComponent3.create(world),
+      TestComponent4.create(world),
+      TestComponent5.create(world),
+      TestComponent6.create(world),
+      TestComponent7.create(world),
       ...Array(8)
         .fill(10)
         // @ts-expect-error
-        .map((x, y) => new clases[y * x + i + z]()),
+        .map((x, y) => clases[y * x + i + z].create(world)),
     ]);
 }
 
@@ -46,7 +51,7 @@ query: {
       constructor(public y: any[]) {}
       query = create(
         [
-          TestComponent,
+          TestComponent0,
           TestComponent1,
           TestComponent2,
           TestComponent3,

@@ -29,9 +29,10 @@ test("[EntityPool.push()]", (t) => {
 });
 
 test("[EntityPool.create()]", (t) => {
+  const world = new World();
   const pool = new EntityPool([TestComponent1, TestComponent9]);
-  const component1 = new TestComponent1();
-  const component9 = new TestComponent9();
+  const component1 = TestComponent1.create(world);
+  const component9 = TestComponent9.create(world);
 
   // lazy initialization, pool will be lazy initialized after first pop()
   // so we need to ask pool for entity at least once
@@ -52,8 +53,8 @@ test("[EntityPool.create()]", (t) => {
 test("[EntityPool.instantiate()]", (t) => {
   const pool = new EntityPool([TestComponent9, TestComponent1]!);
   const world = new World();
-  const component1 = new TestComponent1();
-  const component9 = new TestComponent9();
+  const component1 = TestComponent1.create(world);
+  const component9 = TestComponent9.create(world);
 
   // lazy initialization
   pool.pop();
@@ -88,9 +89,9 @@ test("[EntityPool.instantiate()]", (t) => {
 test("[EntityPool.reuse()]", (t) => {
   const pool = new EntityPool([TestComponent1, TestComponent9]);
   const world = new World();
-  const component1 = new TestComponent1();
-  const component7 = new TestComponent7();
-  const component9 = new TestComponent9();
+  const component1 = TestComponent1.create(world);
+  const component7 = TestComponent7.create(world);
+  const component9 = TestComponent9.create(world);
   const empty_entity = world.entity([component1, component7, component9]);
 
   const prev_ref = empty_entity.ref;
@@ -101,7 +102,7 @@ test("[EntityPool.reuse()]", (t) => {
   empty_entity.pool = pool as EntityPool<any>;
 
   world.delete_entity(empty_entity);
-  validate_deleted_entity(t, empty_entity, pool.components);
+  validate_deleted_entity(t, world, empty_entity, pool.components);
   t.is(prev_hash, empty_entity?.hash);
   t.is(prev_ref, empty_entity?.ref);
   t.is(prev_ref.entity, undefined);
@@ -155,12 +156,12 @@ test("[Pool.get()]", (t) => {
     (create) => {
       created = true;
       updated = false;
-      return create(new TestComponent1(), new TestComponent9());
+      return create(TestComponent1.create(world), TestComponent9.create(world));
     },
     (create, c1, c9) => {
       created = false;
       updated = true;
-      return create(c1 || new TestComponent1(), c9 || new TestComponent9());
+      return create(c1 || TestComponent1.create(world), c9 || TestComponent9.create(world));
     }
   );
 

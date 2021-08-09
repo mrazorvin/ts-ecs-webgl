@@ -187,6 +187,25 @@ main_world.system(
   })
 );
 
+// function run<T extends any[]>(name: string, value: [...T], run: (...args: T) => void): T {
+//   return null as any;
+// }
+// function cache(): undefined {
+//   return undefined;
+// }
+// TODO
+// A much better way to define a system
+// const system = run(
+//   "MoveHero",
+//   cache(a1, a2, a3, a4, a5) ?? {
+//     components: [Transform, Modification, Creature],
+//     ignore: [],
+//   },
+//   (a1, a2, a3, a4, a5, a6, a7, a8, a9) => {
+//     //
+//   }
+// );
+
 const MoveHero = $(
   "mh",
   (create) =>

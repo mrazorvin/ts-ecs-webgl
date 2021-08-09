@@ -57,14 +57,15 @@ export class DeleteEntity {
             .map(
               (component) => `
                 ${pool_components.includes(component) ?  "" : `
-                  ${component.hasOwnProperty("dispose") ? 
-                      ` 
-                        var vc${component.id} = s${storage_id}._${component.container_column_id};
-                        if (vc${component.id} !== null) {
-                          Components[${components.indexOf(component)}].dispose(world, entity, vc${component.id}); 
-                        }` 
-                      : ""
-                  }
+                  ${component.hasOwnProperty("dispose") || pool_hash === undefined ? `
+                    var vc${component.id} = s${storage_id}._${component.container_column_id};
+                    if (vc${component.id} !== null) {
+                      ${component.hasOwnProperty("dispose") ? `
+                        Components[${components.indexOf(component)}].dispose(world, entity, vc${component.id});
+                      `: ""}
+                      ${pool_hash === undefined && component.no_pool !== true ? `coll_${component.id}.pool.push(vc${component.id})`: ""}
+                    }
+                  ` : ""}
                   s${storage_id}._${component.container_column_id} = null;
                 `}
               `).join("\n")}

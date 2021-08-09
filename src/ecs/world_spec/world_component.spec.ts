@@ -1,5 +1,5 @@
 import { default as test, ExecutionContext } from "ava";
-import { IComponent } from "../Component";
+import { ComponentFactory, IComponent } from "../Component";
 import { DeleteEntity } from "../DeleteEntity";
 import { $, Entity, InitComponent, World } from "../World";
 import { TestComponent3, TestComponent1, TestComponent2, TestComponent0, TestComponent9 } from "./world_spec_fixtures";
@@ -24,7 +24,7 @@ test("[InitComponent()] Component 9", (t) => {
   t.is(column_id, 0);
 });
 
-export const validate_deleted_entity = (t: ExecutionContext, entity: Entity, exceptions?: Array<typeof IComponent>) => {
+export const validate_deleted_entity = (t: ExecutionContext, world: World, entity: Entity, exceptions?: Array<typeof IComponent>) => {
   t.true(Object.values(entity.components).flatMap((container) => Object.values(container)).length !== 0);
   t.true(Object.values(entity.register).flatMap((register) => Object.values(register)).length !== 0);
 
@@ -36,7 +36,8 @@ export const validate_deleted_entity = (t: ExecutionContext, entity: Entity, exc
 
       if (component != null && exceptions !== undefined) {
         if (exceptions.find((Constructor) => component.constructor === Constructor)) {
-          // ignore exception
+          t.not(component, null);
+          t.false(world.components.get((component.constructor as typeof IComponent).id)?.pool.includes(component));
         } else {
           t.is(component, null);
         }
@@ -94,9 +95,7 @@ export const validate_component = <T extends typeof IComponent>(
 // entity.hash, entity.register, entity.components
 test("[World.entity(), Component.attach(), Component.get()]", (t) => {
   const world = new World();
-  const component1 = new TestComponent1();
-  // creating new component's don't magically add new collection to the world
-  t.is(world.components.get(TestComponent1.id), undefined);
+  const component1 = TestComponent1.create(world);
 
   const entity = world.entity([component1]);
   validate_component(t, world, entity, component1, {
@@ -116,7 +115,7 @@ test("[World.entity(), Component.attach(), Component.get()]", (t) => {
     columns: 1,
   });
 
-  const override_component = new TestComponent1();
+  const override_component = TestComponent1.create(world);
   override_component.attach(world, entity);
   validate_component(t, world, entity, override_component, {
     id: 0,
@@ -136,7 +135,7 @@ test("[World.entity(), Component.attach(), Component.get()]", (t) => {
     columns: 1,
   });
 
-  const component2 = new TestComponent2();
+  const component2 = TestComponent2.create(world);
   component2.attach(world, entity);
   validate_component(t, world, entity, override_component, {
     id: 0,
@@ -153,7 +152,7 @@ test("[World.entity(), Component.attach(), Component.get()]", (t) => {
     columns: 2,
   });
 
-  const component9 = new TestComponent9();
+  const component9 = TestComponent9.create(world);
   component9.attach(world, entity);
   validate_component(t, world, entity, component9, {
     id: 0,
@@ -173,12 +172,12 @@ test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
   TestComponent1.clear_collection(world);
 
   const entities: Entity[] = [];
-  entities.push(world.entity([new TestComponent1()]));
-  entities.push(world.entity([new TestComponent1()]));
-  entities.push(world.entity([new TestComponent1()]));
-  entities.push(world.entity([new TestComponent1()]));
-  entities.push(world.entity([new TestComponent1()]));
-  entities.push(world.entity([new TestComponent1()]));
+  entities.push(world.entity([TestComponent1.create(world)]));
+  entities.push(world.entity([TestComponent1.create(world)]));
+  entities.push(world.entity([TestComponent1.create(world)]));
+  entities.push(world.entity([TestComponent1.create(world)]));
+  entities.push(world.entity([TestComponent1.create(world)]));
+  entities.push(world.entity([TestComponent1.create(world)]));
 
   validate_component(t, world, entities[0]!, TestComponent1.get(entities[0]!)!, {
     id: 0,
@@ -203,8 +202,8 @@ test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
   t.is(world.components.get(TestComponent1.id)?.size, 0);
   t.is(world.components.get(TestComponent1.id)?.refs.length, entities.length);
 
-  const entity1 = world.entity([new TestComponent2()]);
-  const entity2 = world.entity([new TestComponent2()]);
+  const entity1 = world.entity([TestComponent2.create(world)]);
+  const entity2 = world.entity([TestComponent2.create(world)]);
   TestComponent1.manager(world).clear(entity1);
   validate_component(t, world, entity1, TestComponent2.get(entity1)!, {
     id: 0,
@@ -235,8 +234,8 @@ test("[World -> Component.clear(), Component.clear_collection()]", (t) => {
 test("[World.query()]", (t) => {
   t.plan(10);
   const world = new World();
-  const component1 = new TestComponent1();
-  const component3 = new TestComponent3();
+  const component1 = TestComponent1.create(world);
+  const component3 = TestComponent3.create(world);
   const entity = world.entity([component1, component3]);
 
   // prettier-ignore
@@ -293,8 +292,8 @@ test("[World.query()] multiple entities", (t) => {
   t.plan(12);
   const world = new World();
 
-  world.entity([new TestComponent1(), new TestComponent3()]);
-  world.entity([new TestComponent1(), new TestComponent3()]);
+  world.entity([TestComponent1.create(world), TestComponent3.create(world)]);
+  world.entity([TestComponent1.create(world), TestComponent3.create(world)]);
 
   // prettier-ignore
   world.query($("q7", (c) => class {
@@ -330,12 +329,16 @@ test("[World.query()] multiple entities", (t) => {
 test("[World.delete_entity()]", (t) => {
   const world = new World();
 
-  world.entity([new TestComponent1()]);
-  world.entity([new TestComponent1()]);
+  world.entity([TestComponent1.create(world)]);
+  world.entity([TestComponent1.create(world)]);
 
-  const entity1 = world.entity([new TestComponent2()]);
-  const entity2 = world.entity([new TestComponent2()]);
-  const entity3 = world.entity([new TestComponent1(), new TestComponent9()]);
+  const comp2_e1 = TestComponent2.create(world);
+  const comp2_e2 = TestComponent2.create(world);
+  const entity1 = world.entity([comp2_e1]);
+  const entity2 = world.entity([comp2_e2]);
+  const comp1_e3 = TestComponent1.create(world);
+  const comp9_e3 =  TestComponent9.create(world);
+  const entity3 = world.entity([comp1_e3, comp9_e3]);
 
   validate_component(t, world, entity3, TestComponent9.get(entity3)!, {
     Constructor: TestComponent9,
@@ -360,10 +363,11 @@ test("[World.delete_entity()]", (t) => {
   ];
 
   world.delete_entity(entity1);
-  validate_deleted_entity(t, entity1);
+  validate_deleted_entity(t, world, entity1);
   t.is(entity1.hash, prev_hash);
   t.is(entity1.ref, prev_ref);
   t.is(entity1.ref.entity, undefined);
+  t.true(world.components.get(TestComponent2.id)!.pool.includes(comp2_e1));
 
   t.is(world.components.get(TestComponent2.id)?.size, 1);
   t.is(world.components.get(TestComponent2.id)?.refs?.length, 2);
@@ -377,14 +381,16 @@ test("[World.delete_entity()]", (t) => {
   world.delete_entity(entity2);
   t.is(world.components.get(TestComponent2.id)?.size, 0);
   t.is(world.components.get(TestComponent2.id)?.refs?.length, 2);
-  validate_deleted_entity(t, entity2);
+  validate_deleted_entity(t, world, entity2);
+  t.true(world.components.get(TestComponent2.id)!.pool.includes(comp2_e2));
+  t.is(world.components.get(TestComponent2.id)!.pool.length, 2);
   t.is(world.components.get(TestComponent2.id)?.refs[0], entity2);
   t.is(world.components.get(TestComponent2.id)?.refs[1], entity2);
 
   t.is(DeleteEntity.func_cache.size, 1);
   t.not(DeleteEntity.func_cache.get(entity2.hash)?.["_"], undefined);
 
-  const new_entity4 = world.entity([new TestComponent2()]);
+  const new_entity4 = world.entity([TestComponent2.create(world)]);
   validate_component(t, world, new_entity4, TestComponent2.get(new_entity4)!, {
     Constructor: TestComponent2,
     columns: 1,
@@ -395,7 +401,10 @@ test("[World.delete_entity()]", (t) => {
   });
 
   world.delete_entity(entity3);
-  validate_deleted_entity(t, entity3);
+  validate_deleted_entity(t, world, entity3);
+  t.true(world.components.get(TestComponent1.id)!.pool.includes(comp1_e3));
+  t.true(world.components.get(TestComponent9.id)!.pool.includes(comp9_e3));
+
   t.is(world.components.get(TestComponent1.id)?.size, 2);
   t.is(world.components.get(TestComponent9.id)?.size, 0);
 
@@ -403,10 +412,10 @@ test("[World.delete_entity()]", (t) => {
   t.not(DeleteEntity.func_cache.get(entity3.hash)?.["_"], undefined);
 
   const entity5 = world.entity([]);
-  new TestComponent9().attach(world, entity5);
-  new TestComponent1().attach(world, entity5);
+  TestComponent9.create(world).attach(world, entity5);
+  TestComponent1.create(world).attach(world, entity5);
   world.delete_entity(entity5);
-  validate_deleted_entity(t, entity3);
+  validate_deleted_entity(t, world, entity3);
   t.is(DeleteEntity.func_cache.get(entity3.hash)?.["_"], DeleteEntity.func_cache.get(entity5.hash)?.["_"]);
 });
 
@@ -417,6 +426,7 @@ test(`[World.delete_entity()] dispose`, (t) => {
   let disposed_world: World | undefined;
   let disposed_component: IComponent | undefined;
   class DisposableComponent extends InitComponent() {
+    static create = ComponentFactory(DisposableComponent, () => new DisposableComponent());
     static override dispose(world: World, entity: Entity, component: IComponent) {
       disposed_entity = entity;
       disposed_world = world;
@@ -425,7 +435,7 @@ test(`[World.delete_entity()] dispose`, (t) => {
     }
   }
 
-  const component = new DisposableComponent();
+  const component = DisposableComponent.create(world);
   const entity = world.entity([component]);
   world.delete_entity(entity);
   t.is(dispose_count, 1);
@@ -444,6 +454,7 @@ test(`[World -> Component.clear()] dispose`, (t) => {
   let disposed_world: World | undefined;
   let disposed_component: IComponent | undefined;
   class DisposableComponent extends InitComponent() {
+    static create = ComponentFactory(DisposableComponent, () => new DisposableComponent());
     static override dispose(world: World, entity: Entity, component: IComponent) {
       disposed_entity = entity;
       disposed_world = world;
@@ -452,7 +463,7 @@ test(`[World -> Component.clear()] dispose`, (t) => {
     }
   }
 
-  const component = new DisposableComponent();
+  const component = DisposableComponent.create(world);
   const entity = world.entity([component]);
   const manager = DisposableComponent.manager(world)
   manager.clear(entity);
@@ -473,6 +484,7 @@ test(`[World -> Component.clear_collection()] dispose`, (t) => {
   let disposed_world: World | undefined;
   let disposed_component: IComponent | undefined;
   class DisposableComponent extends InitComponent() {
+    static create = ComponentFactory(DisposableComponent, () => new DisposableComponent());
     static override dispose(world: World, entity: Entity, component: IComponent) {
       disposed_entity = entity;
       disposed_world = world;
@@ -481,8 +493,8 @@ test(`[World -> Component.clear_collection()] dispose`, (t) => {
     }
   }
 
-  world.entity([new DisposableComponent()]);
-  const component = new DisposableComponent();
+  world.entity([DisposableComponent.create(world)]);
+  const component = DisposableComponent.create(world);
   const entity = world.entity([component]);
   DisposableComponent.clear_collection(world);
   t.is(dispose_count, 2);

@@ -1,3 +1,4 @@
+import { ComponentFactory } from "@mr/ecs/Component";
 import { InitComponent, EntityRef, Resource, World, Entity } from "@mr/ecs/World";
 import { SSCDShape, SSCDWorld } from "@mr/sscd";
 
@@ -11,6 +12,15 @@ export class SSCDShapeRef {
 
 // TODO: Better naming
 export class CollisionShape extends InitComponent() {
+  static create = ComponentFactory(CollisionShape, (prev, ref) => {
+    if (prev !== undefined) {
+       prev.ref = ref;
+       return prev;
+    }
+
+    return new CollisionShape(ref);
+  });
+
   constructor(public ref: SSCDShapeRef) {
     super();
   }

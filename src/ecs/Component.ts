@@ -42,6 +42,7 @@ export class IComponent {
   static container_column_id = ID_SEQ_START;
   static container_class: ComponentsContainer | undefined = undefined;
   static register_class: ComponentsRegister | undefined = undefined;
+  static no_pool: boolean | undefined;
 
   constructor(...args: any[]) {}
 
@@ -67,6 +68,8 @@ export class IComponent {
     return entity;
   }
 }
+
+const state = { allow_construct: false };
 
 export function InitComponent() {
   if (last_storage_column_id >= COMPONENT_CONTAINER_SIZE) {
@@ -99,8 +102,14 @@ export function InitComponent() {
     static container_column_id = column_id;
     static container_class = container_class_cache[`_${row_id}`];
     static register_class = register_class_cache[`_${row_id}`];
+    static no_pool: boolean | undefined;
 
-    constructor(...args: any[]) {}
+    constructor(...args: any[]) {
+      // TODO: remove in development build
+      if (state.allow_construct === false) {
+        throw new Error(`[Component] can't create component outside of world, this can cause memory leak because all components returns back to the pool`);
+      }
+    }
 
     static dispose: (world: World, entity: Entity, component: any) => void;
 
@@ -121,12 +130,13 @@ export function InitComponent() {
       return manager;
     }`)(Component, [Component]) as typeof IComponent["manager"];
 
-    private static clear = (Constructor: Component) => (new Function("Constructor", `return function(entity) { 
+    private static clear = (Constructor: typeof IComponent) => (new Function("Constructor", `return function(entity) { 
       // we must have this check, otherwise we might create property that we don't want on deletion 
       const container = entity.components._${row_id};
       const value = container._${column_id};
       if (value !== undefined && value !== null) {
         ${Constructor.hasOwnProperty("dispose") ? `Constructor.dispose(this.world, entity, value);`: ""}
+        ${Constructor.no_pool !== true ? "this.pool.push(value)" : ""}
         container._${column_id} = null;
         const register = entity.register._${row_id};
         const id = register?._${column_id};
@@ -150,9 +160,10 @@ export function InitComponent() {
       const isDispose = this.dispose !== undefined; 
       for (let i = 0; i < collection.size; i++) {
         const entity = refs[i];
-        if (isDispose) {
+        if (isDispose || this.no_pool !== true) {
           const component = entity.components._${row_id}._${column_id};
-          this.dispose(world, entity, component);
+          if (isDispose) this.dispose(world, entity, component);
+          collection.pool.push(component)
         }
         entity.components._${row_id}._${column_id} = null;
         entity.register._${row_id}._${column_id} = null;
@@ -209,3 +220,27 @@ export function InitComponent() {
 const noop = (_: any) => _;
 
 export const HASH_HEAD = new Hash<typeof IComponent>(IComponent, undefined);
+
+export function ComponentFactory<T extends typeof IComponent>(
+  Component: T,
+  constructor: (
+    ...args: [...(T extends new (...args: [...infer B]) => infer A ? [A | undefined, ...B] : never)]
+  ) => T extends new (...args: any) => infer A ? A : never
+): (
+  world: World,
+  ...args: [...(T extends new (...args: [...infer B]) => any ? B : never)]
+) => T extends new (...args: any) => infer A ? A : never {
+  const args = Array(Component.prototype.constructor.length)
+    .fill(0)
+    .map((_, i) => `a${i}`);
+  const body = `return (world, ${args.join(",")}) => {
+    const collection = world.get_collections("${Component.id}", Component)._${Component.id};
+    const prev_component = collection.pool.pop();
+    state.allow_construct = true;
+    const result = constructor(prev_component, ${args.join(",")});
+    state.allow_construct = false;
+    
+    return result;
+  }`;
+  return new Function("state", "Component", "constructor", body)(state, [Component], constructor);
+}

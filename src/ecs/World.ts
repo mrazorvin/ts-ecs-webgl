@@ -109,10 +109,12 @@ export namespace Resource {
 
 export class ComponentsCollection {
   refs: Entity[];
+  pool: IComponent[];
   size: number;
 
   constructor() {
     this.refs = [];
+    this.pool = [];
     this.size = 0;
   }
 }
