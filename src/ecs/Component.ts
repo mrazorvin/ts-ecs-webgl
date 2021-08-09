@@ -136,7 +136,7 @@ export function InitComponent() {
       const value = container._${column_id};
       if (value !== undefined && value !== null) {
         ${Constructor.hasOwnProperty("dispose") ? `Constructor.dispose(this.world, entity, value);`: ""}
-        ${Constructor.no_pool !== true ? "this.pool.push(value)" : ""}
+        ${Constructor.no_pool !== true ? "this.pool_push(value)" : ""}
         container._${column_id} = null;
         const register = entity.register._${row_id};
         const id = register?._${column_id};
@@ -163,7 +163,7 @@ export function InitComponent() {
         if (isDispose || this.no_pool !== true) {
           const component = entity.components._${row_id}._${column_id};
           if (isDispose) this.dispose(world, entity, component);
-          collection.pool.push(component)
+          collection.pool_push(component)
         }
         entity.components._${row_id}._${column_id} = null;
         entity.register._${row_id}._${column_id} = null;

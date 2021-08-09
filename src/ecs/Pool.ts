@@ -15,7 +15,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
   hash: Hash<typeof IComponent>;
   entities: Entity<PoolInstances<T>>[];
   components: T;
-
+  max_pool_size: number;
   create: ((...args: PoolInstances<T>) => Entity<PoolInstances<T>>) | undefined;
 
   reuse:
@@ -44,6 +44,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
     this.create = undefined;
     this.reuse = undefined;
     this.instantiate = undefined;
+    this.max_pool_size = 200;
   }
 
   pop(): Entity<PoolInstances<T>> | undefined {
@@ -52,6 +53,10 @@ export class EntityPool<T extends Array<typeof IComponent>> {
     }
 
     return this.entities.pop();
+  }
+
+  pool_push(entity: Entity<PoolInstances<T>>) {
+    if (this.entities.length < this.max_pool_size) this.entities.push(entity);
   }
 
   init() {

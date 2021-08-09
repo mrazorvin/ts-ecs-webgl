@@ -110,12 +110,18 @@ export namespace Resource {
 export class ComponentsCollection {
   refs: Entity[];
   pool: IComponent[];
+  max_pool_size: number;
   size: number;
 
   constructor() {
     this.refs = [];
     this.pool = [];
     this.size = 0;
+    this.max_pool_size = 200;
+  }
+
+  pool_push(component: IComponent) {
+    if (this.pool.length < this.max_pool_size) this.pool.push(component);     
   }
 }
 

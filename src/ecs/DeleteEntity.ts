@@ -63,7 +63,7 @@ export class DeleteEntity {
                       ${component.hasOwnProperty("dispose") ? `
                         Components[${components.indexOf(component)}].dispose(world, entity, vc${component.id});
                       `: ""}
-                      ${pool_hash === undefined && component.no_pool !== true ? `coll_${component.id}.pool.push(vc${component.id})`: ""}
+                      ${pool_hash === undefined && component.no_pool !== true ? `coll_${component.id}.pool_push(vc${component.id})`: ""}
                     }
                   ` : ""}
                   s${storage_id}._${component.container_column_id} = null;
@@ -98,7 +98,7 @@ export class DeleteEntity {
         ).join("\n")}
           
         entity.ref.entity = undefined;
-        ${pool_hash !== undefined ? `entity.pool.push(entity);` : undefined}
+        ${pool_hash !== undefined ? `entity.pool.pool_push(entity);` : undefined}
     }`;
 
     const func = new Function("pool_hash", "Components", body);
