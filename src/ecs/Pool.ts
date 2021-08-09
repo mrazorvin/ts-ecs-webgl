@@ -23,6 +23,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
         world: World,
         entity: Entity<PoolInstances<T>>,
         reset: (
+          world: World,
           create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
           ...args: PoolInstancesUndef<T>
         ) => Entity<PoolInstances<T>>
@@ -32,7 +33,10 @@ export class EntityPool<T extends Array<typeof IComponent>> {
   instantiate:
     | ((
         world: World,
-        instantiate: (create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>) => Entity<PoolInstances<T>>
+        instantiate: (
+          world: World,
+          create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
+        ) => Entity<PoolInstances<T>>
       ) => Entity<PoolInstances<T>>)
     | undefined;
 
@@ -135,7 +139,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
             .join("\n")}
 
           create.prev_entity = entity;
-          const new_entity = reset(create, ${vars.join(",")});
+          const new_entity = reset(world, create, ${vars.join(",")});
           const register = new_entity.register;
           create.prev_entity = undefined;
                 
@@ -164,7 +168,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
       ...["create", "components", "ComponentsCollection"],
       `
         return (world, instantiate) => {
-          const new_entity = instantiate(create);
+          const new_entity = instantiate(world, create);
           const register = new_entity.register = {
             ${storages
               .map((storage) => {
@@ -206,9 +210,13 @@ export namespace EntityPool {
 }
 
 export class Pool<T extends Array<typeof IComponent>> {
-  instantiate: (create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>) => Entity<PoolInstances<T>>;
+  instantiate: (
+    world: World,
+    create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
+  ) => Entity<PoolInstances<T>>;
 
   reuse: (
+    world: World,
     create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
     ...args: PoolInstancesUndef<T>
   ) => Entity<PoolInstances<T>>;

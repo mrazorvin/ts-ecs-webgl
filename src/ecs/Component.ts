@@ -124,7 +124,7 @@ export function InitComponent() {
       const manager = world.get_collections("_${id}", components)._${id};
       if (manager.clear === undefined) {
         manager.clear = Component.clear(this);
-        manager.attach = Component.attach;
+        manager.attach = Component.attach(this);
         manager.world = world;
       } 
       return manager;
@@ -173,7 +173,7 @@ export function InitComponent() {
       return true;
     `) as typeof IComponent["clear_collection"];
 
-    private static attach = new Function(
+    private static attach = (Constructor: typeof IComponent) => new Function(
       ...["RegisterClass", "ContainerClass", "ComponentsCollection"],
       `return function(entity, component) {
         var container = entity.components._${row_id};
@@ -186,6 +186,7 @@ export function InitComponent() {
           var value = container._${column_id};
           container._${column_id} = component;
           if (value !== undefined && value !== null) {
+            ${Constructor.no_pool !== true ? "this.pool_push(value)" : ""}
             return entity;
           } else if (value === undefined) {
             entity.hash = entity.hash.add(component.constructor);

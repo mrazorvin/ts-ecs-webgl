@@ -1,8 +1,8 @@
 import { default as test } from "ava";
-import { Entity, World } from "./World";
+import { Entity, InitComponent, World } from "./World";
 import { EntityPool, Pool } from "./Pool";
 import { TestComponent1, TestComponent2, TestComponent7, TestComponent9 } from "./world_spec/world_spec_fixtures";
-import { HASH_HEAD } from "./Component";
+import { ComponentFactory, HASH_HEAD } from "./Component";
 import { validate_component, validate_deleted_entity } from "./world_spec/world_spec_utils";
 
 test("[EntityPool.pop()]", (t) => {
@@ -59,7 +59,7 @@ test("[EntityPool.instantiate()]", (t) => {
   // lazy initialization
   pool.pop();
 
-  const entity = pool.instantiate?.(world, (create) => create(component9, component1));
+  const entity = pool.instantiate?.(world, (world, create) => create(component9, component1));
 
   t.is(entity?.hash, pool.hash);
   t.is(entity?.components["_0"]!["_1"]!, component1);
@@ -113,7 +113,7 @@ test("[EntityPool.reuse()]", (t) => {
   // lazy initialization
   pool.pop();
 
-  const entity = pool.reuse?.(world, empty_entity, (create, c1, c9) => create(c1!, c9!));
+  const entity = pool.reuse?.(world, empty_entity, (world, create, c1, c9) => create(c1!, c9!));
 
   // pool reuse entities instances
   t.is(entity, empty_entity);
@@ -153,12 +153,12 @@ test("[Pool.get()]", (t) => {
   let updated = false;
   const pool = new Pool(
     entity_pool,
-    (create) => {
+    (world, create) => {
       created = true;
       updated = false;
       return create(TestComponent1.create(world), TestComponent9.create(world));
     },
-    (create, c1, c9) => {
+    (world, create, c1, c9) => {
       created = false;
       updated = true;
       return create(c1 || TestComponent1.create(world), c9 || TestComponent9.create(world));
@@ -203,4 +203,79 @@ test("[Pool.get()]", (t) => {
   t.is(world.components.get(TestComponent9.id)?.size, 1);
 });
 
-test("[World -> Pool.instance()] non-conflict & synergy with generic components pool", (t) => {});
+test("[World -> Pool.instance() + delete_entity()] non-conflict & synergy with generic components pool", (t) => {
+  class ExpensiveComponent extends InitComponent() {
+    position: Float32Array;
+    static create = ComponentFactory(ExpensiveComponent, (prev_component, x, y) => {
+      if (prev_component !== undefined) {
+        prev_component.position[0] = x;
+        prev_component.position[1] = y;
+
+        return prev_component;
+      }
+      return new ExpensiveComponent(x, y);
+    });
+
+    constructor(x: number, y: number) {
+      super();
+      this.position = new Float32Array([x, y]);
+    }
+  }
+
+  const entity_pool = new EntityPool([TestComponent1, ExpensiveComponent]);
+  const world = new World();
+  const pool = new Pool(
+    entity_pool,
+    (world, create) => {
+      return create(TestComponent1.create(world), ExpensiveComponent.create(world, 1, 2));
+    },
+    (world, create) => {
+      return create(TestComponent1.create(world), ExpensiveComponent.create(world, 3, 4));
+    }
+  );
+
+  // simple components pooling
+  const entity = pool.get(world);
+  const existed_component = ExpensiveComponent.get(entity);
+  const new_component = ExpensiveComponent.create(world, 1, 2);
+  const collection = world.components.get(ExpensiveComponent.id)!;
+  const components_pool = collection.pool;
+  t.is(components_pool.length, 0);
+  t.is(collection.size, 1);
+
+  // re-attaching component, must return existed component to the pool
+  ExpensiveComponent.manager(world).attach(entity, new_component);
+  t.is(components_pool.length, 1);
+  t.is(collection.size, 1);
+  t.not(existed_component, new_component);
+  t.is(ExpensiveComponent.get(entity), new_component);
+
+  // pooled-entity from the pool also used component from the components-pool
+  // because attaching component to the entity from previous step return component to the pool
+  const entity2 = pool.get(world);
+  t.is(components_pool.length, 0);
+  t.is(collection.size, 2);
+  t.is(ExpensiveComponent.get(entity2), existed_component);
+
+  // fully deleting entity from the world, returns it and it's component only to the entity pool
+  // but components_poll stay clear, so no components returned to the pool
+  world.delete_entity(entity);
+  t.is(components_pool.length, 0);
+  // check that component still attached to the entity
+  t.is(ExpensiveComponent.get(entity), new_component);
+  t.is(entity_pool.entities.length, 1);
+
+  // we re-used entity from the pool, but not component because component not in components-pool
+  // component will be cleared by GC
+  const entity3 = pool.get(world);
+  t.not(ExpensiveComponent.get(entity3), new_component);
+  t.is(entity_pool.entities.length, 0);
+
+  // we deleted single component, so it has only single option to return to components-pool
+  ExpensiveComponent.manager(world).clear(entity2);
+  t.is(components_pool.length, 1);
+  const entity4 = pool.get(world);
+  t.is(components_pool.length, 0);
+  t.is(ExpensiveComponent.get(entity4), existed_component);
+  t.not(ExpensiveComponent.get(entity3), existed_component);
+});
