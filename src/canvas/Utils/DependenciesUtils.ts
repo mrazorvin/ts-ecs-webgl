@@ -5,17 +5,7 @@ type Runtime = any;
 export namespace DependenciesUtils {
   // @helper-types
   export interface Path<A extends string> {}
-  export type TupleKeys =
-    | "0"
-    | "1"
-    | "2"
-    | "3"
-    | "4"
-    | "5"
-    | "6"
-    | "7"
-    | "8"
-    | "9";
+  export type TupleKeys = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
   export interface Arity {
     "0": [];
     "1": [Runtime];
@@ -25,27 +15,8 @@ export namespace DependenciesUtils {
     "5": [Runtime, Runtime, Runtime, Runtime, Runtime];
     "6": [Runtime, Runtime, Runtime, Runtime, Runtime, Runtime];
     "7": [Runtime, Runtime, Runtime, Runtime, Runtime, Runtime, Runtime];
-    "8": [
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime
-    ];
-    "9": [
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime,
-      Runtime
-    ];
+    "8": [Runtime, Runtime, Runtime, Runtime, Runtime, Runtime, Runtime, Runtime];
+    "9": [Runtime, Runtime, Runtime, Runtime, Runtime, Runtime, Runtime, Runtime, Runtime];
   }
 
   // @array-to-object
@@ -66,9 +37,7 @@ export namespace DependenciesUtils {
 
   export interface DependencyInstance {}
 
-  type ExtractDependency<T extends { type: string }> = T extends new (
-    ...args: Runtime[]
-  ) => infer A
+  type ExtractDependency<T extends { type: string }> = T extends new (...args: Runtime[]) => infer A
     ? A & Path<T["type"]>
     : T extends { create(...args: Runtime[]): infer B }
     ? B & Path<T["type"]>
@@ -76,9 +45,9 @@ export namespace DependenciesUtils {
 
   type DefaultDependency = ExtractDependency<Runtime>;
 
-  export type DependenciesToArguments<
-    T extends Dependencies<Runtime[]>
-  > = T extends Dependencies<[...infer A]> ? A : [];
+  export type DependenciesToArguments<T extends Dependencies<Runtime[]>> = T extends Dependencies<[...infer A]>
+    ? A
+    : [];
 
   export class Dependencies<T> {
     static create<T extends DefaultDependency[]>(dependencies: T) {
@@ -95,30 +64,19 @@ export namespace DependenciesUtils {
 
   export function dependOn(): Dependencies<[]>;
 
-  export function dependOn<A1 extends DependencyClass>(
-    a1: A1
-  ): Dependencies<[ExtractDependency<A1>]>;
+  export function dependOn<A1 extends DependencyClass>(a1: A1): Dependencies<[ExtractDependency<A1>]>;
 
-  export function dependOn<
-    A1 extends DependencyClass,
-    A2 extends DependencyClass
-  >(
+  export function dependOn<A1 extends DependencyClass, A2 extends DependencyClass>(
     a1: A1,
     a2: A2
   ): Dependencies<[ExtractDependency<A1>, ExtractDependency<A2>]>;
 
-  export function dependOn<
-    A1 extends DependencyClass,
-    A2 extends DependencyClass,
-    A3 extends DependencyClass
-  >(
+  export function dependOn<A1 extends DependencyClass, A2 extends DependencyClass, A3 extends DependencyClass>(
     // @args
     a1: A1,
     a2: A2,
     a3: A3
-  ): Dependencies<
-    [ExtractDependency<A1>, ExtractDependency<A2>, ExtractDependency<A3>]
-  >;
+  ): Dependencies<[ExtractDependency<A1>, ExtractDependency<A2>, ExtractDependency<A3>]>;
 
   export function dependOn<
     A1 extends DependencyClass,
@@ -131,14 +89,7 @@ export namespace DependenciesUtils {
     a2: A2,
     a3: A3,
     a4: A4
-  ): Dependencies<
-    [
-      ExtractDependency<A1>,
-      ExtractDependency<A2>,
-      ExtractDependency<A3>,
-      ExtractDependency<A4>
-    ]
-  >;
+  ): Dependencies<[ExtractDependency<A1>, ExtractDependency<A2>, ExtractDependency<A3>, ExtractDependency<A4>]>;
 
   export function dependOn<
     A1 extends DependencyClass,
@@ -154,13 +105,7 @@ export namespace DependenciesUtils {
     a4: A4,
     a5: A5
   ): Dependencies<
-    [
-      ExtractDependency<A1>,
-      ExtractDependency<A2>,
-      ExtractDependency<A3>,
-      ExtractDependency<A4>,
-      ExtractDependency<A5>
-    ]
+    [ExtractDependency<A1>, ExtractDependency<A2>, ExtractDependency<A3>, ExtractDependency<A4>, ExtractDependency<A5>]
   >;
 
   export function dependOn<
@@ -260,17 +205,9 @@ export namespace DependenciesUtils {
     ARITY extends TupleKeys = "0"
   >(
     paths: T,
-    cb: (
-      ...args: [
-        ...(T extends Dependencies<[...infer A]> ? A : never),
-        ...Arity[ARITY]
-      ]
-    ) => R,
+    cb: (...args: [...(T extends Dependencies<[...infer A]> ? A : never), ...Arity[ARITY]]) => R,
     additionalArgs = "0" as ARITY
-  ): (
-    state: ConstructObjectFromArray<T["dependencies"]>,
-    ...args: Arity[ARITY]
-  ) => R {
+  ): (state: ConstructObjectFromArray<T["dependencies"]>, ...args: Arity[ARITY]) => R {
     const dependencies = paths.constructors.map((withPath, i) => ({
       // @ts-expect-error
       jsonPath: withPath.type as string,
@@ -291,11 +228,7 @@ export namespace DependenciesUtils {
             ({ jsonPath }) =>
               `state${jsonPath
                 .split(".")
-                .map((part) =>
-                  letters.test(part)
-                    ? `.${part}`
-                    : `["${part.replace('"', '\\"')}"]`
-                )
+                .map((part) => (letters.test(part) ? `.${part}` : `["${part.replace('"', '\\"')}"]`))
                 .join("")}`
           )
           .concat(additionalArgsNames)
@@ -321,30 +254,27 @@ export namespace DependenciesUtils {
 
     // tslint:disable:function-constructor no-trailing-whitespace
     const body = `
-    ${memoizeVars
-      .map((variable) => `let ${variable.cache} = undefined`)
-      .join("; \n")}
+    ${memoizeVars.map((variable) => `let ${variable.cache} = undefined`).join("; \n")}
     let ${resultVar} = undefined;
-    return (${memoizeVars.map((variable) => variable.arg).join(",")}) => {
-      if (!(${memoizeVars
-        .map((variable) => `Object.is(${variable.cache}, ${variable.arg})`)
-        .join("&&")})) {
-        ${resultVar} = ${reducerVar}(${memoizeVars
-      .map((variable) => variable.arg)
-      .join(",")})
+    function memoize(${memoizeVars.map((variable) => variable.arg).join(",")}) {
+      if (!(${memoizeVars.map((variable) => `Object.is(${variable.cache}, ${variable.arg})`).join("&&")})) {
+        ${resultVar} = ${reducerVar}(${memoizeVars.map((variable) => variable.arg).join(",")})
       }
-      ${memoizeVars
-        .map((variable) => `${variable.cache} = ${variable.arg}`)
-        .join("; \n")}
+      ${memoizeVars.map((variable) => `${variable.cache} = ${variable.arg}`).join("; \n")}
 
       return ${resultVar};
     }
+
+    memoize.clear = () => {
+      ${memoizeVars.map((variable) => `${variable.cache} = undefined`).join("; \n")}
+    }
+
+    return memoize;
   `;
     const fn = new Function(reducerVar, body);
     // tslint:enable:function-constructor no-trailing-whitespace
 
-    return <R>(reducer: (...args: [...T]) => R): ((...args: [...T]) => R) =>
-      fn(reducer);
+    return <R>(reducer: (...args: [...T]) => R): ((...args: [...T]) => R) => fn(reducer);
   }
 
   export const createDependency = <T extends string>(propPath: T) =>
@@ -352,7 +282,5 @@ export namespace DependenciesUtils {
       static type = propPath;
     };
 
-  export const createDependencyTuple = <T extends Array<Path<string>>>(
-    ...args: [...T]
-  ): T => args;
+  export const createDependencyTuple = <T extends Array<Path<string>>>(...args: [...T]): T => args;
 }

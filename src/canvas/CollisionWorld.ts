@@ -39,11 +39,11 @@ export class CollisionWorld extends Resource {
     super();
   }
 
-  attach(ref: EntityRef, shape: SSCDShape<EntityRef>): CollisionShape {
+  attach(world: World, ref: EntityRef, shape: SSCDShape<EntityRef>): CollisionShape {
     this.world.add(shape);
     shape.set_data(ref);
 
-    return new CollisionShape(new SSCDShapeRef(shape));
+    return CollisionShape.create(world, new SSCDShapeRef(shape));
   }
 }
 

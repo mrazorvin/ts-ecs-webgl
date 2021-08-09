@@ -14,7 +14,7 @@ export class Camera extends Resource {
 }
 
 // find better way to modify camera stats, for example in some aggregation object
-export const camera_transform = new Transform({
+export const camera_transform = Transform.create(main_world, {
   parent: world_transform.ref,
   height: 0,
   width: 0,

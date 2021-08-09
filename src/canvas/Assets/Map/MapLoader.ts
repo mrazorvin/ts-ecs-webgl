@@ -66,7 +66,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
       const meta = tiles_properties.regions[frame]!;
 
       // TODO: find a better API to connect transform with CollisionWorld
-      const transform = new Transform({
+      const transform = Transform.create(world, {
         width: 32,
         height: 32,
         position: new Float32Array([column * 32, row * 32]),
@@ -75,12 +75,13 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
 
       // TOOD: prettu ugle that we need to use transform in such way
       const entity = world.entity([
-        new Sprite(SPRITE_SHADER, tile_mesh, bg_texture),
+        Sprite.create(world, SPRITE_SHADER, tile_mesh, bg_texture),
         transform,
-        new Static(meta.rect[0]! / tiles_properties.grid_width, meta.rect[1]! / tiles_properties.grid_height),
+        Static.create(world, meta.rect[0]! / tiles_properties.grid_width, meta.rect[1]! / tiles_properties.grid_height),
       ]);
 
       const shape = sscd.attach(
+        world,
         entity.ref,
         new SSCDRectangle(
           new SSCDVector(transform.position![0]! + transform.width / 2, transform.position![1]! + transform.width / 2),

@@ -1,3 +1,4 @@
+import { ComponentFactory } from "@mr/ecs/Component";
 import { glMatrix, mat3 } from "gl-matrix";
 import { EntityRef, InitComponent, World } from "../../ecs/World";
 import { DependenciesUtils } from "../Utils/DependenciesUtils";
@@ -13,6 +14,43 @@ type ParentView = Float32Array | undefined;
 type ParentViewChanged = number | undefined;
 
 export class Transform extends InitComponent() {
+  static create = ComponentFactory(Transform, (prev, config) => {
+    if (prev !== undefined) {
+      prev._parent = config.parent;
+      prev._changed = 0;
+
+      prev.height = config.height;
+      prev.width = config.width;
+      prev.to_center_offset[0] = config.width / 2;
+      prev.to_center_offset[1] = config.height / 2;
+      prev.to_origin_offset[0] = -config.width / 2;
+      prev.to_origin_offset[1] = -config.height / 2;
+
+      if (config.position) {
+        prev.position = config.position;
+      } else if (prev.position) {
+        prev.position[0] = 0;
+        prev.position[1] = 0;
+      }
+
+      if (config.scale !== undefined) {
+        prev.scale = config.scale;
+      } else if (prev.scale) {
+        prev.scale[0] = 1;
+        prev.scale[1] = 1;
+      }
+
+      prev.rotation = config.rotation;
+
+      // @ts-expect-error
+      prev.getView.clear();
+
+      return prev;
+    }
+
+    return new Transform(config);
+  });
+
   // TODO: all those values must be always defined
   //       it's hell to check them on non existence each time when
   //       we want to use it
@@ -60,13 +98,9 @@ export class Transform extends InitComponent() {
     }
 
     if (matrix) {
-      return (parent === undefined
-        ? matrix
-        : mat3.multiply(matrix, parent, matrix)) as Float32Array;
+      return (parent === undefined ? matrix : mat3.multiply(matrix, parent, matrix)) as Float32Array;
     } else {
-      return (parent === undefined
-        ? mat3.identity(view)
-        : parent) as Float32Array;
+      return (parent === undefined ? mat3.identity(view) : parent) as Float32Array;
     }
   });
 
@@ -105,9 +139,7 @@ export namespace Transform {
       transform.position,
       transform.scale,
       transform.rotation,
-      parent_transform !== undefined
-        ? Transform.view(world, parent_transform)
-        : undefined,
+      parent_transform !== undefined ? Transform.view(world, parent_transform) : undefined,
       parent_transform?._changed
     );
 

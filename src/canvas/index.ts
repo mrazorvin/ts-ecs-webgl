@@ -16,10 +16,10 @@ import * as atlas from "./Assets/Monsters/Ogre/Atlas.json";
 import { PostPassShader, POST_PASS_SHADER } from "./Assets/View/PostPass/PostPass.shader";
 import { PostPass, POST_PASS_CONTEXT } from "./Assets/View/PostPass/PostPass";
 import { Input } from "./Input";
-import { Creature } from "./Creature";
+import { creature, Creature } from "./Creature";
 import { Static } from "./Static";
 import { camera, Camera, camera_entity } from "./Camera";
-import { Modification } from "./Modification";
+import { Movement } from "./Modification";
 import { MapLoader, map_mesh, map_shader, map_texture } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
 import { world_transform_component } from "./WorldView";
@@ -77,7 +77,7 @@ window.onresize = () => main_world.system_once(resize_system);
 main_world.system_once(resize_system);
 
 main_world.system_once(
-  sys([WebGL], async (_, ctx) => {
+  sys([WebGL], async (world, ctx) => {
     t.clear(ctx.gl, [0, 0, 0, 0]);
     t.blend(ctx.gl);
 
@@ -110,15 +110,15 @@ main_world.system_once(
 
     // TODO: inject entities in SubWorld instead of World
     main_world.entity([
-      new Sprite(sprite_shader, ogre_mesh, ogre_texture),
-      new Transform({
+      Sprite.create(world, sprite_shader, ogre_mesh, ogre_texture),
+      Transform.create(world, {
         parent: camera_entity.ref,
         position: new Float32Array([0, 0]),
         height: atlas.grid_height,
         width: atlas.grid_width,
       }),
-      new Creature(),
-      new Modification(),
+      creature,
+      Movement.create(world, 0, 0),
     ]);
 
     main_world.system_once(MapLoader);
@@ -211,7 +211,7 @@ const MoveHero = $(
   (create) =>
     class {
       constructor(public world: World, public input: Input, public camera: Camera, public lcw: LocalCollisionWorld) {}
-      query = create([Transform, Modification, Creature], (_, transform, modification) => {
+      query = create([Transform, Movement, Creature], (_, transform, modification) => {
         this.lcw.world.test_collision<SSCDShape<EntityRef>>(
           new SSCDRectangle(
             new SSCDVector(transform.position[0], transform.position[1]),
@@ -229,8 +229,8 @@ const MoveHero = $(
         const target_y = this.input.current_y - transform.height / 2;
         const direction_x = transform.position[0] - target_x;
         const direction_y = transform.position[1] - target_y;
-        modification.movement_target[0] = direction_x;
-        modification.movement_target[1] = direction_y;
+        modification.target[0] = direction_x;
+        modification.target[1] = direction_y;
       });
     }
 );
@@ -294,20 +294,20 @@ main_world.system(
   sys([], (world) => {
     // prettier-ignore
     const play_animation = $("animation") ?? $("animation", (fn) => class {
-      query = fn([Transform, Modification, Creature], (_, transform, modification) => {
+      query = fn([Transform, Movement, Creature], (_, transform, modification) => {
         // those code some how connected to animation chain + movement behavior
         // think a better way to organize it
         if (
           !(
-            modification.movement_target[0] > -0.5 &&
-            modification.movement_target[0] < 0.5 &&
-            modification.movement_target[1] > -0.5 &&
-            modification.movement_target[1] < 0.5
+            modification.target[0] > -0.5 &&
+            modification.target[0] < 0.5 &&
+            modification.target[1] > -0.5 &&
+            modification.target[1] < 0.5
           )
         ) {
           // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
           const pos = new Float32Array(2);
-          vec2.normalize(pos, modification.movement_target as [number, number]);
+          vec2.normalize(pos, modification.target as [number, number]);
           const direction = pos[0];
           transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
           transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
