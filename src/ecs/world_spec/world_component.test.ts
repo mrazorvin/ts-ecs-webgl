@@ -489,6 +489,6 @@ test(`[World -> Component.clear_collection(), clear(), delete_entity()] pooling`
   }
 
   validate_pool((world, entity) => world.delete_entity(entity));
+  validate_pool((world) => ExpensiveComponent.clear_collection(world));
   validate_pool((world, entity) => ExpensiveComponent.manager(world).clear(entity));
-  validate_pool((world, entity) => ExpensiveComponent.clear_collection(world));
 });

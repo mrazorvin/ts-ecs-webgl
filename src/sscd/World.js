@@ -148,10 +148,8 @@ Object.assign(SSCDWorld.prototype, {
     // set world and grid chunks boundaries
     if (this.__readonly === 0) {
       obj.__world = this;
+      obj.__last_insert_aabb = obj.get_aabb().clone();
     }
-
-    // TODO: possible optimization - remove __last_insert_aabb and this call
-    obj.__last_insert_aabb = obj.get_aabb().clone();
 
     // return the newly added object
     return obj;

@@ -48,7 +48,7 @@ export class CollisionWorld extends Resource {
 }
 
 export class LocalCollisionWorld extends Resource {
-  constructor(public world = new SSCDWorld({ grid_size: 32, readonly: true })) {
+  constructor(public world = new SSCDWorld({ grid_size: 32, readonly: true, size: 50 })) {
     super();
   }
 

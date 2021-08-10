@@ -1,4 +1,4 @@
-import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD, ComponentTypeID } from "./Component";
+import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD, ComponentTypeID, ComponentFactory } from "./Component";
 import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
@@ -142,6 +142,14 @@ export class World {
     this.on_tick_end = [];
   }
 
+  clear(fn: <T extends any>(pre_world: World, next_resource: T) => any) {
+    // select on resources that needed be cleared in fn
+    // clear features 
+    // clear systems_once
+    // left systems, but mark them as non indexed
+    // for all collections, move all component to second cache
+  }
+
   query(query: Query.Prepared) {
     inject_entity_and_component(this, query.components, query.cb as any);
   }
@@ -220,7 +228,8 @@ export abstract class BaseScheduler {
   abstract start(): void;
 
   tick() {
-    for (const system of this.world.systems) {
+    for (let i = 0; i < this.world.systems.length; i++) {
+      const system = this.world.systems[i]!;
       QUERIES = system.queries;
       inject_resources_and_sub_world(this.world, system);
     }
@@ -347,6 +356,7 @@ const resource_injector = new Function("world", "system", `
       }
     }
 `);
+
 
 function inject_resources_and_sub_world(world: World, system: System) {
   return resource_injector(world, system);
