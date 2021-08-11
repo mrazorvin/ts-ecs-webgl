@@ -64,7 +64,7 @@ export class IComponent {
     return false;
   }
 
-  attach(world: World, entity: Entity): Entity {
+  attach<W extends World | undefined>(world: World, entity: Entity<W>): Entity<W> {
     return entity;
   }
 }
@@ -206,7 +206,7 @@ export function InitComponent() {
       container_class_cache[`_${row_id}`],
       ComponentsCollection)
     
-    attach(world: World, entity: Entity): Entity  {
+    attach<W extends World | undefined>(world: World, entity: Entity<W>): Entity<W>  {
       // @ts-expect-error
       return this.constructor.manager(world).attach(entity, this);
     }

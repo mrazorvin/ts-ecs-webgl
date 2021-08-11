@@ -75,6 +75,8 @@ const pool = new Pool(entity_pool, {
     for (let attribute of attributes) {
       manage.set(world, attribute);
     }
+
+    return world;
   },
   // wrapper around world.clear
   world_reuse: (prev_world, next_world) => {

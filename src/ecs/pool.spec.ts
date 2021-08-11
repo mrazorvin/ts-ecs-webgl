@@ -16,7 +16,7 @@ test("[EntityPool.pop()]", (t) => {
 
 test("[EntityPool.push()]", (t) => {
   const pool = new EntityPool([TestComponent1, TestComponent2]);
-  const entity = new Entity();
+  const entity = new Entity(undefined);
 
   pool.push(entity);
 

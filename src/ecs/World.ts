@@ -1,4 +1,4 @@
-import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD, ComponentTypeID, ComponentFactory } from "./Component";
+import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD, ComponentTypeID } from "./Component";
 import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
@@ -8,7 +8,7 @@ export const ID_SEQ_START = -1;
 export const CONTAINER_SIZE = 8; // TODO: set to 32 after normalizing container locations
 
 export enum ResourceID {}
-export class Entity<T extends IComponent[] = []> {
+export class Entity<W extends World | undefined =  undefined> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
   components: { [key: string]: ComponentsContainer };
@@ -16,19 +16,21 @@ export class Entity<T extends IComponent[] = []> {
   hash: Hash<typeof IComponent>;
   pool: EntityPool<[]> | undefined;
   ref: EntityRef;
+  world: W;
 
-  constructor(...args: any[]) {
+  constructor(world: W) {
     this.components = {};
     this.register = {};
     this.ref = new EntityRef(this);
     this.pool = undefined;
     this.hash = HASH_HEAD;
+    this.world = world;
   }
 }
 
 export class EntityRef {
-  entity: Entity | undefined;
-  constructor(entity?: Entity) {
+  entity: Entity<World | undefined> | undefined;
+  constructor(entity?: Entity<World | undefined>) {
     this.entity = entity;
   }
 }
@@ -167,8 +169,13 @@ export class World {
     Constructor.set(this, resource);
   }
 
-  entity<T extends IComponent[]>(components: [...T]): Entity<T> {
-    const entity = new Entity();
+  entity<W extends World | undefined>(components: IComponent[]): Entity<undefined>; 
+  entity<W extends World | undefined>(components: IComponent[], world?: W): Entity<W> {
+    const entity = new Entity(world!);
+
+    if (world !== undefined) {
+      SubWorld.instance.attach(world, entity);
+    }
 
     for (const component of components) {
       component.attach(this, entity);
@@ -462,6 +469,10 @@ export function sys<T extends Array<new (...args: any[]) => Resource>>(
   ) => void
 ) {
   return new DynamicSystem(args as any, fn);
+}
+
+export class SubWorld extends InitComponent() {
+  static instance = new SubWorld();
 }
 
 export { EntityPool, InitComponent };

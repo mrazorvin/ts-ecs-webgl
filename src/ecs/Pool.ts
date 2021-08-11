@@ -13,31 +13,21 @@ type PoolInstancesUndef<T extends Array<typeof IComponent>> = {
 export class EntityPool<T extends Array<typeof IComponent>> {
   id: number;
   hash: Hash<typeof IComponent>;
-  entities: Entity<PoolInstances<T>>[];
+  entities: Entity[];
   components: T;
   max_pool_size: number;
-  create: ((...args: PoolInstances<T>) => Entity<PoolInstances<T>>) | undefined;
+  create: ((...args: PoolInstances<T>) => Entity) | undefined;
 
   reuse:
     | ((
         world: World,
-        entity: Entity<PoolInstances<T>>,
-        reset: (
-          world: World,
-          create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
-          ...args: PoolInstancesUndef<T>
-        ) => Entity<PoolInstances<T>>
-      ) => Entity<PoolInstances<T>>)
+        entity: Entity,
+        reset: (world: World, create: (...args: PoolInstances<T>) => Entity, ...args: PoolInstancesUndef<T>) => Entity
+      ) => Entity)
     | undefined;
 
   instantiate:
-    | ((
-        world: World,
-        instantiate: (
-          world: World,
-          create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
-        ) => Entity<PoolInstances<T>>
-      ) => Entity<PoolInstances<T>>)
+    | ((world: World, instantiate: (world: World, create: (...args: PoolInstances<T>) => Entity) => Entity) => Entity)
     | undefined;
 
   constructor(components: [...T]) {
@@ -48,10 +38,10 @@ export class EntityPool<T extends Array<typeof IComponent>> {
     this.create = undefined;
     this.reuse = undefined;
     this.instantiate = undefined;
-    this.max_pool_size = 200;
+    this.max_pool_size = 20;
   }
 
-  pop(): Entity<PoolInstances<T>> | undefined {
+  pop(): Entity | undefined {
     if (this.create === undefined) {
       this.init();
     }
@@ -59,7 +49,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
     return this.entities.pop();
   }
 
-  pool_push(entity: Entity<PoolInstances<T>>) {
+  pool_push(entity: Entity) {
     if (this.entities.length < this.max_pool_size) this.entities.push(entity);
   }
 
@@ -210,16 +200,8 @@ export namespace EntityPool {
 }
 
 export class Pool<T extends Array<typeof IComponent>> {
-  instantiate: (
-    world: World,
-    create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>
-  ) => Entity<PoolInstances<T>>;
-
-  reuse: (
-    world: World,
-    create: (...args: PoolInstances<T>) => Entity<PoolInstances<T>>,
-    ...args: PoolInstancesUndef<T>
-  ) => Entity<PoolInstances<T>>;
+  instantiate: (world: World, create: (...args: PoolInstances<T>) => Entity) => Entity;
+  reuse: (world: World, create: (...args: PoolInstances<T>) => Entity, ...args: PoolInstancesUndef<T>) => Entity;
 
   pool: EntityPool<T>;
 
@@ -229,13 +211,48 @@ export class Pool<T extends Array<typeof IComponent>> {
     this.instantiate = instantiate;
   }
 
-  get(world: World) {
+  get(world: World): Entity<undefined> {
     const _entity = this.pool.pop();
     const entity =
       _entity === undefined
         ? this.pool.instantiate!(world, this.instantiate)
         : this.pool.reuse!(world, _entity, this.reuse);
 
-    return entity;
+    return entity as Entity<undefined>;
+  }
+}
+
+export class WorldPool<T extends Array<typeof IComponent>> {
+  init_world: <T extends World>(world: T) => T;
+  world_reuse: <PREV extends World, NEXT extends World>(prev_world: PREV, next_world: NEXT) => NEXT;
+  instantiate: (world: World, create: (...args: PoolInstances<T>) => Entity) => Entity;
+  reuse: (world: World, create: (...args: PoolInstances<T>) => Entity, ...args: PoolInstancesUndef<T>) => Entity;
+
+  pool: EntityPool<T>;
+  constructor(params: {
+    pool: EntityPool<T>;
+    instantiate: WorldPool<T>["instantiate"];
+    reuse: WorldPool<T>["reuse"];
+    init_world: WorldPool<T>["init_world"];
+    world_reuse: WorldPool<T>["world_reuse"];
+  }) {
+    this.pool = params.pool;
+    this.instantiate = params.instantiate;
+    this.reuse = params.reuse;
+    this.init_world = params.init_world;
+    this.world_reuse = params.world_reuse;
+  }
+
+  get(world: World): Entity<World> {
+    const prev_entity = this.pool.pop();
+    if (prev_entity === undefined) {
+      const entity = (this.pool.instantiate!(world, this.instantiate) as unknown) as Entity<World>;
+      entity.world = this.init_world(new World());
+      return entity;
+    } else {
+      const entity = (this.pool.reuse!(world, prev_entity, this.reuse) as unknown) as Entity<World>;
+      entity.world = this.world_reuse(entity.world, new World());
+      return entity;
+    }
   }
 }
