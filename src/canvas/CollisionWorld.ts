@@ -11,11 +11,11 @@ export class SSCDShapeRef {
 }
 
 // TODO: Better naming
-export class CollisionShape extends InitComponent() {
+export class CollisionShape extends InitComponent({ use_pool: 20 }) {
   static create = ComponentFactory(CollisionShape, (prev, ref) => {
     if (prev !== undefined) {
-       prev.ref = ref;
-       return prev;
+      prev.ref = ref;
+      return prev;
     }
 
     return new CollisionShape(ref);

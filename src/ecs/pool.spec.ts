@@ -1,9 +1,11 @@
+import { ComponentFactory, HASH_HEAD, InitComponent } from "./Component";
+import { TestComponent1, TestComponent2, TestComponent7, TestComponent9 } from "./world_spec/world_component_fixtures";
+
 import { default as test } from "ava";
-import { Entity, InitComponent, World } from "./World";
-import { EntityPool, Pool } from "./Pool";
-import { TestComponent1, TestComponent2, TestComponent7, TestComponent9 } from "./world_spec/world_spec_fixtures";
-import { ComponentFactory, HASH_HEAD } from "./Component";
+import { Entity, World } from "./World";
+import { EntityPool, Pool, WorldPool } from "./Pool";
 import { validate_component, validate_deleted_entity } from "./world_spec/world_spec_utils";
+import { SubWorld } from "./SubWorld";
 
 test("[EntityPool.pop()]", (t) => {
   const pool = new EntityPool([TestComponent2, TestComponent1]!);
@@ -204,7 +206,7 @@ test("[Pool.get()]", (t) => {
 });
 
 test("[World -> Pool.instance() + delete_entity()] non-conflict & synergy with generic components pool", (t) => {
-  class ExpensiveComponent extends InitComponent() {
+  class ExpensiveComponent extends InitComponent({ use_pool: 20 }) {
     position: Float32Array;
     static create = ComponentFactory(ExpensiveComponent, (prev_component, x, y) => {
       if (prev_component !== undefined) {
@@ -278,4 +280,17 @@ test("[World -> Pool.instance() + delete_entity()] non-conflict & synergy with g
   t.is(components_pool.length, 0);
   t.is(ExpensiveComponent.get(entity4), existed_component);
   t.not(ExpensiveComponent.get(entity3), existed_component);
+});
+
+test("[World -> WorldPool]", (t) => {
+  const components_pool = new EntityPool([TestComponent1, TestComponent2], SubWorld);
+  const world_pool = new WorldPool({
+    pool: components_pool,
+    init_world: (world) => world,
+    world_reuse: (prev_world, new_world) => new_world,
+    instantiate: (world, create) => create(TestComponent1.create(world), TestComponent2.create(world)),
+    reuse: (world, create, c1, c2) => create(c1 ?? TestComponent1.create(world), c2 || TestComponent2.create(world)),
+  });
+
+  t.is(world_pool.pool, components_pool);
 });

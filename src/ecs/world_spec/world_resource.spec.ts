@@ -11,7 +11,7 @@ import {
   TestResource7,
   TestResource8,
   TestResource9,
-} from "./world_spec_fixtures";
+} from "./world_resources_fixtures";
 
 test("[World.resource()] cache", (t) => {
   const world = new World();

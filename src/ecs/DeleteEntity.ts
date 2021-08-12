@@ -63,7 +63,7 @@ export class DeleteEntity {
                       ${component.hasOwnProperty("dispose") ? `
                         Components[${components.indexOf(component)}].dispose(world, entity, vc${component.id});
                       `: ""}
-                      ${pool_hash === undefined && component.no_pool !== true ? `coll_${component.id}.pool_push(vc${component.id})`: ""}
+                      ${pool_hash === undefined && component.use_pool > 0 ? `coll_${component.id}.pool_push(vc${component.id})`: ""}
                     }
                   ` : ""}
                   s${storage_id}._${component.container_column_id} = null;

@@ -1,9 +1,16 @@
 import { default as test } from "ava";
-import { ComponentFactory, IComponent } from "../Component";
+import { InitComponent, ComponentFactory, IComponent } from "../Component";
+import {
+  TestComponent3,
+  TestComponent1,
+  TestComponent2,
+  TestComponent0,
+  TestComponent9,
+} from "./world_component_fixtures";
+
 import { DeleteEntity } from "../DeleteEntity";
-import { $, Entity, InitComponent, World } from "../World";
+import { $, Entity, World } from "../World";
 import { validate_component, validate_deleted_entity } from "./world_spec_utils";
-import { TestComponent3, TestComponent1, TestComponent2, TestComponent0, TestComponent9 } from "./world_spec_fixtures";
 
 // test that TestComponent1 has expected container class, register class, row_id, column id
 
@@ -271,7 +278,7 @@ test("[World.delete_entity()]", (t) => {
   const entity1 = world.entity([comp2_e1]);
   const entity2 = world.entity([comp2_e2]);
   const comp1_e3 = TestComponent1.create(world);
-  const comp9_e3 =  TestComponent9.create(world);
+  const comp9_e3 = TestComponent9.create(world);
   const entity3 = world.entity([comp1_e3, comp9_e3]);
 
   validate_component(t, world, entity3, TestComponent9.get(entity3)!, {
@@ -292,9 +299,8 @@ test("[World.delete_entity()]", (t) => {
 
   const prev_hash = entity1.hash;
   const prev_ref = entity1.ref;
-  const prev_registers = entity1.register[`_${TestComponent2.storage_row_id}`]![
-    `_${TestComponent2.container_column_id}`
-  ];
+  const prev_registers =
+    entity1.register[`_${TestComponent2.storage_row_id}`]![`_${TestComponent2.container_column_id}`];
 
   world.delete_entity(entity1);
   validate_deleted_entity(t, world, entity1);
@@ -359,7 +365,7 @@ test(`[World.delete_entity()] dispose`, (t) => {
   let disposed_entity: Entity | undefined;
   let disposed_world: World | undefined;
   let disposed_component: IComponent | undefined;
-  class DisposableComponent extends InitComponent() {
+  class DisposableComponent extends InitComponent({ use_pool: false }) {
     static create = ComponentFactory(DisposableComponent, () => new DisposableComponent());
     static override dispose(world: World, entity: Entity, component: IComponent) {
       disposed_entity = entity;
@@ -387,7 +393,7 @@ test(`[World -> Component.clear()] dispose`, (t) => {
   let disposed_entity: Entity | undefined;
   let disposed_world: World | undefined;
   let disposed_component: IComponent | undefined;
-  class DisposableComponent extends InitComponent() {
+  class DisposableComponent extends InitComponent({ use_pool: false }) {
     static create = ComponentFactory(DisposableComponent, () => new DisposableComponent());
     static override dispose(world: World, entity: Entity, component: IComponent) {
       disposed_entity = entity;
@@ -399,7 +405,7 @@ test(`[World -> Component.clear()] dispose`, (t) => {
 
   const component = DisposableComponent.create(world);
   const entity = world.entity([component]);
-  const manager = DisposableComponent.manager(world)
+  const manager = DisposableComponent.manager(world);
   manager.clear(entity);
   t.is(dispose_count, 1);
   t.is(disposed_world, world);
@@ -410,14 +416,13 @@ test(`[World -> Component.clear()] dispose`, (t) => {
   t.is(dispose_count, 1);
 });
 
-
 test(`[World -> Component.clear_collection()] dispose`, (t) => {
   const world = new World();
   let dispose_count = 0;
   let disposed_entity: Entity | undefined;
   let disposed_world: World | undefined;
   let disposed_component: IComponent | undefined;
-  class DisposableComponent extends InitComponent() {
+  class DisposableComponent extends InitComponent({ use_pool: false }) {
     static create = ComponentFactory(DisposableComponent, () => new DisposableComponent());
     static override dispose(world: World, entity: Entity, component: IComponent) {
       disposed_entity = entity;
@@ -441,13 +446,13 @@ test(`[World -> Component.clear_collection()] dispose`, (t) => {
 });
 
 test(`[World -> Component.clear_collection(), clear(), delete_entity()] pooling`, (t) => {
-  class ExpensiveComponent extends InitComponent() {
+  class ExpensiveComponent extends InitComponent({ use_pool: 20 }) {
     position: Float32Array;
     static create = ComponentFactory(ExpensiveComponent, (prev_component, x, y) => {
-      if (prev_component  !== undefined) {
+      if (prev_component !== undefined) {
         prev_component.position[0] = x;
         prev_component.position[1] = y;
-        
+
         return prev_component;
       }
       return new ExpensiveComponent(x, y);
@@ -460,17 +465,17 @@ test(`[World -> Component.clear_collection(), clear(), delete_entity()] pooling`
   }
 
   const validate_pool = (clear: (world: World, entity: Entity) => void) => {
-    const world = new World(); 
+    const world = new World();
     const component = ExpensiveComponent.create(world, 1, 2);
     const entity = world.entity([component]);
     const collection = world.components.get(ExpensiveComponent.id)!;
     const pool = collection.pool;
-  
+
     t.is(pool.length, 0);
     t.is(collection.size, 1);
 
     clear(world, entity);
-  
+
     t.is(pool.length, 1);
     t.is(collection.size, 0);
     t.is(pool[0], component);
@@ -478,7 +483,7 @@ test(`[World -> Component.clear_collection(), clear(), delete_entity()] pooling`
 
     const component2 = ExpensiveComponent.create(world, 3, 4);
     t.is(pool.length, 0);
-    t.is(collection.size, 0)
+    t.is(collection.size, 0);
     t.is(component2, component);
     t.is(component2.position, component.position);
     t.is(component2.position[0], 3);
@@ -486,7 +491,7 @@ test(`[World -> Component.clear_collection(), clear(), delete_entity()] pooling`
     const component3 = ExpensiveComponent.create(world, 3, 4);
     t.not(component2, component3);
     t.not(component2.position, component3.position);
-  }
+  };
 
   validate_pool((world, entity) => world.delete_entity(entity));
   validate_pool((world) => ExpensiveComponent.clear_collection(world));

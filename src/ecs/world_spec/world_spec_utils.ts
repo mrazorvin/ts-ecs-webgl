@@ -1,7 +1,7 @@
 import { ExecutionContext } from "ava";
 import { IComponent } from "../Component";
 import { Entity, World } from "../World";
-import { TestComponent0 } from "./world_spec_fixtures";
+import { TestComponent0 } from "./world_component_fixtures";
 
 export const validate_deleted_entity = (
   t: ExecutionContext,

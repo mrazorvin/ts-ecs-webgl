@@ -7,7 +7,7 @@ import { Shader, ShaderID } from "./Render/Shader";
 import { TextureID } from "./Render/Texture";
 import { WebGL } from "./Render/WebGL";
 
-export class Sprite extends InitComponent() {
+export class Sprite extends InitComponent({ use_pool: 20 }) {
   static create = ComponentFactory(Sprite, (prev, shader, mesh, texture) => {
     if (prev !== undefined) {
       prev.shader = shader;

@@ -13,7 +13,7 @@ type Rotation = number | undefined;
 type ParentView = Float32Array | undefined;
 type ParentViewChanged = number | undefined;
 
-export class Transform extends InitComponent() {
+export class Transform extends InitComponent({ use_pool: 100 }) {
   static create = ComponentFactory(Transform, (prev, config) => {
     if (prev !== undefined) {
       prev._parent = config.parent;

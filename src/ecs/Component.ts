@@ -1,5 +1,5 @@
 import { Hash } from "./Hash";
-import { Entity, ComponentsCollection, World } from "./World";
+import type { Entity, World } from "./World";
 
 const container_class_cache: {
   [key: string]: ComponentsContainer;
@@ -42,11 +42,14 @@ export class IComponent {
   static container_column_id = ID_SEQ_START;
   static container_class: ComponentsContainer | undefined = undefined;
   static register_class: ComponentsRegister | undefined = undefined;
-  static no_pool: boolean | undefined;
+  static use_pool: number | false;
 
   constructor(...args: any[]) {}
 
-  static get<T>(this: (new (...args: any[]) => T) & typeof IComponent, entity: Entity): T | undefined {
+  static get<T>(
+    this: (new (...args: any[]) => T) & typeof IComponent,
+    entity: Entity<World | undefined>
+  ): T | undefined {
     return undefined;
   }
 
@@ -71,7 +74,7 @@ export class IComponent {
 
 const state = { allow_construct: false };
 
-export function InitComponent() {
+export function InitComponent(options: { use_pool: number | false }) {
   if (last_storage_column_id >= COMPONENT_CONTAINER_SIZE) {
     last_container_row_id += 1;
     last_storage_column_id = 0;
@@ -102,11 +105,11 @@ export function InitComponent() {
     static container_column_id = column_id;
     static container_class = container_class_cache[`_${row_id}`];
     static register_class = register_class_cache[`_${row_id}`];
-    static no_pool: boolean | undefined;
+    static use_pool = options.use_pool;
 
     constructor(...args: any[]) {
       // TODO: remove in development build
-      if (state.allow_construct === false) {
+      if (state.allow_construct === false && options.use_pool !== false) {
         throw new Error(`[Component] can't create component outside of world, this can cause memory leak because all components returns back to the pool`);
       }
     }
@@ -123,6 +126,7 @@ export function InitComponent() {
     static manager = new Function("Component", "components", `return function (world) {
       const manager = world.get_collections("_${id}", components)._${id};
       if (manager.clear === undefined) {
+        manager.max_pool_size = Component.use_pool || 0; 
         manager.clear = Component.clear(this);
         manager.attach = Component.attach(this);
         manager.world = world;
@@ -136,7 +140,7 @@ export function InitComponent() {
       const value = container._${column_id};
       if (value !== undefined && value !== null) {
         ${Constructor.hasOwnProperty("dispose") ? `Constructor.dispose(this.world, entity, value);`: ""}
-        ${Constructor.no_pool !== true ? "this.pool_push(value)" : ""}
+        ${Constructor.use_pool > 0 ? "this.pool_push(value)" : ""}
         container._${column_id} = null;
         const register = entity.register._${row_id};
         const id = register?._${column_id};
@@ -174,7 +178,7 @@ export function InitComponent() {
     `) as typeof IComponent["clear_collection"];
 
     private static attach = (Constructor: typeof IComponent) => new Function(
-      ...["RegisterClass", "ContainerClass", "ComponentsCollection"],
+      ...["RegisterClass", "ContainerClass"],
       `return function(entity, component) {
         var container = entity.components._${row_id};
         if (container === undefined) {
@@ -186,7 +190,7 @@ export function InitComponent() {
           var value = container._${column_id};
           container._${column_id} = component;
           if (value !== undefined && value !== null) {
-            ${Constructor.no_pool !== true ? "this.pool_push(value)" : ""}
+            ${Constructor.use_pool > 0 ? "this.pool_push(value)" : ""}
             return entity;
           } else if (value === undefined) {
             entity.hash = entity.hash.add(component.constructor);
@@ -203,8 +207,7 @@ export function InitComponent() {
         return entity;
       }`
     )(register_class_cache[`_${row_id}`], 
-      container_class_cache[`_${row_id}`],
-      ComponentsCollection)
+      container_class_cache[`_${row_id}`])
     
     attach<W extends World | undefined>(world: World, entity: Entity<W>): Entity<W>  {
       // @ts-expect-error

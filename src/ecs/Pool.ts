@@ -1,5 +1,6 @@
 import { Hash } from "./Hash";
 import { Entity, World, ComponentsCollection, EntityRef } from "./World";
+import { SubWorld } from "./SubWorld";
 import { IComponent, HASH_HEAD } from "./Component";
 
 type PoolInstances<T extends Array<typeof IComponent>> = {
@@ -10,13 +11,14 @@ type PoolInstancesUndef<T extends Array<typeof IComponent>> = {
   [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A | undefined : never;
 };
 
-export class EntityPool<T extends Array<typeof IComponent>> {
+export class EntityPool<T extends Array<typeof IComponent>, W extends typeof SubWorld | undefined = undefined> {
   id: number;
   hash: Hash<typeof IComponent>;
   entities: Entity[];
   components: T;
   max_pool_size: number;
   create: ((...args: PoolInstances<T>) => Entity) | undefined;
+  has_sub_world: W;
 
   reuse:
     | ((
@@ -30,7 +32,11 @@ export class EntityPool<T extends Array<typeof IComponent>> {
     | ((world: World, instantiate: (world: World, create: (...args: PoolInstances<T>) => Entity) => Entity) => Entity)
     | undefined;
 
-  constructor(components: [...T]) {
+  constructor(raw_components: [...T], sub_world_class?: W) {
+    const components = [...raw_components] as T;
+    if (sub_world_class !== undefined) {
+      components.push(sub_world_class);
+    }
     this.hash = components.reduce((acc, component) => acc.add(component), HASH_HEAD);
     this.id = EntityPool.global_id++;
     this.entities = [];
@@ -39,6 +45,7 @@ export class EntityPool<T extends Array<typeof IComponent>> {
     this.reuse = undefined;
     this.instantiate = undefined;
     this.max_pool_size = 20;
+    this.has_sub_world = sub_world_class!;
   }
 
   pop(): Entity | undefined {
@@ -205,7 +212,7 @@ export class Pool<T extends Array<typeof IComponent>> {
 
   pool: EntityPool<T>;
 
-  constructor(pool: EntityPool<T>, instantiate: Pool<T>["instantiate"], reuse: Pool<T>["reuse"]) {
+  constructor(pool: EntityPool<T, undefined>, instantiate: Pool<T>["instantiate"], reuse: Pool<T>["reuse"]) {
     this.pool = pool;
     this.reuse = reuse;
     this.instantiate = instantiate;
@@ -228,9 +235,9 @@ export class WorldPool<T extends Array<typeof IComponent>> {
   instantiate: (world: World, create: (...args: PoolInstances<T>) => Entity) => Entity;
   reuse: (world: World, create: (...args: PoolInstances<T>) => Entity, ...args: PoolInstancesUndef<T>) => Entity;
 
-  pool: EntityPool<T>;
+  pool: EntityPool<T, typeof SubWorld>;
   constructor(params: {
-    pool: EntityPool<T>;
+    pool: EntityPool<T, typeof SubWorld>;
     instantiate: WorldPool<T>["instantiate"];
     reuse: WorldPool<T>["reuse"];
     init_world: WorldPool<T>["init_world"];

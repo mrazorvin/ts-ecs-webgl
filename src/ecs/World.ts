@@ -3,6 +3,7 @@ import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
 import { Query } from "./Query";
+import { SubWorld } from "./SubWorld";
 
 export const ID_SEQ_START = -1;
 export const CONTAINER_SIZE = 8; // TODO: set to 32 after normalizing container locations
@@ -119,7 +120,7 @@ export class ComponentsCollection {
     this.refs = [];
     this.pool = [];
     this.size = 0;
-    this.max_pool_size = 200;
+    this.max_pool_size = 20;
   }
 
   pool_push(component: IComponent) {
@@ -469,10 +470,6 @@ export function sys<T extends Array<new (...args: any[]) => Resource>>(
   ) => void
 ) {
   return new DynamicSystem(args as any, fn);
-}
-
-export class SubWorld extends InitComponent() {
-  static instance = new SubWorld();
 }
 
 export { EntityPool, InitComponent };

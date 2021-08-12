@@ -1,11 +1,7 @@
 import { default as test } from "ava";
 import { Hash } from "./Hash";
 import { IComponent } from "./Component";
-import {
-  TestComponent1,
-  TestComponent2,
-  TestComponent3,
-} from "./world_spec/world_spec_fixtures";
+import { TestComponent1, TestComponent2, TestComponent3 } from "./world_spec/world_component_fixtures";
 
 const HEAD_HASH = new Hash(IComponent, undefined);
 
@@ -27,9 +23,7 @@ test("[World -> Hash]", (t) => {
 
   const hash123 = hash12.add(TestComponent3);
   const hash213 = hash12.add(TestComponent3);
-  const hash312 = HEAD_HASH.add(TestComponent3)
-    .add(TestComponent1)
-    .add(TestComponent2);
+  const hash312 = HEAD_HASH.add(TestComponent3).add(TestComponent1).add(TestComponent2);
   t.is(hash123, hash213);
   t.is(hash213, hash312);
 

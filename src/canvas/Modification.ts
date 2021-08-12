@@ -1,7 +1,7 @@
 import { ComponentFactory } from "@mr/ecs/Component";
 import { InitComponent } from "@mr/ecs/World";
 
-export class Movement extends InitComponent() {
+export class Movement extends InitComponent({ use_pool: 20 }) {
   target: [x: number, y: number];
 
   static create = ComponentFactory(Movement, (prev, x: number, y: number) => {

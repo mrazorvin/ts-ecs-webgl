@@ -10,13 +10,13 @@ import {
   TestComponent6,
   TestComponent7,
   TestComponent8,
-} from "./world_spec/world_spec_fixtures";
+} from "./world_spec/world_component_fixtures";
 
 const world = new World();
 // @ts-expect-error
 const clases = [];
 for (let i = 0; i < 6000; i++) {
-  class _C extends InitComponent() {
+  class _C extends InitComponent({ use_pool: false }) {
     static create = ComponentFactory(_C, () => new _C());
   }
   clases.push(_C);
