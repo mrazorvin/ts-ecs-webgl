@@ -44,18 +44,16 @@ for (let i = 0; i < 400; i++) {
 query: {
   console.time("query");
   let y = [] as any;
-  const query = q({
-    components: [
-      TestComponent0,
-      TestComponent1,
-      TestComponent2,
-      TestComponent3,
-      TestComponent4,
-      TestComponent5,
-      TestComponent6,
-      TestComponent7,
-    ],
-  });
+  const query = q([
+    TestComponent0,
+    TestComponent1,
+    TestComponent2,
+    TestComponent3,
+    TestComponent4,
+    TestComponent5,
+    TestComponent6,
+    TestComponent7,
+  ]);
 
   for (let i = 0; i < 1000; i++) {
     q.run(world, query, (entity, t1, t2, t3, t4) => {

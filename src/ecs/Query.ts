@@ -5,6 +5,5 @@ export interface QueryOptions {
 }
 
 export interface Query<T extends Array<typeof IComponent>> extends QueryOptions {
-  init?: true;
   components: [...T] | readonly [...T];
 }

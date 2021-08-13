@@ -235,7 +235,6 @@ export function q(
 ): QueryInit<Query<Array<typeof IComponent>>> {
   const query = Array.isArray(arg) ? { components: arg } : arg;
   if (query.world === true) (query.components as Array<typeof IComponent>).push(SubWorld);
-  query.init = true;
 
   return query as unknown as QueryInit<Query<any>>;
 }
@@ -274,15 +273,17 @@ export abstract class BaseScheduler {
   tick() {
     for (let i = 0; i < this.world.systems.length; i++) {
       const system = this.world.systems[i]!;
-      QUERY_NAME = undefined;
       QUERIES = system.queries;
       inject_resources_and_sub_world(this.world, system);
+      QUERY_NAME = undefined;
     }
 
     if (this.world.systems_once.length > 0) {
       this.world.systems_once = this.world.systems_once.filter((system) => {
         QUERIES = system.queries;
-        return !inject_resources_and_sub_world(this.world, system);
+        const result = !inject_resources_and_sub_world(this.world, system);
+        QUERY_NAME = undefined;
+        return result;
       });
     }
 
