@@ -179,30 +179,30 @@ test("[q.run()]", (t) => {
   const component3 = TestComponent3.create(world);
   const entity = world.entity([component1, component3]);
 
-  q.run(world, q.name("q1") ?? { components: [TestComponent1] }, (e, component) => {
+  q.run(world, q([TestComponent1]), (e, component) => {
     t.is(entity, e);
     t.is(component, component1);
   });
-  q.run(world, q.name("q2") ?? { components: [TestComponent3] }, (e, component) => {
+  q.run(world, q([TestComponent3]), (e, component) => {
     t.is(entity, e);
     t.is(component, component3);
   });
 
-  q.run(world, q.name("q3") ?? { components: [TestComponent1, TestComponent3] }, (e, _component1, _component3) => {
+  q.run(world, q([TestComponent1, TestComponent3]), (e, _component1, _component3) => {
     t.is(entity, e);
     t.is(_component1, component1);
     t.is(_component3, component3);
   });
 
-  q.run(world, q.name("q4") ?? { components: [TestComponent3, TestComponent1] }, (e, _component3, _component1) => {
+  q.run(world, q([TestComponent3, TestComponent1]), (e, _component3, _component1) => {
     t.is(entity, e);
     t.is(_component1, component1);
     t.is(_component3, component3);
   });
 
-  q.run(world, q.name("q5") ?? { components: [TestComponent2] }, () => t.fail());
-  q.run(world, q.name("q6") ?? { components: [TestComponent1, TestComponent2] }, () => t.fail());
-  q.run(world, q.name("q7") ?? { components: [TestComponent1, TestComponent2, TestComponent3] }, () => t.fail());
+  q.run(world, q([TestComponent2]), () => t.fail());
+  q.run(world, q([TestComponent1, TestComponent2]), () => t.fail());
+  q.run(world, q([TestComponent1, TestComponent2, TestComponent3]), () => t.fail());
 });
 
 test("[q.run()] multiple entities", (t) => {
@@ -212,26 +212,20 @@ test("[q.run()] multiple entities", (t) => {
   world.entity([TestComponent1.create(world), TestComponent3.create(world)]);
   world.entity([TestComponent1.create(world), TestComponent3.create(world)]);
 
-  q.run(world, q.name("q7") ?? { components: [TestComponent3] }, (e, component) => {
+  q.run(world, q([TestComponent3]), (e, component) => {
     t.true(component instanceof TestComponent3);
   });
 
-  q.run(world, q.name("q8") ?? { components: [TestComponent1] }, (e, component) => {
+  q.run(world, q([TestComponent1]), (e, component) => {
     t.true(component instanceof TestComponent1);
   });
 
-  q.run(
-    world,
-    q.name("q9") ?? {
-      components: [TestComponent1, TestComponent3],
-    },
-    (e, component1, component2) => {
-      t.true(component1 instanceof TestComponent1);
-      t.true(component2 instanceof TestComponent3);
-    }
-  );
+  q.run(world, q([TestComponent1, TestComponent3]), (e, component1, component2) => {
+    t.true(component1 instanceof TestComponent1);
+    t.true(component2 instanceof TestComponent3);
+  });
 
-  q.run(world, q.name("q10") ?? { components: [TestComponent3, TestComponent1] }, (e, component2, component1) => {
+  q.run(world, q([TestComponent3, TestComponent1]), (e, component2, component1) => {
     t.true(component1 instanceof TestComponent1);
     t.true(component2 instanceof TestComponent3);
   });

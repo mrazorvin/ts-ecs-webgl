@@ -189,7 +189,7 @@ main_world.system(
 
 main_world.system(
   sys([Input, LocalCollisionWorld], (world, input, lcw) => {
-    q.run(world, q.name("mh") ?? { components: [Transform, Movement, Creature] }, (_, transform, modification) => {
+    q.run(world, q.id("move") ?? q([Transform, Movement, Creature]), (_, transform, modification) => {
       lcw.world.test_collision<SSCDShape<EntityRef>>(
         new SSCDRectangle(
           new SSCDVector(transform.position[0], transform.position[1]),
@@ -224,7 +224,7 @@ main_world.system(
 
     let idx = 0;
     const data = map_mesh.transformation_data;
-    q.run(world, q.name("rt") ?? { components: [Transform, Sprite, Static, Visible] }, (_, transform) => {
+    q.run(world, q.id("render") ?? q([Transform, Sprite, Static, Visible]), (_, transform) => {
       const view = Transform.view(main_world, transform);
 
       data[idx * 9 + 0] = view[0]!;
@@ -260,7 +260,7 @@ main_world.system(
 
 main_world.system(
   sys([], (world) => {
-    q.run(world, { components: [Transform, Movement, Creature] }, (_, transform, modification) => {
+    q.run(world, q.id("animation") ?? q([Transform, Movement, Creature]), (_, transform, modification) => {
       // those code some how connected to animation chain + movement behavior
       // think a better way to organize it
       if (
@@ -305,7 +305,7 @@ main_world.system(
     if (m_ctx === undefined) return;
     else t.buffer(ctx.gl, m_ctx);
 
-    q.run(world, q.name("render") ?? { components: [Sprite, Transform, Creature] }, (_, sprite, transform) => {
+    q.run(world, q.id("render") ?? q([Sprite, Transform, Creature]), (_, sprite, transform) => {
       Sprite.render(
         ctx,
         sprite,

@@ -9,7 +9,7 @@ import {
 import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
-import { Query } from "./Query";
+import { Query, QueryOptions } from "./Query";
 import { SubWorld } from "./SubWorld";
 
 export const ID_SEQ_START = -1;
@@ -222,23 +222,49 @@ export abstract class System<R extends Resource[] = Resource[]> {
 
 let GLOBAL_QUERIES: Queries = {};
 let QUERIES: Queries = GLOBAL_QUERIES;
+let QUERY_NAME: string | undefined = undefined;
 
-export namespace q {
-  export function run<T extends Array<typeof IComponent>>(
-    world: World,
-    query: Query<[...T]>,
-    cb: (
-      entity: Entity<undefined>,
-      ...args: { [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : never }
-    ) => void
-  ) {
-    inject_entity_and_component(world, query.components, cb as (entity: Entity<any>, ...args: IComponent[]) => void);
-  }
-
-  export function name(name: string): undefined {
-    return QUERIES[name] as undefined;
-  }
+class QueryInit<T> {
+  private query!: T;
 }
+
+export function q<T extends Array<typeof IComponent>>(args: [...T]): QueryInit<Query<T>>;
+export function q<T extends Query<any>>(args: T): QueryInit<T>;
+export function q(
+  arg: Array<typeof IComponent> | Query<Array<typeof IComponent>>
+): QueryInit<Query<Array<typeof IComponent>>> {
+  const query = Array.isArray(arg) ? { components: arg } : arg;
+  if (query.world === true) (query.components as Array<typeof IComponent>).push(SubWorld);
+  query.init = true;
+
+  return query as unknown as QueryInit<Query<any>>;
+}
+
+q.run = function <T extends Array<typeof IComponent>, Options extends QueryOptions>(
+  world: World,
+  raw_query: QueryInit<Query<[...T]> & Options>,
+  cb: (
+    entity: Entity<Options["world"] extends true ? World : undefined>,
+    ...args: { [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : never }
+  ) => void
+) {
+  const query = raw_query as unknown as Query<any>;
+  if (QUERY_NAME !== undefined) {
+    QUERIES[QUERY_NAME] = query;
+    QUERY_NAME = undefined;
+  }
+  inject_entity_and_component(world, query.components, cb as (entity: Entity, ...args: IComponent[]) => void);
+};
+
+q.id = function id(name: string): undefined {
+  const query = QUERIES[name];
+  if (query === undefined) {
+    QUERY_NAME = name;
+    return undefined;
+  } else {
+    return query as unknown as undefined;
+  }
+};
 
 export abstract class BaseScheduler {
   constructor(public world: World) {}
@@ -248,6 +274,7 @@ export abstract class BaseScheduler {
   tick() {
     for (let i = 0; i < this.world.systems.length; i++) {
       const system = this.world.systems[i]!;
+      QUERY_NAME = undefined;
       QUERIES = system.queries;
       inject_resources_and_sub_world(this.world, system);
     }
