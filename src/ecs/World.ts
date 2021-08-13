@@ -1,4 +1,11 @@
-import { InitComponent, IComponent, ComponentsContainer, ComponentsRegister, HASH_HEAD, ComponentTypeID } from "./Component";
+import {
+  InitComponent,
+  IComponent,
+  ComponentsContainer,
+  ComponentsRegister,
+  HASH_HEAD,
+  ComponentTypeID,
+} from "./Component";
 import { DeleteEntity } from "./DeleteEntity";
 import { Hash } from "./Hash";
 import { EntityPool } from "./Pool";
@@ -9,7 +16,7 @@ export const ID_SEQ_START = -1;
 export const CONTAINER_SIZE = 8; // TODO: set to 32 after normalizing container locations
 
 export enum ResourceID {}
-export class Entity<W extends World | undefined =  undefined> {
+export class Entity<W extends World | undefined = undefined> {
   // IMPORTANT: don't add more than 12 properties, otherwise V8 will use for this object dictionary mode.
   //            this also mean that you not allow to add more properties to entity instance
   components: { [key: string]: ComponentsContainer };
@@ -40,10 +47,7 @@ export abstract class Resource {
   constructor(...args: any[]) {}
 
   // real code will be injected after initialization
-  static get<T>(
-    this: (new (...args: any[]) => T) & typeof Resource,
-    world: World
-  ): T | undefined {
+  static get<T>(this: (new (...args: any[]) => T) & typeof Resource, world: World): T | undefined {
     return undefined as T | undefined;
   }
 
@@ -63,16 +67,11 @@ export abstract class Resource {
   static storage_row_id = ID_SEQ_START;
   static container_column_id = ID_SEQ_START;
   static init() {
-    if (
-      this.container_column_id === ID_SEQ_START ||
-      this.storage_row_id === ID_SEQ_START
-    ) {
+    if (this.container_column_id === ID_SEQ_START || this.storage_row_id === ID_SEQ_START) {
       if (Resource.last_container_column_id >= CONTAINER_SIZE) {
         Resource.last_container_row_id += 1;
         Resource.last_container_column_id = 0;
-        Resource.container_class_cache[
-          `_${Resource.last_container_row_id}`
-        ] = class ResourceContainer {
+        Resource.container_class_cache[`_${Resource.last_container_row_id}`] = class ResourceContainer {
           [key: string]: Resource;
         };
       } else {
@@ -124,13 +123,13 @@ export class ComponentsCollection {
   }
 
   pool_push(component: IComponent) {
-    if (this.pool.length < this.max_pool_size) this.pool.push(component);     
+    if (this.pool.length < this.max_pool_size) this.pool.push(component);
   }
 }
 
 export class World {
   components: Map<ComponentTypeID, ComponentsCollection>;
-  collection_cache: Map<string, { [key: string]: ComponentsCollection}>; 
+  collection_cache: Map<string, { [key: string]: ComponentsCollection }>;
   resources: Array<{ [key: string]: Resource }>;
   systems: System[];
   systems_once: System[];
@@ -147,15 +146,13 @@ export class World {
 
   clear(fn: <T extends any>(pre_world: World, next_resource: T) => any) {
     // select on resources that needed be cleared in fn
-    // clear features 
+    // clear features
     // clear systems_once
     // left systems, but mark them as non indexed
     // for all collections, move all component to second cache
   }
 
-  query(query: Query.Prepared) {
-    inject_entity_and_component(this, query.components, query.cb as any);
-  }
+  query(query: Query<any>) {}
 
   system(system: System) {
     this.on_tick_end.push(() => this.systems.push(system));
@@ -166,11 +163,11 @@ export class World {
   }
 
   resource(resource: Resource) {
-    const Constructor = (resource.constructor as unknown) as typeof Resource;
+    const Constructor = resource.constructor as unknown as typeof Resource;
     Constructor.set(this, resource);
   }
 
-  entity<W extends World | undefined>(components: IComponent[]): Entity<undefined>; 
+  entity<W extends World | undefined>(components: IComponent[]): Entity<undefined>;
   entity<W extends World | undefined>(components: IComponent[], world?: W): Entity<W> {
     const entity = new Entity(world!);
 
@@ -185,7 +182,7 @@ export class World {
     return entity;
   }
 
-  delete_entity(entity: Entity) {
+  delete_entity(entity: Entity<World | undefined>) {
     DeleteEntity.delete(this, entity);
   }
 
@@ -197,19 +194,19 @@ export class World {
         let collection = this.components.get(component.id);
         if (collection === undefined) {
           collection = new ComponentsCollection();
-          this.components.set(component.id, collection)
-        } 
+          this.components.set(component.id, collection);
+        }
         collections[`_${component.id}`] = collection;
       }
       this.collection_cache.set(hash, collections);
-    } 
+    }
 
     return collections;
   }
 }
 
 export interface Queries {
-  [key: string]: Query 
+  [key: string]: Query<any>;
 }
 
 export abstract class System<R extends Resource[] = Resource[]> {
@@ -226,9 +223,22 @@ export abstract class System<R extends Resource[] = Resource[]> {
 let GLOBAL_QUERIES: Queries = {};
 let QUERIES: Queries = GLOBAL_QUERIES;
 
-export const $ = (function $(name: string, query?: (factory: typeof Query.Factory) => typeof Query) {
-  return query === undefined ? QUERIES[name] : (QUERIES[name] = Query.Constructor(query(Query.Factory)));
-} as unknown as Query.$)
+export namespace q {
+  export function run<T extends Array<typeof IComponent>>(
+    world: World,
+    query: Query<[...T]>,
+    cb: (
+      entity: Entity<undefined>,
+      ...args: { [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : never }
+    ) => void
+  ) {
+    inject_entity_and_component(world, query.components, cb as (entity: Entity<any>, ...args: IComponent[]) => void);
+  }
+
+  export function name(name: string): undefined {
+    return QUERIES[name] as undefined;
+  }
+}
 
 export abstract class BaseScheduler {
   constructor(public world: World) {}
@@ -243,12 +253,10 @@ export abstract class BaseScheduler {
     }
 
     if (this.world.systems_once.length > 0) {
-      this.world.systems_once = this.world.systems_once.filter(
-        (system) => {
-          QUERIES = system.queries;
-          return !inject_resources_and_sub_world(this.world, system);
-        }
-      );
+      this.world.systems_once = this.world.systems_once.filter((system) => {
+        QUERIES = system.queries;
+        return !inject_resources_and_sub_world(this.world, system);
+      });
     }
 
     QUERIES = GLOBAL_QUERIES;
@@ -259,7 +267,6 @@ export abstract class BaseScheduler {
       }
       this.world.on_tick_end = [];
     }
-
   }
 }
 
@@ -315,14 +322,14 @@ export class RafScheduler extends Scheduler {
     sec += ms_delta;
 
     if (sec >= 1) {
-      console.time("tick")
+      console.time("tick");
     }
 
     this.tick();
     this.start();
 
     if (sec >= 1) {
-      console.timeEnd("tick")
+      console.timeEnd("tick");
       sec = 0;
     }
   };
@@ -337,7 +344,10 @@ const resource_injector_variables = Array(9)
   .map((_, i) => `_${i}`);
 
 // it's possible to generate more optimized code
-const resource_injector = new Function("world", "system", `
+const resource_injector = new Function(
+  "world",
+  "system",
+  `
     switch (system.dependencies.length) {
       ${resource_injector_variables
         .map((_, i) => {
@@ -352,9 +362,7 @@ const resource_injector = new Function("world", "system", `
              )
              .join("\n")}
 
-            system.exec(${["world"]
-              .concat(resource_injector_variables.slice(0, i))
-              .join(",")});
+            system.exec(${["world"].concat(resource_injector_variables.slice(0, i)).join(",")});
             return true;
         }`;
         })
@@ -363,8 +371,8 @@ const resource_injector = new Function("world", "system", `
         throw new Error("Can't inject more than 9 resource");
       }
     }
-`);
-
+`
+);
 
 function inject_resources_and_sub_world(world: World, system: System) {
   return resource_injector(world, system);
@@ -375,7 +383,7 @@ const noop = () => void 0;
 // TODO: refactor names
 class Cacher {
   static storage = new Map<string, Function>();
-  static get_func(components: Array<typeof IComponent>) {
+  static get_func(components: Array<typeof IComponent> | ReadonlyArray<typeof IComponent>) {
     let id = "";
     for (const component of components) {
       id += `_${component.id}`;
@@ -386,12 +394,16 @@ class Cacher {
         const collections = world.get_collections("${id}", components);
         let size = Infinity;
         let components_collection;
-        ${components.map(({ id }) => `
+        ${components
+          .map(
+            ({ id }) => `
           if (collections._${id}.size < size) {
             size = collections._${id}.size;
             components_collection = collections._${id}.refs;
           }
-        `).join("\n")}; 
+        `
+          )
+          .join("\n")}; 
       
 
         for (let i = 0; i < size; i++) {
@@ -413,13 +425,10 @@ class Cacher {
             )
             .join(";")}
         
-            fn(${["entity"]
-              .concat(components.map(({ id }) => `_${id}`))
-              .join(",")});
+            fn(${["entity"].concat(components.map(({ id }) => `_${id}`)).join(",")});
         }
       }`;
       fn = new Function("components", body)(components);
-
 
       this.storage.set(id, fn!);
     }
@@ -439,11 +448,10 @@ class Cacher {
 
 function inject_entity_and_component(
   world: World,
-  components: Array<typeof IComponent>,
+  components: Array<typeof IComponent> | ReadonlyArray<typeof IComponent>,
   fn: (entity: Entity, ...components: IComponent[]) => void
 ) {
   const inject = Cacher.get_func(components)!;
-
 
   return inject(world, fn);
 }

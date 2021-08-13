@@ -1,5 +1,5 @@
 import { glMatrix, vec2 } from "gl-matrix";
-import { $, EntityRef, LoopInfo, RafScheduler, sys, World } from "@mr/ecs/World";
+import { EntityRef, LoopInfo, q, RafScheduler, sys } from "@mr/ecs/World";
 import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
 import { SpriteShader, SPRITE_SHADER } from "./Assets/View/Sprite/Sprite.shader";
 import { WebGL } from "./Render/WebGL";
@@ -187,62 +187,34 @@ main_world.system(
   })
 );
 
-// function run<T extends any[]>(name: string, value: [...T], run: (...args: T) => void): T {
-//   return null as any;
-// }
-// function cache(): undefined {
-//   return undefined;
-// }
-// TODO
-// A much better way to define a system
-// const system = run(
-//   "MoveHero",
-//   cache(a1, a2, a3, a4, a5) ?? {
-//     components: [Transform, Modification, Creature],
-//     ignore: [],
-//   },
-//   (a1, a2, a3, a4, a5, a6, a7, a8, a9) => {
-//     //
-//   }
-// );
-
-const MoveHero = $(
-  "mh",
-  (create) =>
-    class {
-      constructor(public world: World, public input: Input, public camera: Camera, public lcw: LocalCollisionWorld) {}
-      query = create([Transform, Movement, Creature], (_, transform, modification) => {
-        this.lcw.world.test_collision<SSCDShape<EntityRef>>(
-          new SSCDRectangle(
-            new SSCDVector(transform.position[0], transform.position[1]),
-            new SSCDVector(transform.width, transform.height)
-          ),
-          undefined,
-          (shape) => {
-            const entity = shape.get_data()?.entity;
-            if (entity) this.world.delete_entity(entity);
-          }
-        );
-
-        // make a static method from Modification class
-        const target_x = this.input.current_x - transform.width / 2;
-        const target_y = this.input.current_y - transform.height / 2;
-        const direction_x = transform.position[0] - target_x;
-        const direction_y = transform.position[1] - target_y;
-        modification.target[0] = direction_x;
-        modification.target[1] = direction_y;
-      });
-    }
-);
-
 main_world.system(
-  sys([Input, Camera, LocalCollisionWorld], (world, input, camera, lcw) => {
-    world.query(MoveHero.prep(world, input, camera, lcw));
+  sys([Input, LocalCollisionWorld], (world, input, lcw) => {
+    q.run(world, q.name("mh") ?? { components: [Transform, Movement, Creature] }, (_, transform, modification) => {
+      lcw.world.test_collision<SSCDShape<EntityRef>>(
+        new SSCDRectangle(
+          new SSCDVector(transform.position[0], transform.position[1]),
+          new SSCDVector(transform.width, transform.height)
+        ),
+        undefined,
+        (shape) => {
+          const entity = shape.get_data()?.entity;
+          if (entity) world.delete_entity(entity);
+        }
+      );
+
+      // make a static method from Modification class
+      const target_x = input.current_x - transform.width / 2;
+      const target_y = input.current_y - transform.height / 2;
+      const direction_x = transform.position[0] - target_x;
+      const direction_y = transform.position[1] - target_y;
+      modification.target[0] = direction_x;
+      modification.target[1] = direction_y;
+    });
   })
 );
 
 main_world.system(
-  sys([WebGL], (sub_world, ctx) => {
+  sys([WebGL], (world, ctx) => {
     const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
     const gl = ctx.gl;
     if (bg_ctx === undefined || map_shader === undefined) return;
@@ -250,27 +222,23 @@ main_world.system(
 
     const bg_texture = ctx.textures.get(map_texture)!.texture;
 
-    // prettier-ignore
-    const render_tiles = $("rt") ?? $("rt", (fn) => class {
-      constructor (public idx: number, public data: typeof map_mesh.transformation_data) {}
-      query = fn([Sprite, Transform, Static, Visible], (_, __, transform, ___) => {
-        const view = Transform.view(main_world, transform);
+    let idx = 0;
+    const data = map_mesh.transformation_data;
+    q.run(world, q.name("rt") ?? { components: [Transform, Sprite, Static, Visible] }, (_, transform) => {
+      const view = Transform.view(main_world, transform);
 
-        this.data[this.idx * 9 + 0] = view[0];
-        this.data[this.idx * 9 + 1] = view[1];
-        this.data[this.idx * 9 + 2] = view[2];
-        this.data[this.idx * 9 + 3] = view[3];
-        this.data[this.idx * 9 + 4] = view[4];
-        this.data[this.idx * 9 + 5] = view[5];
-        this.data[this.idx * 9 + 6] = view[6];
-        this.data[this.idx * 9 + 7] = view[7];
-        this.data[this.idx * 9 + 8] = view[8];
+      data[idx * 9 + 0] = view[0]!;
+      data[idx * 9 + 1] = view[1]!;
+      data[idx * 9 + 2] = view[2]!;
+      data[idx * 9 + 3] = view[3]!;
+      data[idx * 9 + 4] = view[4]!;
+      data[idx * 9 + 5] = view[5]!;
+      data[idx * 9 + 6] = view[6]!;
+      data[idx * 9 + 7] = view[7]!;
+      data[idx * 9 + 8] = view[8]!;
 
-        this.idx++;
-      })
+      idx++;
     });
-
-    sub_world.query(render_tiles.prep(0, map_mesh.transformation_data));
 
     gl.useProgram(map_shader.program);
     gl.activeTexture(gl.TEXTURE0);
@@ -278,12 +246,12 @@ main_world.system(
     gl.uniform1i(map_shader.location.Image, 0);
     gl.bindVertexArray(map_mesh.vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, map_mesh.transformation_buffer.buffer);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, map_mesh.transformation_data.subarray(0, render_tiles.idx * 9));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, map_mesh.transformation_data.subarray(0, idx * 9));
     gl.drawArraysInstanced(
       gl.TRIANGLE_STRIP,
       0, // offset
       6, // num vertices per instance
-      render_tiles.idx - 1 // num instances
+      idx - 1 // num instances
     );
     gl.bindVertexArray(null);
     gl.useProgram(null);
@@ -292,39 +260,34 @@ main_world.system(
 
 main_world.system(
   sys([], (world) => {
-    // prettier-ignore
-    const play_animation = $("animation") ?? $("animation", (fn) => class {
-      query = fn([Transform, Movement, Creature], (_, transform, modification) => {
-        // those code some how connected to animation chain + movement behavior
-        // think a better way to organize it
-        if (
-          !(
-            modification.target[0] > -0.5 &&
-            modification.target[0] < 0.5 &&
-            modification.target[1] > -0.5 &&
-            modification.target[1] < 0.5
-          )
-        ) {
-          // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
-          const pos = new Float32Array(2);
-          vec2.normalize(pos, modification.target as [number, number]);
-          const direction = pos[0];
-          transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
-          transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
-          if (selected_animation === "idle") {
-            selected_animation = "run";
-            sec = 0;
-          }
-        } else {
-          if (selected_animation === "run" && current_frame === 4) {
-            selected_animation = "idle";
-            sec = 0;
-          }
+    q.run(world, { components: [Transform, Movement, Creature] }, (_, transform, modification) => {
+      // those code some how connected to animation chain + movement behavior
+      // think a better way to organize it
+      if (
+        !(
+          modification.target[0] > -0.5 &&
+          modification.target[0] < 0.5 &&
+          modification.target[1] > -0.5 &&
+          modification.target[1] < 0.5
+        )
+      ) {
+        // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
+        const pos = new Float32Array(2);
+        vec2.normalize(pos, modification.target as [number, number]);
+        const direction = pos[0];
+        transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
+        transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
+        if (selected_animation === "idle") {
+          selected_animation = "run";
+          sec = 0;
         }
-      })
+      } else {
+        if (selected_animation === "run" && current_frame === 4) {
+          selected_animation = "idle";
+          sec = 0;
+        }
+      }
     });
-
-    world.query(play_animation.prep());
   })
 );
 
@@ -342,23 +305,15 @@ main_world.system(
     if (m_ctx === undefined) return;
     else t.buffer(ctx.gl, m_ctx);
 
-    // prettier-ignore
-    const Render = $("Render") ?? $("Render", (fn) => class {
-      constructor(public _atlas: typeof atlas, public ctx: WebGL, public world: World, public _frame: typeof frame) {}
-      query = fn(
-        [Sprite, Transform, Creature],
-        (_, sprite, transform) => {
-          Sprite.render(
-            this.ctx,
-            sprite,
-            Transform.view(this.world, transform),
-            this._frame!.rect[0]! / this._atlas.grid_width,
-            this._frame!.rect[1]! / this._atlas.grid_height
-        );
-      })
-    })
-
-    world.query(Render.prep(atlas, ctx, world, frame));
+    q.run(world, q.name("render") ?? { components: [Sprite, Transform, Creature] }, (_, sprite, transform) => {
+      Sprite.render(
+        ctx,
+        sprite,
+        Transform.view(world, transform),
+        frame!.rect[0]! / atlas.grid_width,
+        frame!.rect[1]! / atlas.grid_height
+      );
+    });
   })
 );
 

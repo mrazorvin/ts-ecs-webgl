@@ -57,8 +57,8 @@ export class IComponent {
     this: (new (...args: any[]) => T) & typeof IComponent,
     world: World
   ): {
-    clear(entity: Entity): boolean;
-    attach(entity: Entity, component: T): Entity;
+    clear(entity: Entity<World | undefined>): boolean;
+    attach<T>(entity: Entity<World | undefined>, component: T): Entity;
   } {
     return null as any;
   }

@@ -2,12 +2,12 @@ import { Hash } from "./Hash";
 import { Entity, World } from "./World";
 import { IComponent } from "./Component";
 
-type DeleteFunction = (world: World, entity: Entity) => void;
+type DeleteFunction = (world: World, entity: Entity<World | undefined>) => void;
 type HashType = Hash<typeof IComponent>;
 
 export class DeleteEntity {
   static func_cache = new Map<HashType, { [key: string]: DeleteFunction }>();
-  static delete(world: World, entity: Entity): void {
+  static delete(world: World, entity: Entity<World | undefined>): void {
     let func_container = this.func_cache.get(entity.hash);
     if (func_container === undefined) {
       func_container = {};
