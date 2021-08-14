@@ -6,4 +6,5 @@ export interface QueryOptions {
 
 export interface Query<T extends Array<typeof IComponent>> extends QueryOptions {
   components: [...T] | readonly [...T];
+  named?: number;
 }

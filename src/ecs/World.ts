@@ -167,12 +167,13 @@ export class World {
     Constructor.set(this, resource);
   }
 
-  entity<W extends World | undefined>(components: IComponent[]): Entity<undefined>;
+  entity(components: IComponent[]): Entity<undefined>;
+  entity(components: IComponent[], world: World): Entity<World>;
   entity<W extends World | undefined>(components: IComponent[], world?: W): Entity<W> {
     const entity = new Entity(world!);
 
     if (world !== undefined) {
-      SubWorld.instance.attach(world, entity);
+      SubWorld.instance.attach(this, entity);
     }
 
     for (const component of components) {
@@ -223,6 +224,7 @@ export abstract class System<R extends Resource[] = Resource[]> {
 let GLOBAL_QUERIES: Queries = {};
 let QUERIES: Queries = GLOBAL_QUERIES;
 let QUERY_NAME: string | undefined = undefined;
+let ITERATION: number = Infinity;
 
 class QueryInit<T> {
   private query!: T;
@@ -234,6 +236,12 @@ export function q(
   arg: Array<typeof IComponent> | Query<Array<typeof IComponent>>
 ): QueryInit<Query<Array<typeof IComponent>>> {
   const query = Array.isArray(arg) ? { components: arg } : arg;
+  if (process.env["NODE_ENV"] === "development") {
+    if (QUERY_NAME !== undefined) {
+      query.named = Infinity;
+    }
+  }
+
   if (query.world === true) (query.components as Array<typeof IComponent>).push(SubWorld);
 
   return query as unknown as QueryInit<Query<any>>;
@@ -250,6 +258,13 @@ q.run = function <T extends Array<typeof IComponent>, Options extends QueryOptio
   const query = raw_query as unknown as Query<any>;
   if (QUERY_NAME !== undefined) {
     QUERIES[QUERY_NAME] = query;
+    if (process.env["NODE_ENV"] === "development") {
+      if (query.named !== undefined) {
+        query.named = ITERATION;
+      } else {
+        throw new Error(`[World -> Query.id(${QUERY_NAME})] you can't use Query.id with non-named query`);
+      }
+    }
     QUERY_NAME = undefined;
   }
   inject_entity_and_component(world, query.components, cb as (entity: Entity, ...args: IComponent[]) => void);
@@ -258,19 +273,43 @@ q.run = function <T extends Array<typeof IComponent>, Options extends QueryOptio
 q.id = function id(name: string): undefined {
   const query = QUERIES[name];
   if (query === undefined) {
+    if (process.env["NODE_ENV"] === "development") {
+      if (QUERY_NAME !== undefined) {
+        throw new Error(`[World -> Query.id(${name})] something going wrong, you didn't use prev ${QUERY_NAME} query`);
+      }
+    }
     QUERY_NAME = name;
     return undefined;
   } else {
+    if (process.env["NODE_ENV"] === "development") {
+      if (query.named === undefined) {
+        throw new Error(`[World -> Query.id(${name})] you can't use Query.id with non-named query`);
+      }
+
+      if (query.named === ITERATION) {
+        throw new Error(
+          `[World -> Query.id(${name})] you trying to use named query second time during system it's possible an error. try to create query in upper scope and use it instead without Query.id() call`
+        );
+      } else {
+        query.named = ITERATION;
+      }
+    }
     return query as unknown as undefined;
   }
 };
 
 export abstract class BaseScheduler {
-  constructor(public world: World) {}
+  iteration: number;
+
+  constructor(public world: World) {
+    this.iteration = 0;
+  }
 
   abstract start(): void;
 
   tick() {
+    ITERATION = this.iteration += 1;
+
     for (let i = 0; i < this.world.systems.length; i++) {
       const system = this.world.systems[i]!;
       QUERIES = system.queries;
