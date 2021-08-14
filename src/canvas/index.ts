@@ -26,6 +26,8 @@ import { world_transform_component } from "./WorldView";
 import { CollisionWorld, LocalCollisionWorld } from "./CollisionWorld";
 import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
+import { SpriteInstancingMesh } from "./Assets/View/SpriteInstancing/SpriteInstancing.mesh";
+import { SpriteInstancingShader } from "./Assets/View/SpriteInstancing/SpriteInstancing.shader";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -223,7 +225,9 @@ main_world.system(
     const bg_texture = ctx.textures.get(map_texture)!.texture;
 
     let idx = 0;
-    const data = map_mesh.transformation_data;
+    const mesh = ctx.meshes.get(map_mesh) as SpriteInstancingMesh;
+    const data = mesh.transformation_data;
+
     q.run(world, q.id("render") ?? q([Transform, Sprite, Static, Visible]), (_, transform) => {
       const view = Transform.view(main_world, transform);
 
@@ -240,13 +244,15 @@ main_world.system(
       idx++;
     });
 
-    gl.useProgram(map_shader.program);
+    const shader = ctx.shaders.get(map_shader)! as SpriteInstancingShader;
+
+    gl.useProgram(shader.program);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, bg_texture);
-    gl.uniform1i(map_shader.location.Image, 0);
-    gl.bindVertexArray(map_mesh.vao);
-    gl.bindBuffer(gl.ARRAY_BUFFER, map_mesh.transformation_buffer.buffer);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, map_mesh.transformation_data.subarray(0, idx * 9));
+    gl.uniform1i(shader.location.Image, 0);
+    gl.bindVertexArray(mesh.vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.transformation_buffer.buffer);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, mesh.transformation_data.subarray(0, idx * 9));
     gl.drawArraysInstanced(
       gl.TRIANGLE_STRIP,
       0, // offset
@@ -350,3 +356,8 @@ main_world.system(
 // TODO: think about logging ?
 
 scheduler.start();
+
+window.clear_all = () => {
+  scheduler.stop();
+  main_world.dispose();
+};

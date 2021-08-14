@@ -28,7 +28,6 @@ export class SpriteShader extends Shader {
     const Image = gl.getUniformLocation(program, "u_Image");
     const Frame = gl.getUniformLocation(program, "u_Frame");
     const Transform = gl.getUniformLocation(program, "u_Transform");
-
     gl.useProgram(null);
 
     if (Image && Transform && Frame) {
@@ -43,5 +42,9 @@ export class SpriteShader extends Shader {
           })}`
       );
     }
+  }
+
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
   }
 }

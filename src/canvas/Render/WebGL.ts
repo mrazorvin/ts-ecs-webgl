@@ -78,7 +78,7 @@ export class WebGL extends Resource {
   ) {
     const prev = this.context.get(id);
     if (prev) {
-      prev.clear(this.gl);
+      prev.dispose(this.gl);
     }
 
     if (!this.shaders.has(SCREEN_SHADER)) {
@@ -96,5 +96,34 @@ export class WebGL extends Resource {
     this.context.set(id, context);
 
     return context.id;
+  }
+
+  dispose() {
+    for (const shader of this.shaders.values()) {
+      shader.dispose(this.gl);
+    }
+    this.shaders.clear();
+
+    for (const mesh of this.meshes.values()) {
+      mesh.dispose(this.gl);
+    }
+    this.meshes.clear();
+
+    for (const context of this.context.values()) {
+      context.dispose(this.gl);
+    }
+    this.context.clear();
+
+    for (const texture of this.textures.values()) {
+      texture.dispose(this.gl);
+    }
+    this.context.clear();
+
+    window.gl = this.gl;
+    this.canvas.remove();
+    // @ts-expect-error
+    this.canvas = null;
+    // @ts-expect-error
+    this.gl = null;
   }
 }

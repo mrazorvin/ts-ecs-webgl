@@ -11,6 +11,8 @@ export class Camera extends Resource {
   set_position(x: number, y: number) {
     this.transform.position = new Float32Array([-x, -y]);
   }
+
+  dispose() {}
 }
 
 // find better way to modify camera stats, for example in some aggregation object

@@ -97,8 +97,7 @@ export abstract class Resource {
     }
   }
 
-  // this property exists, to disable using other classes instead of resource in type interference
-  name() {}
+  abstract dispose(world: World): void;
 }
 
 export namespace Resource {
@@ -152,7 +151,22 @@ export class World {
     // for all collections, move all component to second cache
   }
 
-  query(query: Query<any>) {}
+  dispose() {
+    for (const storage_key in this.resources) {
+      const storage = this.resources[storage_key];
+      for (const resource_key in storage) {
+        const resource = storage[resource_key];
+        resource?.dispose(this);
+      }
+    }
+
+    this.components.clear();
+    this.collection_cache.clear();
+    this.resources = [];
+    this.systems = [];
+    this.systems_once = [];
+    this.on_tick_end = [];
+  }
 
   system(system: System) {
     this.on_tick_end.push(() => this.systems.push(system));
@@ -360,6 +374,8 @@ export class LoopInfo extends Resource {
   constructor(public time_delta: number) {
     super();
   }
+
+  dispose() {}
 }
 
 let sec = 0;

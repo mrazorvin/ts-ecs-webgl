@@ -5,10 +5,11 @@ import { Shader, ShaderID } from "./Shader";
 import { WebGL } from "./WebGL";
 
 export class ContextID {
-  #type = ContextID;
+  // @ts-expect-error
+  #type: ContextID;
 }
 
-export class Context {
+export abstract class Context {
   render_buffer: WebGLRenderbuffer;
   frame_buffer: WebGLFramebuffer;
   texture: WebGLTexture;
@@ -17,21 +18,14 @@ export class Context {
   width: number;
   height: number;
 
-  id = new ContextID();
-  need_clear = false;
+  id: ContextID;
+  need_clear: boolean;
 
   constructor(
-    params: Pick<
-      Context,
-      | "frame_buffer"
-      | "render_buffer"
-      | "shader"
-      | "mesh"
-      | "height"
-      | "width"
-      | "texture"
-    >
+    params: Pick<Context, "frame_buffer" | "render_buffer" | "shader" | "mesh" | "height" | "width" | "texture">
   ) {
+    this.id = new ContextID();
+    this.need_clear = false;
     this.shader = params.shader;
     this.mesh = params.mesh;
     this.width = params.width;
@@ -41,18 +35,23 @@ export class Context {
     this.texture = params.texture;
   }
 
-  clear(gl: WebGL2RenderingContext) {
+  default_dispose(gl: WebGL2RenderingContext) {
     gl.deleteRenderbuffer(this.render_buffer);
     gl.deleteFramebuffer(this.frame_buffer);
     gl.deleteTexture(this.texture);
   }
+
+  abstract dispose(gl: WebGL2RenderingContext): void;
+}
+
+class DefaultContext extends Context {
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
+  }
 }
 
 export namespace Context {
-  export function create(
-    gl: WebGL2RenderingContext,
-    options: Pick<Context, "width" | "height" | "shader" | "mesh">
-  ) {
+  export function create(gl: WebGL2RenderingContext, options: Pick<Context, "width" | "height" | "shader" | "mesh">) {
     const render_buffer = gl.createRenderbuffer();
     const frame_buffer = gl.createFramebuffer();
     const texture = gl.createTexture();
@@ -60,9 +59,7 @@ export namespace Context {
 
     if (!all_runtime_exists) {
       throw new Error(
-        `[${
-          Context.name
-        } -> create()] all runtime must present ${JSON.stringify({
+        `[${Context.name} -> create()] all runtime must present ${JSON.stringify({
           texture,
           render_buffer,
           frame_buffer,
@@ -80,45 +77,18 @@ export namespace Context {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 
     // TODO: Switch to RGBA_F16 - to support HDR
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      options.width,
-      options.height,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      null
-    );
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, options.width, options.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
-    gl.renderbufferStorage(
-      gl.RENDERBUFFER,
-      gl.DEPTH_COMPONENT16,
-      options.width,
-      options.height
-    );
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, options.width, options.height);
 
-    gl.framebufferTexture2D(
-      gl.FRAMEBUFFER,
-      gl.COLOR_ATTACHMENT0,
-      gl.TEXTURE_2D,
-      texture,
-      0
-    );
-
-    gl.framebufferRenderbuffer(
-      gl.FRAMEBUFFER,
-      gl.DEPTH_ATTACHMENT,
-      gl.RENDERBUFFER,
-      render_buffer
-    );
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, render_buffer);
 
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    return new Context({
+    return new DefaultContext({
       texture,
       render_buffer,
       frame_buffer,
@@ -140,9 +110,7 @@ export namespace Context {
       Shader.render_mesh(gl, mesh);
       gl.useProgram(null);
     } else {
-      throw new Error(
-        `[Screen -> render()] resource resolving problem, default context could render only Screen view`
-      );
+      throw new Error(`[Screen -> render()] resource resolving problem, default context could render only Screen view`);
     }
   }
 }

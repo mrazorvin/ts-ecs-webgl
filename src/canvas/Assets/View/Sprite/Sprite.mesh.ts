@@ -1,9 +1,13 @@
-import { Mesh, MeshID } from "../../../Render/Mesh";
+import { Mesh } from "../../../Render/Mesh";
 import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
 export class SpriteMesh extends Mesh {
   uv_width = 0;
   uv_height = 0;
+
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
+  }
 }
 
 export namespace SpriteMesh {

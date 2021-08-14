@@ -16,13 +16,14 @@ import { CollisionShape, CollisionWorld } from "../../CollisionWorld";
 import { SSCDRectangle, SSCDVector } from "@mr/sscd";
 import { SpriteInstancingMesh } from "../View/SpriteInstancing/SpriteInstancing.mesh";
 import { SpriteInstancingShader } from "../View/SpriteInstancing/SpriteInstancing.shader";
-import { t } from "../../Render/WebGLUtils";
+import { MeshID } from "../../Render/Mesh";
+import { ShaderID } from "../../Render/Shader";
 
 const query = <T extends any[]>(args: [...T]) => args;
 const Query = query([WebGL, CollisionWorld]);
 
-export let map_mesh: SpriteInstancingMesh = undefined as any;
-export let map_shader: SpriteInstancingShader = undefined as any;
+export let map_mesh: MeshID = undefined as any;
+export let map_shader: ShaderID = undefined as any;
 export let map_texture: TextureID = undefined as any;
 
 export const MapLoader = sys(Query, async (world, ctx, sscd) => {
@@ -39,19 +40,19 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
 
   map_texture = bg_texture;
 
-  map_mesh = SpriteInstancingMesh.create_rect(ctx.gl, {
-    o_width: ground_image.width,
-    o_height: ground_image.height,
-    width: 32,
-    height: 32,
-  });
+  map_mesh = ctx.create_mesh((gl) =>
+    SpriteInstancingMesh.create_rect(gl, {
+      o_width: ground_image.width,
+      o_height: ground_image.height,
+      width: 32,
+      height: 32,
+    })
+  );
 
-  map_shader = SpriteInstancingShader.create(
-    ctx.gl,
-    t.program(ctx.gl, [
-      t.shader(ctx.gl, SpriteInstancingShader.fragment_shader, "FRAGMENT"),
-      t.shader(ctx.gl, SpriteInstancingShader.vertex_shader, "VERTEX"),
-    ])
+  map_shader = ctx.create_shader(
+    SpriteInstancingShader.fragment_shader,
+    SpriteInstancingShader.vertex_shader,
+    (gl, program) => SpriteInstancingShader.create(gl, program)
   );
 
   // this code must be generic and use less constants

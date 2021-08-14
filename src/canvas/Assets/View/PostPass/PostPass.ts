@@ -6,7 +6,11 @@ import { PostPassShader } from "./PostPass.shader";
 
 export const POST_PASS_CONTEXT = new ContextID();
 
-export class PostPass extends Context {}
+export class PostPass extends Context {
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
+  }
+}
 
 export namespace PostPass {
   export function render(ctx: WebGL, context: Context) {
@@ -23,9 +27,7 @@ export namespace PostPass {
       Shader.render_mesh(gl, mesh);
       gl.useProgram(null);
     } else {
-      throw new Error(
-        `[${PostPass.name} -> render()] resource resolving problem`
-      );
+      throw new Error(`[${PostPass.name} -> render()] resource resolving problem`);
     }
   }
 

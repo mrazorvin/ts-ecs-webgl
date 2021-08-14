@@ -45,6 +45,8 @@ export class CollisionWorld extends Resource {
 
     return CollisionShape.create(world, new SSCDShapeRef(shape));
   }
+
+  dispose() {}
 }
 
 export class LocalCollisionWorld extends Resource {
@@ -55,4 +57,6 @@ export class LocalCollisionWorld extends Resource {
   attach(shape: SSCDShape<EntityRef>): void {
     this.world.add(shape);
   }
+
+  dispose() {}
 }

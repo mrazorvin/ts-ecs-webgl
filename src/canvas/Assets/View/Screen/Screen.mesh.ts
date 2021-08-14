@@ -4,6 +4,10 @@ import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 export class ScreenMesh extends Mesh {
   uv_width = 0;
   uv_height = 0;
+
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
+  }
 }
 
 export const SCREEN_MESH = new MeshID();

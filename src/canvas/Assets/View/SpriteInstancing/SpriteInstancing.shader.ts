@@ -9,10 +9,7 @@ import * as SpriteInstancingFS from "./SpriteInstancing.frag";
 export const SPRITE_SHADER = new ShaderID();
 
 export class SpriteInstancingShader extends Shader {
-  constructor(
-    program: WebGLProgram,
-    public location: { Image: WebGLUniformLocation }
-  ) {
+  constructor(program: WebGLProgram, public location: { Image: WebGLUniformLocation }) {
     super(program);
   }
 
@@ -32,5 +29,9 @@ export class SpriteInstancingShader extends Shader {
           all locations must be valid ${JSON.stringify({ Image })}`
       );
     }
+  }
+
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
   }
 }

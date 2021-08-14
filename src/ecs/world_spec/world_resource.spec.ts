@@ -87,9 +87,7 @@ test("[World.system_once()]", async (t) => {
 });
 
 class TestResource extends Resource {
-  constructor() {
-    super();
-  }
+  dispose() {}
 }
 
 test("[World.resource()]", (t) => {

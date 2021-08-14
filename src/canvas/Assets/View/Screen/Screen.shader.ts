@@ -9,10 +9,7 @@ import * as ScreenFS from "./Screen.frag";
 export const SCREEN_SHADER = new ShaderID();
 
 export class ScreenShader extends Shader {
-  constructor(
-    program: WebGLProgram,
-    public location: { Image: WebGLUniformLocation }
-  ) {
+  constructor(program: WebGLProgram, public location: { Image: WebGLUniformLocation }) {
     super(program);
   }
 
@@ -32,5 +29,9 @@ export class ScreenShader extends Shader {
           all locations must be valid ${JSON.stringify({ Image })}`
       );
     }
+  }
+
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
   }
 }

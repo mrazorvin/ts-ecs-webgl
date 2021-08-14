@@ -9,10 +9,7 @@ import * as PostPassFS from "./PostPass.frag";
 export const POST_PASS_SHADER = new ShaderID();
 
 export class PostPassShader extends Shader {
-  constructor(
-    program: WebGLProgram,
-    public location: { Image: WebGLUniformLocation }
-  ) {
+  constructor(program: WebGLProgram, public location: { Image: WebGLUniformLocation }) {
     super(program);
   }
 
@@ -32,5 +29,9 @@ export class PostPassShader extends Shader {
           all locations must be valid ${JSON.stringify({ Image })}`
       );
     }
+  }
+
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
   }
 }

@@ -1,14 +1,31 @@
 import { Mesh } from "../../../Render/Mesh";
 import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
-export class SpriteInstancingMesh {
+export class SpriteInstancingMesh extends Mesh {
   constructor(
-    public vertices_buffer: Mesh.Buffer,
+    mode: WebGL2RenderingContext["TRIANGLES"],
+    public vertex_buffer: Mesh.Buffer,
     public uv_buffer: Mesh.Buffer,
     public transformation_buffer: Mesh.Buffer,
     public transformation_data: Float32Array,
-    public vao: WebGLVertexArrayObject
-  ) {}
+    public override vao: WebGLVertexArrayObject
+  ) {
+    super(mode, vao, {
+      vertex: vertex_buffer,
+      uv: uv_buffer,
+      index: null,
+      normal: null,
+    });
+  }
+
+  dispose(gl: WebGL2RenderingContext) {
+    this.default_dispose(gl);
+    const gl_buffer = this.transformation_buffer.buffer;
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, 1, gl.DYNAMIC_DRAW);
+    gl.deleteBuffer(gl_buffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
 }
 
 export namespace SpriteInstancingMesh {
@@ -63,22 +80,13 @@ export namespace SpriteInstancingMesh {
     const attribute_transform_position = 3;
     const attributes_amount_for_mat3 = 3;
     const el_per_row_count_for_mat3 = 3;
-    const transformation_data = new Float32Array(
-      Array(matrix_size * instances)
-    );
+    const transformation_data = new Float32Array(Array(matrix_size * instances));
 
     const transformation_buffer = gl.createBuffer!();
     gl.bindBuffer(gl.ARRAY_BUFFER, transformation_buffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      transformation_data.byteLength,
-      gl.DYNAMIC_DRAW
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, transformation_data.byteLength, gl.DYNAMIC_DRAW);
 
-    const bytes_per_transform =
-      Float32Array.BYTES_PER_ELEMENT *
-      el_per_row_count_for_mat3 *
-      attributes_amount_for_mat3;
+    const bytes_per_transform = Float32Array.BYTES_PER_ELEMENT * el_per_row_count_for_mat3 * attributes_amount_for_mat3;
     for (let i = 0; i < attributes_amount_for_mat3; i++) {
       const next_location = attribute_transform_position + i;
       gl.enableVertexAttribArray(next_location);
@@ -100,6 +108,7 @@ export namespace SpriteInstancingMesh {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     return new SpriteInstancingMesh(
+      gl.TRIANGLES,
       vertices_buffer,
       uv_buffer,
       {

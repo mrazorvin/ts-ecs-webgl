@@ -1,12 +1,22 @@
 import { Mesh } from "./Mesh";
 
-export class Shader {
-  id = new ShaderID();
-  constructor(public program: WebGLProgram, ...args: any[]) {}
+export class ShaderID {
+  // @ts-expect-error
+  #type: ShaderID;
 }
 
-export class ShaderID {
-  #type = ShaderID;
+export abstract class Shader {
+  id: ShaderID;
+
+  constructor(public program: WebGLProgram, ...args: any[]) {
+    this.id = new ShaderID();
+  }
+
+  default_dispose(gl: WebGL2RenderingContext) {
+    gl.deleteProgram(this.program);
+  }
+
+  abstract dispose(gl: WebGL2RenderingContext): void;
 }
 
 export namespace Shader {
@@ -17,9 +27,7 @@ export namespace Shader {
     } else if (mesh.vertex?.count) {
       gl.drawArrays(mesh.mode, 0, mesh.vertex?.count);
     } else {
-      throw new Error(
-        `[Shader -> render_model()] Can't render model without index and vertex buffer`
-      );
+      throw new Error(`[Shader -> render_model()] Can't render model without index and vertex buffer`);
     }
     gl.bindVertexArray(null);
   }
