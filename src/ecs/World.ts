@@ -61,6 +61,10 @@ export abstract class Resource {
     return this._set(world, resource);
   }
 
+  static reuse<T>(this: (new (...args: any[]) => T) & typeof Resource, world: World): Resource | undefined {
+    return undefined;
+  }
+
   // it' possible that we also need normalization here
   // but because there less resources than components
   // we could just switch to array [{resource id}, {resource id}]
@@ -83,14 +87,26 @@ export abstract class Resource {
 
       this.get = new Function(
         "world",
-        `return world.resources[${this.storage_row_id}] && world.resources[${this.storage_row_id}]._${this.container_column_id}`
+        `return world.resources._${this.storage_row_id} && world.resources._${this.storage_row_id}._${this.container_column_id}`
       ) as typeof this.get;
+
+      this.reuse = new Function(
+        "world",
+        `
+          const container = world.resources._${this.storage_row_id};
+          const resource = container !== undefined && container._${this.container_column_id};
+          if (resource != null) {
+            world.resources._${this.storage_row_id}._${this.container_column_id} = null;
+          }
+          
+          return resource;`
+      ) as typeof this.reuse;
 
       this._set = new Function(
         "Resource",
         `return (world, resource) => {
-          return (world.resources[${this.storage_row_id}] || 
-            (world.resources[${this.storage_row_id}] = new Resource.container_class_cache._${this.storage_row_id}()) 
+          return (world.resources._${this.storage_row_id} || 
+            (world.resources._${this.storage_row_id} = new Resource.container_class_cache._${this.storage_row_id}()) 
           )._${this.container_column_id} = resource
         }`
       )(Resource) as typeof this.set;
@@ -129,7 +145,7 @@ export class ComponentsCollection {
 export class World {
   components: Map<ComponentTypeID, ComponentsCollection>;
   collection_cache: Map<string, { [key: string]: ComponentsCollection }>;
-  resources: Array<{ [key: string]: Resource }>;
+  resources: { [key: string]: { [key: string]: Resource } };
   systems: System[];
   systems_once: System[];
   on_tick_end: Array<() => void>;
@@ -137,18 +153,10 @@ export class World {
   constructor() {
     this.components = new Map();
     this.collection_cache = new Map();
-    this.resources = [];
+    this.resources = {};
     this.systems = [];
     this.systems_once = [];
     this.on_tick_end = [];
-  }
-
-  clear(fn: <T extends any>(pre_world: World, next_resource: T) => any) {
-    // select on resources that needed be cleared in fn
-    // clear features
-    // clear systems_once
-    // left systems, but mark them as non indexed
-    // for all collections, move all component to second cache
   }
 
   dispose() {
@@ -156,13 +164,19 @@ export class World {
       const storage = this.resources[storage_key];
       for (const resource_key in storage) {
         const resource = storage[resource_key];
-        resource?.dispose(this);
+        if (resource !== undefined) {
+          resource?.dispose(this);
+          // @ts-expect-error
+          storage[resource_key] = undefined;
+        }
       }
     }
 
+    q.run(this, q({ world: true, components: [] }), (entity) => entity.world.dispose());
+
     this.components.clear();
     this.collection_cache.clear();
-    this.resources = [];
+    this.resources = {};
     this.systems = [];
     this.systems_once = [];
     this.on_tick_end = [];

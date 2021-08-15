@@ -253,12 +253,14 @@ export class WorldPool<T extends Array<typeof IComponent>> {
   get(world: World): Entity<World> {
     const prev_entity = this.pool.pop();
     if (prev_entity === undefined) {
-      const entity = (this.pool.instantiate!(world, this.instantiate) as unknown) as Entity<World>;
+      const entity = this.pool.instantiate!(world, this.instantiate) as unknown as Entity<World>;
       entity.world = this.init_world(new World());
       return entity;
     } else {
-      const entity = (this.pool.reuse!(world, prev_entity, this.reuse) as unknown) as Entity<World>;
-      entity.world = this.world_reuse(entity.world, new World());
+      const entity = this.pool.reuse!(world, prev_entity, this.reuse) as unknown as Entity<World>;
+      const prev_world = entity.world;
+      entity.world = this.world_reuse(prev_world, new World());
+      prev_world.dispose();
       return entity;
     }
   }

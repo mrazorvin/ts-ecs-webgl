@@ -1,19 +1,20 @@
 import { Pool } from "@mr/ecs/Pool";
 import { EntityPool, Resource, sys, World } from "@mr/ecs/World";
 
-// example of sub-world initialization outside of pool
-
+// Example of sub-world initialization outside of pool
+//
 // const world = new World();
 // const sub_world = new World();
+//
 // sub_world.system(...)
 // sub_world.system(...)
 // sub_world.system(...)
 // sub_world.system(...)
-
-// GenericResource.init(undefined, world);
-// GenericResource.init(undefined, world);
-// GenericResource.init(undefined, world);
-
+//
+// sub_world.resource(new GenericResource(d1, d2, d3));
+// sub_world.resource(new GenericResource(d1, d2, d3));
+// sub_world.resource(new GenericResource(d1, d2, d3));
+//
 // entity with with sub_world
 // component size schedule systems running
 // const entity = world.entity([Component1, Component2], sub_world);
@@ -54,44 +55,44 @@ const pool = new Pool(entity_pool, {
   create: (world, create) => create(Component1.create(world), Component2.create(world)),
   // TODO: must be implemented, manager/prev_entity/world
   reuse: (_, create, a1, a2) => create(Component1.create(a1), Component2.create(a2)),
-  world_init: () => {
-    const sub_world = new World();
-
-    // resource initialization
-    AttributeManager.init(undefined, sub_world);
-    ResourceManager.init(undefined, sub_world);
-    BehaviorManager.init(undefined, sub_world);
+  world_init: (sub_world) => {
+    sub_world.resource(new AttributeManager());
+    sub_world.resource(new ResourceManager());
+    sub_world.resource(new BehaviorManager());
 
     // system, will be defined only once
-    sub_world.system(LocalDamageApplicationSystem);
+    //
+    // sub_world.system(LocalDamageApplicationSystem);
     // sub_world.system(/* ... */);
     // sub_world.system(/* ... */);
     // sub_world.system(/* ... */);
-
+    //
     // batch optimization
-    const manage = ResourceManager.get(sub_world);
-
+    // const manage = ResourceManager.get(sub_world);
+    //
     // health / mana / shield / ... any other resource like value
-    for (let attribute of attributes) {
-      manage.set(world, attribute);
-    }
+    // for (let attribute of attributes) {
+    //  manage.set(world, attribute);
+    // }
 
     return world;
   },
   // wrapper around world.clear
   world_reuse: (prev_world, next_world) => {
     // re-initialize resources
-    AttributeManager.init(prev_world, next_world);
-    ResourceManager.init(prev_world, sub_world);
-    BehaviorManager.init(prev_world, next_world);
+
+    next_world.resource(AttributeManager.reuse(prev_world));
+    next_world.resource(ResourceManager.reuse(prev_world));
+    next_world.resource(BehaviorManager.reuse(prev_world));
 
     // manager could stay in world
-    const manage = ResourceManager.get(next_world);
-
+    //
+    // const manage = ResourceManager.get(next_world);
     // reset - health / mana / shield / ... any other resource like value
-    for (let attribute of attributes) {
-      manage.set(world, attribute);
-    }
+    //
+    // for (let attribute of attributes) {
+    //   manage.set(world, attribute);
+    // }
 
     return next_world;
   },
