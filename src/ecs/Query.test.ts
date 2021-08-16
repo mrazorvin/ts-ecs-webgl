@@ -48,8 +48,6 @@ const exec = (opts?: {
       const fn = (world: World) => _fn(world, system);
       const system: System = sys([], fn);
       world.system(system);
-      // system will be added only on next tick
-      scheduler.tick();
     } else if (world.systems[0] !== undefined && opts.fn !== undefined) {
       const _fn = opts.fn;
       world.systems[0].exec = (world: World) => _fn(world, world.systems[0]!) as any;

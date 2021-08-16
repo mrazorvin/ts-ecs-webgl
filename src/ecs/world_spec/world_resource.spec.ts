@@ -121,16 +121,15 @@ test("[World -> System.dependencies] exec systems when all dependencies are read
   const scheduler = new Scheduler(world);
   const resource = new TestResource();
 
-  await new Promise((resolve) => {
-    t.plan(1);
-    t.timeout(100);
+  t.plan(1);
 
-    world.system_once(sys([TestResource], () => t.pass()));
-    world.system(sys([TestResource], () => setTimeout(resolve)));
-    world.resource(resource);
+  world.system_once(sys([TestResource], () => t.pass()));
+  world.resource(resource);
 
-    scheduler.start();
-  });
+  // inject system
+  scheduler.tick();
+  // run system
+  scheduler.tick();
 });
 
 test("[World -> SubWorld.system_once]", async (t) => {

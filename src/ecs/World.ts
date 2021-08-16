@@ -127,14 +127,32 @@ export namespace Resource {
 export class ComponentsCollection {
   refs: Entity[];
   pool: IComponent[];
+  dependent_system: System[];
   max_pool_size: number;
   size: number;
 
   constructor() {
     this.refs = [];
     this.pool = [];
+    this.dependent_system = [];
     this.size = 0;
     this.max_pool_size = 20;
+  }
+
+  expand(diff: number) {
+    const next_size = (this.size += diff);
+
+    return next_size;
+  }
+
+  shrink(diff: number) {
+    const next_size = (this.size -= diff);
+
+    return next_size;
+  }
+
+  add_system(system: System) {
+    this.dependent_system.push(system);
   }
 
   pool_push(component: IComponent) {
@@ -183,7 +201,30 @@ export class World {
   }
 
   system(system: System) {
-    this.on_tick_end.push(() => this.systems.push(system));
+    const id = this.systems.length;
+    if (process.env["NODE_ENV"] === "development") {
+      if (system.id !== -1) throw new Error(`[World -> World.system()] system already added to another world`);
+    }
+    system.setId(id);
+    if (id !== 0) {
+      const prev_id = id - 1;
+      const prev_system = this.systems[prev_id]!;
+      prev_system.setSiblings(prev_system.prev, id);
+      system.setSiblings(prev_id, -1);
+    }
+    let hash = "";
+    const conditions = system.conditions;
+    if (conditions.length > 0) {
+      for (const Component of conditions) {
+        hash += `_${Component.id}`;
+      }
+      const dependencies = this.get_collections(hash, conditions);
+      for (const key in dependencies) {
+        const collection = dependencies[key]!;
+        collection.add_system(system);
+      }
+    }
+    this.systems.push(system);
   }
 
   system_once(system: System) {
@@ -242,10 +283,40 @@ export abstract class System<R extends Resource[] = Resource[]> {
   abstract dependencies: {
     [K in keyof R]: (new (...args: any[]) => R[K]) & typeof Resource;
   };
+  conditions: Array<typeof IComponent>;
+  id: number;
+  next: number;
+  prev: number;
   queries: Queries;
   abstract exec(world: World, ...resources: R): void;
   constructor(...args: any[]) {
+    this.prev = -1;
+    this.next = -1;
+    this.id = -1;
+    this.conditions = [];
     this.queries = {};
+  }
+
+  setConditions(conditions: Array<typeof IComponent>) {
+    this.conditions = conditions;
+
+    return this;
+  }
+
+  setId(id: number) {
+    this.id = id;
+    if (process.env["NODE_ENV"] === "development") {
+      if (this.id > 0) {
+        throw new Error(`[World -> System] system already exists in another world with id ${this.id}`);
+      }
+    }
+  }
+
+  setSiblings(prev: number, next: number) {
+    this.prev = prev;
+    this.next = next;
+
+    return this;
   }
 }
 
@@ -348,6 +419,7 @@ export abstract class BaseScheduler {
     if (this.world.systems_once.length > 0) {
       this.world.systems_once = this.world.systems_once.filter((system) => {
         QUERIES = system.queries;
+
         const result = !inject_resources_and_sub_world(this.world, system);
         QUERY_NAME = undefined;
         return result;
@@ -572,9 +644,12 @@ export function sys<T extends Array<new (...args: any[]) => Resource>>(
     ...args: {
       [K in keyof T]: T[K] extends new (...args: any[]) => infer A ? A : void;
     }
-  ) => void
+  ) => void,
+  conditions: Array<typeof IComponent> = []
 ) {
-  return new DynamicSystem(args as any, fn);
+  const system = new DynamicSystem(args as any, fn);
+  system.setConditions(conditions);
+  return system;
 }
 
 export { EntityPool, InitComponent };

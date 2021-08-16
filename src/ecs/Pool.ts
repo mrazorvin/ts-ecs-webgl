@@ -150,7 +150,7 @@ export class EntityPool<T extends Array<typeof IComponent>, W extends typeof Sub
                 };
                 register._${component.storage_row_id}._${component.container_column_id} = collection${i}.size;
                 collection${i}.refs[collection${i}.size] = new_entity;
-                collection${i}.size += 1;
+                collection${i}.expand(1);
           `
             )
             .join("\n")}
@@ -186,7 +186,7 @@ export class EntityPool<T extends Array<typeof IComponent>, W extends typeof Sub
                 };
                 register._${component.storage_row_id}._${component.container_column_id} = collection${i}.size;
                 collection${i}.refs[collection${i}.size] = new_entity;
-                collection${i}.size += 1;
+                collection${i}.expand(1);
               `
             )
             .join("\n")}

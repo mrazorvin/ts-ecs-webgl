@@ -146,7 +146,7 @@ export function InitComponent(options: { use_pool: number | false }) {
         const id = register?._${column_id};
         if (id !== undefined && id !== null) {
           register._${column_id} = null;
-          this.size -= 1;
+          this.shrink(1);
           var temp_entity = this.refs[this.size];
           temp_entity.register._${row_id}._${column_id} = id;
           this.refs[id] = temp_entity;
@@ -172,7 +172,7 @@ export function InitComponent(options: { use_pool: number | false }) {
         entity.components._${row_id}._${column_id} = null;
         entity.register._${row_id}._${column_id} = null;
       }
-      collection.size = 0;
+      collection.shrink(collection.size);
 
       return true;
     `) as typeof IComponent["clear_collection"];
@@ -197,7 +197,7 @@ export function InitComponent(options: { use_pool: number | false }) {
           }
         } 
 
-        var id = (this.size += 1) - 1;
+        var id = this.expand(1) - 1;
         this.refs[id] = entity;
 
         (entity.register._${row_id} || 
