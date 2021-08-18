@@ -89,7 +89,7 @@ export class DeleteEntity {
         .map(
           (component) => `
             if (reg_${component.id} !== undefined && reg_${component.id} !== null) {
-              coll_${component.id}.shrink(1);
+              coll_${component.id}.shrink(world, 1);
               const temp_entity = coll_${component.id}.refs[coll_${component.id}.size];
               temp_entity.register._${component.storage_row_id}._${component.container_column_id} = coll_${component.id}.size === 0 || coll_${component.id}.size === reg_${component.id} ?  null : reg_${component.id};
               coll_${component.id}.refs[reg_${component.id}] = temp_entity;

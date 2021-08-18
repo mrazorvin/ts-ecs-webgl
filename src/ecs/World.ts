@@ -125,6 +125,7 @@ export namespace Resource {
 }
 
 export class ComponentsCollection {
+  // TODO: don't add more properties, this class already has over +9 properties
   refs: Entity[];
   pool: IComponent[];
   dependent_system: System[];
@@ -139,14 +140,65 @@ export class ComponentsCollection {
     this.max_pool_size = 20;
   }
 
-  expand(diff: number) {
+  expand(world: World, diff: number) {
+    if (this.size === 0) {
+      for (const system of this.dependent_system) {
+        let next_system: undefined | System;
+        for (let i = system.id + 1; i < world.systems.length; i++) {
+          const possible_next_system = world.systems[i]!;
+          if (possible_next_system.disabled === true) continue;
+          next_system = possible_next_system;
+          system.next = next_system.id;
+          if (next_system.prev !== -1) {
+            const prev_system = world.systems[next_system.prev]!;
+            prev_system.next = system.id;
+            system.prev = prev_system.id;
+          }
+          next_system.prev = system.id;
+          break;
+        }
+
+        let prev_system: System | undefined = undefined;
+        if (next_system === undefined) {
+          for (let i = system.id - 1; i >= 0; i--) {
+            const possible_prev_system = world.systems[i]!;
+            if (possible_prev_system.disabled === true) continue;
+
+            prev_system = possible_prev_system;
+            prev_system.next = system.id;
+            system.prev = prev_system.id;
+            break;
+          }
+        }
+
+        system.disabled = false;
+      }
+    }
     const next_size = (this.size += diff);
 
     return next_size;
   }
 
-  shrink(diff: number) {
+  shrink(world: World, diff: number) {
     const next_size = (this.size -= diff);
+    if (next_size === 0) {
+      for (const system of this.dependent_system) {
+        let prev_system: System | undefined;
+        if (system.prev !== -1) {
+          prev_system = world.systems[system.prev]!;
+          prev_system.next = system.next;
+        }
+
+        if (system.next !== -1) {
+          const next_system = world.systems[system.next]!;
+          next_system.prev = prev_system !== undefined ? prev_system.id : -1;
+        }
+
+        system.disabled = true;
+        system.next = -1;
+        system.prev = -1;
+      }
+    }
 
     return next_size;
   }
@@ -202,15 +254,15 @@ export class World {
 
   system(system: System) {
     const id = this.systems.length;
-    if (process.env["NODE_ENV"] === "development") {
-      if (system.id !== -1) throw new Error(`[World -> World.system()] system already added to another world`);
-    }
+    if (system.id !== -1) throw new Error(`[World -> World.system()] system already added to another world`);
     system.setId(id);
     if (id !== 0) {
       const prev_id = id - 1;
       const prev_system = this.systems[prev_id]!;
-      prev_system.setSiblings(prev_system.prev, id);
-      system.setSiblings(prev_id, -1);
+      if (prev_system.disabled === false) {
+        prev_system.setSiblings(prev_system.prev, id);
+        system.setSiblings(prev_id, -1);
+      }
     }
     let hash = "";
     const conditions = system.conditions;
@@ -222,6 +274,11 @@ export class World {
       for (const key in dependencies) {
         const collection = dependencies[key]!;
         collection.add_system(system);
+        if (collection.size === 0) {
+          system.prev = -1;
+          system.next = -1;
+          system.disabled = true;
+        }
       }
     }
     this.systems.push(system);
@@ -288,6 +345,8 @@ export abstract class System<R extends Resource[] = Resource[]> {
   next: number;
   prev: number;
   queries: Queries;
+  disabled: boolean;
+
   abstract exec(world: World, ...resources: R): void;
   constructor(...args: any[]) {
     this.prev = -1;
@@ -295,6 +354,7 @@ export abstract class System<R extends Resource[] = Resource[]> {
     this.id = -1;
     this.conditions = [];
     this.queries = {};
+    this.disabled = false;
   }
 
   setConditions(conditions: Array<typeof IComponent>) {
@@ -304,12 +364,12 @@ export abstract class System<R extends Resource[] = Resource[]> {
   }
 
   setId(id: number) {
-    this.id = id;
     if (process.env["NODE_ENV"] === "development") {
       if (this.id > 0) {
         throw new Error(`[World -> System] system already exists in another world with id ${this.id}`);
       }
     }
+    this.id = id;
   }
 
   setSiblings(prev: number, next: number) {
@@ -411,9 +471,14 @@ export abstract class BaseScheduler {
 
     for (let i = 0; i < this.world.systems.length; i++) {
       const system = this.world.systems[i]!;
+      if (system.disabled === true) continue;
       QUERIES = system.queries;
       inject_resources_and_sub_world(this.world, system);
       QUERY_NAME = undefined;
+
+      const next_system_id = system.next;
+      if (next_system_id === -1) break;
+      if (i + 1 < system.next) i = system.next - 1;
     }
 
     if (this.world.systems_once.length > 0) {
@@ -559,7 +624,10 @@ class Cacher {
     }
     let fn = this.storage.get(id);
     if (fn === undefined) {
-      const body = `return (world, fn) => {
+      const body = `
+      const exec_fn = (e, ${components.map((_, i) => `_a${i}`)}, t) => t?.(e, ${components.map((_, i) => `_a${i}`)});  
+      const empty_obj = {};
+      return (world, fn) => {
         const collections = world.get_collections("${id}", components);
         let size = Infinity;
         let components_collection;
@@ -573,28 +641,24 @@ class Cacher {
         `
           )
           .join("\n")}; 
-      
-
+        
+       
         for (let i = 0; i < size; i++) {
           const entity = components_collection[i];
           const e_components = entity.components;
           ${[...new Set(components.map((v) => v.storage_row_id))]
-            .map(
-              (id) => `
-              const __${id} = e_components._${id}
-              ${components
-                .filter((v) => v.storage_row_id === id)
-                .map(
-                  (v) =>
-                    `const _${v.id} = __${v.storage_row_id}?._${v.container_column_id};
-                    if (_${v.id} === undefined || _${v.id} === null) continue;`
-                )
-                .join("\n")}
-              `
-            )
+            .map((id) => `const __${id} = e_components._${id} ?? empty_obj`)
             .join(";")}
+            var a = true;
         
-            fn(${["entity"].concat(components.map(({ id }) => `_${id}`)).join(",")});
+            exec_fn(${["entity"]
+              .concat(
+                components.map(
+                  ({ storage_row_id, container_column_id }) => `(a &&= __${storage_row_id}._${container_column_id})`
+                )
+              )
+              .concat("a && fn")
+              .join(",")});
         }
       }`;
       fn = new Function("components", body)(components);
