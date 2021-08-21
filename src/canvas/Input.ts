@@ -7,7 +7,7 @@ export class Input extends Resource {
     input.context_info.container_offset_x = target.offsetLeft;
     input.context_info.container_offset_y = target.offsetTop;
 
-    const prevent_default = (event: MouseEvent) => {
+    const prevent_default = (event: MouseEvent | TouchEvent) => {
       event.preventDefault();
     };
 
@@ -19,9 +19,10 @@ export class Input extends Resource {
       const on_mouse_move = Input.get_on_mouse_move(input);
       const on_mouse_up = Input.get_on_mouse_up(input);
 
-      target.addEventListener("mousedown", on_mouse_down);
-      target.addEventListener("mousemove", on_mouse_move);
-      target.addEventListener("mouseup", on_mouse_up);
+      target.addEventListener("touchstart", prevent_default, false);
+      target.addEventListener("touchend", prevent_default, false);
+      target.addEventListener("touchcancel", prevent_default, false);
+      target.addEventListener("touchmove", prevent_default, false);
       target.addEventListener("contextmenu", prevent_default);
 
       input.dispose = () => {
