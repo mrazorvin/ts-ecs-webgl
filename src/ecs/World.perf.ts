@@ -55,7 +55,7 @@ query: {
     TestComponent7,
   ]);
 
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 20; i++) {
     q.run(world, query, (entity, t1, t2, t3, t4) => {
       y[0] = t1;
       y[1] = t2;
@@ -66,7 +66,7 @@ query: {
   }
 
   console.log(y.map((x: any) => (x instanceof Object ? {} : x)));
-  console.log(console.log(y[3].components));
+  // console.log(console.log(y[3].components));
   console.timeEnd("query");
 }
 
@@ -79,10 +79,10 @@ function x() {
     y[1] = TestComponent2.get(entity);
     y[2] = TestComponent3.get(entity);
     y[3] = TestComponent4.get(entity);
-    TestComponent5.get(entity);
-    TestComponent6.get(entity);
-    TestComponent7.get(entity);
-    TestComponent8.get(entity);
+    // TestComponent5.get(entity);
+    // TestComponent6.get(entity);
+    // TestComponent7.get(entity);
+    // TestComponent8.get(entity);
     y[4] = y[4] != null ? y[4] + 1 : 0;
     if (!y[4]) continue;
   }
@@ -138,37 +138,46 @@ iteration: {
   console.timeEnd("iteration-set");
 }
 
+const y1 = () => 23;
+const y2 = () => 73;
+const y3 = () => 83;
+const y4 = () => 93;
+
 console.time("iteration");
 iteration: {
   let y = [] as any;
   let result = {};
-  let y1 = {
+  y[y1()] = {
     x() {
       return result;
     },
   };
-  let y2 = {
+  y[y2()] = {
     x() {
       return result;
     },
   };
-  let y3 = {
+  y[y3()] = {
     x() {
       return result;
     },
   };
-  let y4 = {
+  y[y4()] = {
     x() {
       return result;
     },
   };
 
   function x() {
-    y[0] = y1.x();
-    y[1] = y2.x();
-    y[2] = y3.x();
-    y[3] = y4.x();
-    y[4] = y[4] != null ? y[4] + 1 : 0;
+    y[0] = y[y1()].x();
+    y[1] = y[y2()].x();
+    y[2] = y[y3()].x();
+    y[3] = y[y4()].x();
+    y[5] = y[y1()].x();
+    y[6] = y[y2()].x();
+    y[7] = y[y3()].x();
+    y[8] = y[y4()].x();
+    y[9] = y[4] != null ? y[4] + 1 : 0;
   }
 
   for (let i = 0; i < 40000; i++) {

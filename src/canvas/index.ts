@@ -64,14 +64,16 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   ctx.create_context(MONSTER_CONTEXT, { width, height }, Context.create);
   ctx.create_context(POST_PASS_CONTEXT, { width, height, shader: POST_PASS_SHADER }, PostPass.create);
 
-  input.container_offset_x = gl.canvas.offsetLeft;
-  input.container_offset_y = gl.canvas.offsetTop;
-  input.container_width = width;
-  input.container_height = height;
-  input.world_height = ROWS * 2;
-  input.world_width = width_ratio * 2;
-  input.camera_width = camera.transform.width = width_ratio * 2;
-  input.camera_height = camera.transform.height = ROWS * 2;
+  const input_ctx = input.context_info;
+
+  input_ctx.container_offset_x = gl.canvas.offsetLeft;
+  input_ctx.container_offset_y = gl.canvas.offsetTop;
+  input_ctx.container_width = width;
+  input_ctx.container_height = height;
+  input_ctx.world_height = ROWS * 2;
+  input_ctx.world_width = width_ratio * 2;
+  input_ctx.camera_width = camera.transform.width = width_ratio * 2;
+  input_ctx.camera_height = camera.transform.height = ROWS * 2;
   camera.transform.position = new Float32Array([0, 0]);
 });
 
@@ -138,40 +140,7 @@ let sec = 0;
 let current_frame = 0;
 
 main_world.system(
-  sys([Input, Camera], (_, input, camera) => {
-    if (input.click_x && input.click_y) {
-      // part of contract even if we don't move camera, we still need to call function at least once
-      camera.set_position(input.click_x - camera.transform.width / 2, input.click_y - camera.transform.height / 2);
-
-      // part of contract camera position synchronization
-      if (camera.transform.position) {
-        input.camera_x = -camera.transform.position[0];
-        input.camera_y = -camera.transform.position[1];
-      }
-
-      input.click_x = 0;
-      input.click_y = 0;
-    }
-  })
-);
-
-main_world.system(
   sys([CollisionWorld, LocalCollisionWorld, Camera], (world, sscd, lcw, camera) => {
-    // amazing method for debbug add more such utils
-    // if (sec >= 0.98) {
-    //   console.log(
-    //     sscd.world,
-    //     // TODO: store this vector alongside to prevent additional allocation
-    //     new SSCDVector(
-    //       -Math.min(camera.transform.position![0], 0) +
-    //         camera.transform.width / 2,
-    //       -Math.min(camera.transform.position![1], 0) +
-    //         camera.transform.height / 2
-    //     ),
-    //     // TODO: not sure if params also co
-    //     new SSCDVector(camera.transform.width, camera.transform.height)
-    //   );
-    // }
     const manager = Visible.manager(world);
 
     sscd.world.test_collision<SSCDShape<EntityRef>>(
@@ -192,25 +161,16 @@ main_world.system(
 main_world.system(
   sys([Input, LocalCollisionWorld], (world, input, lcw) => {
     q.run(world, q.id("move") ?? q([Transform, Movement, Creature]), (_, transform, modification) => {
-      lcw.world.test_collision<SSCDShape<EntityRef>>(
-        new SSCDRectangle(
-          new SSCDVector(transform.position[0], transform.position[1]),
-          new SSCDVector(transform.width, transform.height)
-        ),
-        undefined,
-        (shape) => {
-          const entity = shape.get_data()?.entity;
-          if (entity) world.delete_entity(entity);
-        }
-      );
-
       // make a static method from Modification class
-      const target_x = input.current_x - transform.width / 2;
-      const target_y = input.current_y - transform.height / 2;
-      const direction_x = transform.position[0] - target_x;
-      const direction_y = transform.position[1] - target_y;
-      modification.target[0] = direction_x;
-      modification.target[1] = direction_y;
+      const movement = input.movement();
+      if (movement !== undefined) {
+        const target_x = movement.current_x - transform.width / 2;
+        const target_y = movement.current_y - transform.height / 2;
+        const direction_x = transform.position[0] - target_x;
+        const direction_y = transform.position[1] - target_y;
+        modification.target[0] = direction_x;
+        modification.target[1] = direction_y;
+      }
     });
   })
 );
@@ -265,8 +225,9 @@ main_world.system(
 );
 
 main_world.system(
-  sys([], (world) => {
+  sys([Input, Camera], (world, input, camera) => {
     q.run(world, q.id("animation") ?? q([Transform, Movement, Creature]), (_, transform, modification) => {
+      const movement = input.movement();
       // those code some how connected to animation chain + movement behavior
       // think a better way to organize it
       if (
@@ -275,7 +236,8 @@ main_world.system(
           modification.target[0] < 0.5 &&
           modification.target[1] > -0.5 &&
           modification.target[1] < 0.5
-        )
+        ) &&
+        movement !== undefined
       ) {
         // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
         const pos = new Float32Array(2);
@@ -283,6 +245,19 @@ main_world.system(
         const direction = pos[0];
         transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
         transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
+
+        // part of contract even if we don't move camera, we still need to call function at least once
+        camera.set_position(
+          transform.position[0] - camera.transform.width / 2,
+          transform.position[1] - camera.transform.height / 2
+        );
+
+        // part of contract camera position synchronization
+        if (camera.transform.position) {
+          input.context_info.camera_x = -camera.transform.position[0];
+          input.context_info.camera_y = -camera.transform.position[1];
+        }
+
         if (selected_animation === "idle") {
           selected_animation = "run";
           sec = 0;
@@ -356,8 +331,3 @@ main_world.system(
 // TODO: think about logging ?
 
 scheduler.start();
-
-window.clear_all = () => {
-  scheduler.stop();
-  main_world.dispose();
-};

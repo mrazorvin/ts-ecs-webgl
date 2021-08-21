@@ -3,9 +3,8 @@ import { glMatrix, mat3 } from "gl-matrix";
 import { EntityRef, InitComponent, World } from "../../ecs/World";
 import { DependenciesUtils } from "../Utils/DependenciesUtils";
 
-const setView = DependenciesUtils.compileMemoizeFactory<
-  [TranslateVec2, Scale, Rotation, ParentView, ParentViewChanged]
->(5);
+const setView =
+  DependenciesUtils.compileMemoizeFactory<[TranslateVec2, Scale, Rotation, ParentView, ParentViewChanged]>(5);
 
 type TranslateVec2 = Float32Array | undefined;
 type Scale = Float32Array | undefined;
@@ -134,6 +133,19 @@ export namespace Transform {
   export function view(world: World, transform: Transform): Float32Array {
     const parent = transform._parent?.entity;
     const parent_transform = parent ? Transform.get(parent) : undefined;
+
+    // pointers: [
+    //
+    //    { start_x: 1, start_y: 2, current_x: 1, current_y: 2, id: 23  },  -> find is click was made outside of ui, and use first one as mouse
+    //    { start_x: 1, start_y: 2, current_x: 1, current_y: 2, id: 23  },  -> find is click was made on ui so,
+    //
+    // ]
+    //
+    // similar logic could be used to track mouse click as 2 separate instances i.e 2 pointers
+    // so we could detect direction by using following logick on mouse click we will take direction from center of view
+    // from joystick we will take direction from center of last click
+    // from testing purposes we can simulate joystick with drag event from mouse
+    // we could even calculate average movement speed
 
     const result = transform.getView(
       transform.position,
