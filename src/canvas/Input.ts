@@ -11,31 +11,112 @@ export class Input extends Resource {
       event.preventDefault();
     };
 
-    // @ts-expect-error
-    if (Navigator.maxTouchPoints > 1) {
+    if (navigator.maxTouchPoints > 1) {
       input.mode = "mobile";
+      const on_touch_start = (event: TouchEvent) => {
+        event.preventDefault();
 
-      const on_mouse_down = Input.get_on_mouse_down(input);
-      const on_mouse_move = Input.get_on_mouse_move(input);
-      const on_mouse_up = Input.get_on_mouse_up(input);
+        const touches = event.changedTouches;
+        const movement = input._movement;
+        const click = input._touch;
+        let movement_touch: Touch | undefined = undefined;
+        let click_touch: Touch | undefined = undefined;
 
-      target.addEventListener("touchstart", prevent_default, false);
-      target.addEventListener("touchend", prevent_default, false);
-      target.addEventListener("touchcancel", prevent_default, false);
-      target.addEventListener("touchmove", prevent_default, false);
+        for (let i = 0; i < touches.length; i++) {
+          const touch = touches[i]!;
+          if (movement === undefined && movement_touch === undefined && touch.identifier !== click?.identifier) {
+            movement_touch = touch;
+          } else if (click === undefined && click_touch === undefined && touch.identifier !== movement?.identifier) {
+            click_touch = touch;
+          }
+        }
+
+        if (movement_touch !== undefined) {
+          input.start_movement(movement_touch.identifier);
+          this.update_current_values(input, movement_touch, input._movement!);
+          input._movement!.click_x = input._movement!.current_x;
+          input._movement!.click_y = input._movement!.current_y;
+          input._movement!.screen_click_x = input._movement!.screen_current_x;
+          input._movement!.screen_click_y = input._movement!.screen_current_y;
+        }
+
+        if (click_touch !== undefined) {
+          input.start_touch(click_touch.identifier);
+          this.update_current_values(input, click_touch, input._touch!);
+          input._touch!.click_x = input._touch!.current_x;
+          input._touch!.click_y = input._touch!.current_y;
+          input._touch!.screen_click_x = input._touch!.screen_current_x;
+          input._touch!.screen_click_y = input._touch!.screen_current_y;
+        }
+      };
+
+      target.addEventListener("touchstart", on_touch_start);
+
+      const on_touch_move = (event: TouchEvent) => {
+        event.preventDefault();
+
+        let movement = input._movement;
+        let click = input._touch;
+        let movement_touch: Touch | undefined;
+        let click_touch: Touch | undefined;
+        const touches = event.changedTouches;
+
+        for (let i = 0; i < touches.length; i++) {
+          const touch = touches[i]!;
+          if (touch.identifier === movement?.identifier) {
+            movement_touch = touch;
+          } else if (touch.identifier === click?.identifier) {
+            click_touch = touch;
+          }
+        }
+
+        if (movement_touch !== undefined && movement !== undefined) {
+          this.update_current_values(input, movement_touch, movement);
+        }
+
+        if (click_touch !== undefined && click !== undefined) {
+          this.update_current_values(input, click_touch, click);
+        }
+      };
+
+      target.addEventListener("touchmove", on_touch_move);
+
+      const on_touch_end = (event: TouchEvent) => {
+        let movement = input._movement;
+        let click = input._touch;
+        let movement_touch: Touch | undefined;
+        let click_touch: Touch | undefined;
+        const touches = event.changedTouches;
+
+        for (let i = 0; i < touches.length; i++) {
+          const touch = touches[i]!;
+          if (touch.identifier === movement?.identifier) {
+            movement_touch = touch;
+          } else if (touch.identifier === click?.identifier) {
+            click_touch = touch;
+          }
+        }
+
+        if (movement_touch !== undefined && movement !== undefined) input.stop_movement();
+        if (click_touch !== undefined && click !== undefined) input.stop_touch();
+      };
+
+      target.addEventListener("touchend", on_touch_end);
+      target.addEventListener("touchcancel", on_touch_end);
       target.addEventListener("contextmenu", prevent_default);
 
       input.dispose = () => {
-        target.removeEventListener("mousedown", on_mouse_down);
-        target.removeEventListener("mousemove", on_mouse_move);
-        target.removeEventListener("mouseup", on_mouse_up);
+        target.removeEventListener("touchstart", on_touch_start);
+        target.removeEventListener("touchmove", on_touch_move);
+
+        target.removeEventListener("touchcancel", on_touch_end);
+        target.removeEventListener("touchend", on_touch_end);
         target.removeEventListener("contextmenu", prevent_default);
 
         input.dispose = () => null;
       };
     } else {
       input.mode = "pc";
-
       const on_mouse_down = Input.get_on_mouse_down(input);
       const on_mouse_move = Input.get_on_mouse_move(input);
       const on_mouse_up = Input.get_on_mouse_up(input);
@@ -49,7 +130,7 @@ export class Input extends Resource {
         target.removeEventListener("mousedown", on_mouse_down);
         target.removeEventListener("mouseup", on_mouse_up);
         target.removeEventListener("mousemove", on_mouse_move);
-        target.removeEventListener("contextmenu", prevent_default);
+        target.addEventListener("contextmenu", prevent_default);
 
         input.dispose = () => null;
       };
@@ -58,9 +139,9 @@ export class Input extends Resource {
     return input;
   }
 
-  dispose = (): void => void 0;
+  mode: "pc" | "mobile" = "pc";
 
-  private mode: "mobile" | "pc" = "pc";
+  dispose = (): void => void 0;
 
   context_info = {
     container_offset_x: 0,
@@ -92,53 +173,72 @@ export class Input extends Resource {
     return this._touch !== undefined ? this._touch : undefined;
   }
 
-  private start_movement() {
+  private start_movement(identifier: PointerInfo["identifier"]) {
     this._movement = this.#movement;
+    this.#movement.identifier = identifier;
   }
 
   private stop_movement() {
     this._movement = undefined;
+    this.#movement.identifier = NaN;
   }
 
-  private start_touch() {
+  private start_touch(identifier: PointerInfo["identifier"]) {
     this._touch = this.#touch;
+    this.#touch.identifier = identifier;
   }
 
   private stop_touch() {
     this._touch = undefined;
+    this.#touch.identifier = NaN;
+  }
+
+  static update_current_values(input: Input, event: { pageX: number; pageY: number }, target: PointerInfo) {
+    const ctx = input.context_info;
+    const screen_x = ((event.pageX - ctx.container_offset_x) / ctx.container_width) * ctx.world_width;
+    const screen_y = ((event.pageY - ctx.container_offset_y) / ctx.container_height) * ctx.world_height;
+    const current_x = ctx.camera_x + (screen_x - ctx.world_width / 2) + ctx.camera_width / 2;
+    const current_y = ctx.camera_y + (screen_y - ctx.world_height / 2) + ctx.camera_height / 2;
+
+    const direction_x =
+      typeof target.identifier === "number" ? target.screen_click_x - screen_x : ctx.world_width / 2 - screen_x;
+    const direction_y =
+      typeof target.identifier === "number" ? target.screen_click_y - screen_y : ctx.world_height / 2 - screen_y;
+
+    target.direction_x = direction_x;
+    target.direction_y = direction_y;
+    target.screen_current_x = screen_x;
+    target.screen_current_y = screen_y;
+    target.current_x = current_x;
+    target.current_y = current_y;
   }
 
   static get_on_mouse_down(input: Input) {
     return (event: MouseEvent) => {
       event.preventDefault();
-      event.stopPropagation();
 
       if (event.button === 0) {
-        input.start_movement();
+        input.start_movement("right");
       } else if (event.button === 2) {
-        input.start_touch();
+        input.start_touch("left");
       } else {
         return;
       }
 
-      const ctx = input.context_info;
-
-      const click_x = ((event.pageX - ctx.container_offset_x) / ctx.container_width) * ctx.world_width;
-      const click_y = ((event.pageY - ctx.container_offset_y) / ctx.container_height) * ctx.world_height;
-      const current_x = ctx.camera_x + (click_x - ctx.world_width / 2) + ctx.camera_width / 2;
-      const current_y = ctx.camera_y + (click_y - ctx.world_height / 2) + ctx.camera_height / 2;
-
       const target = (event.button === 0 ? input.movement() : input.touch())!;
 
-      target.current_x = target.click_x = current_x;
-      target.current_y = target.click_y = current_y;
+      this.update_current_values(input, event, target);
+
+      target.click_x = target.current_x;
+      target.click_y = target.current_y;
+      target.screen_click_x = target.screen_current_x;
+      target.screen_click_y = target.screen_current_y;
     };
   }
 
   static get_on_mouse_up(input: Input) {
     return (event: MouseEvent) => {
       event.preventDefault();
-      event.stopPropagation();
 
       if (event.button === 0) {
         input.stop_movement();
@@ -153,24 +253,31 @@ export class Input extends Resource {
       event.preventDefault();
       event.stopPropagation();
 
-      const ctx = input.context_info;
-
-      const click_x = ((event.pageX - ctx.container_offset_x) / ctx.container_width) * ctx.world_width;
-      const click_y = ((event.pageY - ctx.container_offset_y) / ctx.container_height) * ctx.world_height;
-      const current_x = ctx.camera_x + (click_x - ctx.world_width / 2) + ctx.camera_width / 2;
-      const current_y = ctx.camera_y + (click_y - ctx.world_height / 2) + ctx.camera_height / 2;
-
       const movement = input._movement;
-
       if (movement !== undefined) {
-        movement.current_x = current_x;
-        movement.current_y = current_y;
+        this.update_current_values(input, event, movement);
+      }
+
+      const touch = input._touch;
+      if (touch !== undefined) {
+        this.update_current_values(input, event, touch);
       }
     };
   }
 }
 
 class PointerInfo {
+  identifier: number | "left" | "right" = NaN;
+
+  screen_click_y = 0;
+  screen_click_x = 0;
+
+  screen_current_x = 0;
+  screen_current_y = 0;
+
+  direction_x = 0;
+  direction_y = 0;
+
   current_x = 0;
   current_y = 0;
 

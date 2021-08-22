@@ -164,12 +164,8 @@ main_world.system(
       // make a static method from Modification class
       const movement = input.movement();
       if (movement !== undefined) {
-        const target_x = movement.current_x - transform.width / 2;
-        const target_y = movement.current_y - transform.height / 2;
-        const direction_x = transform.position[0] - target_x;
-        const direction_y = transform.position[1] - target_y;
-        modification.target[0] = direction_x;
-        modification.target[1] = direction_y;
+        modification.target[0] = movement.direction_x;
+        modification.target[1] = movement.direction_y;
       }
     });
   })
@@ -228,14 +224,27 @@ main_world.system(
   sys([Input, Camera], (world, input, camera) => {
     q.run(world, q.id("animation") ?? q([Transform, Movement, Creature]), (_, transform, modification) => {
       const movement = input.movement();
+
+      // part of contract even if we don't move camera, we still need to call function at least once
+      camera.set_position(
+        transform.position[0] - camera.transform.width / 2,
+        transform.position[1] - camera.transform.height / 2
+      );
+
+      // part of contract camera position synchronization
+      if (camera.transform.position) {
+        input.context_info.camera_x = -camera.transform.position[0];
+        input.context_info.camera_y = -camera.transform.position[1];
+      }
+
       // those code some how connected to animation chain + movement behavior
       // think a better way to organize it
       if (
         !(
-          modification.target[0] > -0.5 &&
-          modification.target[0] < 0.5 &&
-          modification.target[1] > -0.5 &&
-          modification.target[1] < 0.5
+          modification.target[0] > -1 &&
+          modification.target[0] < 1 &&
+          modification.target[1] > -1 &&
+          modification.target[1] < 1
         ) &&
         movement !== undefined
       ) {
@@ -245,18 +254,6 @@ main_world.system(
         const direction = pos[0];
         transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
         transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
-
-        // part of contract even if we don't move camera, we still need to call function at least once
-        camera.set_position(
-          transform.position[0] - camera.transform.width / 2,
-          transform.position[1] - camera.transform.height / 2
-        );
-
-        // part of contract camera position synchronization
-        if (camera.transform.position) {
-          input.context_info.camera_x = -camera.transform.position[0];
-          input.context_info.camera_y = -camera.transform.position[1];
-        }
 
         if (selected_animation === "idle") {
           selected_animation = "run";
