@@ -22,30 +22,39 @@ import { camera, Camera, camera_entity } from "./Camera";
 import { Movement } from "./Modification";
 import { MapLoader, map_mesh, map_shader, map_texture } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
-import { world_transform_component } from "./WorldView";
+import { world_transform, world_transform_component } from "./WorldView";
 import { CollisionWorld, LocalCollisionWorld } from "./CollisionWorld";
 import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
 import { SpriteInstancingMesh } from "./Assets/View/SpriteInstancing/SpriteInstancing.mesh";
 import { SpriteInstancingShader } from "./Assets/View/SpriteInstancing/SpriteInstancing.shader";
+import { attack, joystick, joystick_handle } from "./Assets/UI";
+import { DesktopUI, desktop_ui, MobileUI, mobile_ui, UI, UILayout, UIManager } from "./UI";
 
 glMatrix.setMatrixArrayType(Array);
 
 // this value must somehow refer to 32x32 grid size, for simplification reason
-const ROWS = 160;
+const ROWS = navigator.maxTouchPoints > 1 ? 80 : 160;
 const BACKGROUND_CONTEXT = new ContextID();
 const MONSTER_CONTEXT = new ContextID();
 
 const scheduler = new RafScheduler(main_world);
 const gl = WebGL.setup(document, "app");
-const input = Input.create(gl.canvas);
 
-main_world.resource(input);
-main_world.resource(new Screen());
+main_world.resource(Input.create(gl.canvas));
 main_world.resource(gl);
 main_world.resource(camera);
 main_world.resource(new CollisionWorld());
 main_world.resource(new LocalCollisionWorld());
+
+if (navigator.maxTouchPoints > 1) {
+  window.addEventListener("touchstart", () => {
+    document.documentElement.requestFullscreen({ navigationUI: "hide" });
+    setTimeout(() => main_world.resource(new Screen()), 2000);
+  });
+} else {
+  main_world.resource(new Screen());
+}
 
 const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   const { width, height } = t.size(ctx.gl, "100%", "100%");
@@ -58,8 +67,7 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   // in production mode contracts will be no-op
 
   world_transform_component.scale = new Float32Array([1 / width_ratio, -1 / ROWS]);
-  screen.height = height;
-  screen.width = width;
+
   ctx.create_context(BACKGROUND_CONTEXT, { width, height }, Context.create);
   ctx.create_context(MONSTER_CONTEXT, { width, height }, Context.create);
   ctx.create_context(POST_PASS_CONTEXT, { width, height, shader: POST_PASS_SHADER }, PostPass.create);
@@ -72,6 +80,8 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   input_ctx.container_height = height;
   input_ctx.world_height = ROWS * 2;
   input_ctx.world_width = width_ratio * 2;
+  screen.height = ROWS * 2;
+  screen.width = width_ratio * 2;
   input_ctx.camera_width = camera.transform.width = width_ratio * 2;
   input_ctx.camera_height = camera.transform.height = ROWS * 2;
   camera.transform.position = new Float32Array([0, 0]);
@@ -81,9 +91,15 @@ window.onresize = () => main_world.system_once(resize_system);
 main_world.system_once(resize_system);
 
 main_world.system_once(
-  sys([WebGL], async (world, ctx) => {
+  sys([WebGL, Screen, Input], async (world, ctx, screen, input) => {
     t.clear(ctx.gl, [0, 0, 0, 0]);
     t.blend(ctx.gl);
+
+    const mobile_layout = new UILayout();
+    const desktop_layout = new UILayout();
+    const layout_manager = new UIManager();
+    layout_manager.layouts.set("desktop", desktop_layout);
+    layout_manager.layouts.set("mobile", mobile_layout);
 
     ctx.create_shader(
       PostPassShader.fragment_shader,
@@ -98,6 +114,93 @@ main_world.system_once(
       SpriteShader.create,
       SPRITE_SHADER
     );
+
+    const attack_image = await Texture.load_image(attack);
+    const attack_texture = ctx.create_texture(attack_image, Texture.create);
+    const attack_mesh = ctx.create_mesh((gl) =>
+      SpriteMesh.create_rect(gl, {
+        o_width: attack_image.width,
+        o_height: attack_image.height,
+        width: attack_image.width,
+        height: attack_image.height,
+      })
+    );
+
+    const desktop_position = new SSCDVector(screen.width / 2 - 16, screen.height - 32);
+    const desktop_attack = main_world.entity([
+      Sprite.create(world, sprite_shader, attack_mesh, attack_texture),
+      Transform.create(world, {
+        parent: world_transform.ref,
+        position: new Float32Array([desktop_position.x, desktop_position.y]),
+        height: attack_image.width,
+        width: attack_image.height,
+      }),
+      desktop_ui,
+    ]);
+    const desktop_shape = new SSCDRectangle<EntityRef>(desktop_position, new SSCDVector(32, 32));
+    desktop_shape.set_data(desktop_attack.ref);
+    desktop_layout.lcw.add(desktop_shape);
+    new UI("attack_skill_slot", desktop_shape).attach(world, desktop_attack);
+
+    const mobile_position = new SSCDVector(screen.width - 52, screen.height - 52);
+    const mobile_attack = main_world.entity([
+      Sprite.create(world, sprite_shader, attack_mesh, attack_texture),
+      Transform.create(world, {
+        parent: world_transform.ref,
+        position: new Float32Array([mobile_position.x, mobile_position.y]),
+        height: attack_image.width,
+        width: attack_image.height,
+      }),
+      mobile_ui,
+    ]);
+    const mobile_shape = new SSCDRectangle<EntityRef>(mobile_position, new SSCDVector(32, 32));
+    mobile_shape.set_data(mobile_attack.ref);
+    mobile_layout.lcw.add(mobile_shape);
+    new UI("attack_skill_slot", mobile_shape).attach(world, mobile_attack);
+
+    const joystick_handler_image = await Texture.load_image(joystick_handle);
+    const joystick_handle_texture = ctx.create_texture(joystick_handler_image, Texture.create);
+    const joystick_handle_mesh = ctx.create_mesh((gl) =>
+      SpriteMesh.create_rect(gl, {
+        o_width: Math.floor(joystick_handler_image.width / 3),
+        o_height: Math.floor(joystick_handler_image.height / 3),
+        width: Math.floor(joystick_handler_image.width / 3),
+        height: Math.floor(joystick_handler_image.height / 3),
+      })
+    );
+    main_world.entity([
+      Sprite.create(world, sprite_shader, joystick_handle_mesh, joystick_handle_texture),
+      Transform.create(world, {
+        parent: world_transform.ref,
+        position: new Float32Array([0, 0]),
+        height: Math.floor(joystick_handler_image.width / 3),
+        width: Math.floor(joystick_handler_image.height / 3),
+      }),
+      new UI("joystick_handle", undefined),
+      mobile_ui,
+    ]);
+
+    const joystick_image = await Texture.load_image(joystick);
+    const joystick_texture = ctx.create_texture(joystick_image, Texture.create);
+    const joystick_mesh = ctx.create_mesh((gl) =>
+      SpriteMesh.create_rect(gl, {
+        o_width: joystick_image.width / 4,
+        o_height: joystick_image.height / 4,
+        width: joystick_image.width / 4,
+        height: joystick_image.height / 4,
+      })
+    );
+    main_world.entity([
+      Sprite.create(world, sprite_shader, joystick_mesh, joystick_texture),
+      Transform.create(world, {
+        parent: world_transform.ref,
+        position: new Float32Array([0, 0]),
+        height: joystick_image.width / 4,
+        width: joystick_image.height / 4,
+      }),
+      new UI("joystick", undefined),
+      mobile_ui,
+    ]);
 
     const ogre_image = await Texture.load_image(ogre_sprite);
     const ogre_mesh = ctx.create_mesh((gl) =>
@@ -292,6 +395,43 @@ main_world.system(
         frame!.rect[1]! / atlas.grid_height
       );
     });
+  })
+);
+
+main_world.system(
+  sys([Input, WebGL], (world, input, ctx) => {
+    const m_ctx = ctx.context.get(MONSTER_CONTEXT);
+    if (m_ctx === undefined) return;
+    else t.buffer(ctx.gl, m_ctx);
+
+    if (input.mode === "mobile") {
+      q.run(world, q.id("render") ?? q([Sprite, Transform, UI, MobileUI]), (_, sprite, transform, ui) => {
+        if (ui.id === "joystick" || ui.id === "joystick_handle") {
+          const movement = input._movement;
+          if (movement !== undefined && ui.id === "joystick") {
+            transform.position = new Float32Array([
+              movement.screen_click_x - transform.width / 2,
+              movement.screen_click_y - transform.height / 2,
+            ]);
+            Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+          }
+
+          if (movement !== undefined && ui.id === "joystick_handle") {
+            transform.position = new Float32Array([
+              movement.screen_current_x - transform.width / 2,
+              movement.screen_current_y - transform.height / 2,
+            ]);
+            Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+          }
+        } else {
+          Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+        }
+      });
+    } else {
+      q.run(world, q.id("render") ?? q([Sprite, Transform, UI, DesktopUI]), (_, sprite, transform) => {
+        Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+      });
+    }
   })
 );
 

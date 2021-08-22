@@ -8,6 +8,7 @@ import { ScreenShader, SCREEN_SHADER } from "../Assets/View/Screen/Screen.shader
 import { ScreenMesh, SCREEN_MESH } from "../Assets/View/Screen/Screen.mesh";
 
 export class WebGL extends Resource {
+  // use array's instead of map for faster lookup
   meshes = new Map<MeshID, Mesh>();
   shaders = new Map<ShaderID, Shader>();
   context = new Map<ContextID, Context>();

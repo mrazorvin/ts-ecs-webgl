@@ -12,6 +12,7 @@ export class Input extends Resource {
     };
 
     if (navigator.maxTouchPoints > 1) {
+      console.log("mobile mode");
       input.mode = "mobile";
       const on_touch_start = (event: TouchEvent) => {
         event.preventDefault();
