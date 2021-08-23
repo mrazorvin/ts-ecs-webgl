@@ -5,6 +5,8 @@ import * as SpriteInstancingVS from "./SpriteInstancing.vert";
 
 // @ts-ignore
 import * as SpriteInstancingFS from "./SpriteInstancing.frag";
+import { t } from "../../../Render/WebGLUtils";
+import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
 export const SPRITE_SHADER = new ShaderID();
 
@@ -13,10 +15,13 @@ export class SpriteInstancingShader extends Shader {
     super(program);
   }
 
-  static vertex_shader = SpriteInstancingVS;
-  static fragment_shader = SpriteInstancingFS;
+  static create(gl: WebGL2RenderingContext) {
+    const program = t.program(
+      gl,
+      [t.shader(gl, SpriteInstancingFS, "FRAGMENT"), t.shader(gl, SpriteInstancingVS, "VERTEX")],
+      { layout_attributes: ShaderGlobals.Location }
+    );
 
-  static create(gl: WebGL2RenderingContext, program: WebGLProgram) {
     gl.useProgram(program);
     const Image = gl.getUniformLocation(program, "u_Image");
     gl.useProgram(null);

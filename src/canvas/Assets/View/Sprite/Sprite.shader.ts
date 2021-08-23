@@ -5,6 +5,8 @@ import * as SpriteVS from "./Sprite.vert";
 
 // @ts-ignore
 import * as SpriteFS from "./Sprite.frag";
+import { t } from "../../../Render/WebGLUtils";
+import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
 export const SPRITE_SHADER = new ShaderID();
 
@@ -23,7 +25,11 @@ export class SpriteShader extends Shader {
   static vertex_shader = SpriteVS;
   static fragment_shader = SpriteFS;
 
-  static create(gl: WebGL2RenderingContext, program: WebGLProgram) {
+  static create(gl: WebGL2RenderingContext) {
+    const program = t.program(gl, [t.shader(gl, SpriteFS, "FRAGMENT"), t.shader(gl, SpriteVS, "VERTEX")], {
+      layout_attributes: ShaderGlobals.Location,
+    });
+
     gl.useProgram(program);
     const Image = gl.getUniformLocation(program, "u_Image");
     const Frame = gl.getUniformLocation(program, "u_Frame");

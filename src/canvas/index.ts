@@ -101,19 +101,9 @@ main_world.system_once(
     layout_manager.layouts.set("desktop", desktop_layout);
     layout_manager.layouts.set("mobile", mobile_layout);
 
-    ctx.create_shader(
-      PostPassShader.fragment_shader,
-      PostPassShader.vertex_shader,
-      PostPassShader.create,
-      POST_PASS_SHADER
-    );
+    ctx.create_shader(PostPassShader.create, { id: POST_PASS_SHADER });
 
-    const sprite_shader = ctx.create_shader(
-      SpriteShader.fragment_shader,
-      SpriteShader.vertex_shader,
-      SpriteShader.create,
-      SPRITE_SHADER
-    );
+    const sprite_shader = ctx.create_shader(SpriteShader.create, { id: SPRITE_SHADER });
 
     const attack_image = await Texture.load_image(attack);
     const attack_texture = ctx.create_texture(attack_image, Texture.create);
@@ -202,6 +192,8 @@ main_world.system_once(
       mobile_ui,
     ]);
 
+    input.set_layout(navigator.maxTouchPoints > 1 ? mobile_layout : desktop_layout);
+
     const ogre_image = await Texture.load_image(ogre_sprite);
     const ogre_mesh = ctx.create_mesh((gl) =>
       SpriteMesh.create_rect(gl, {
@@ -235,6 +227,7 @@ main_world.system_once(
 const animation = {
   run: atlas.regions.filter((region) => region.name.includes("run")),
   idle: atlas.regions.filter((region) => region.name.includes("idle")),
+  attack: atlas.regions.filter((region) => region.name.includes("attack")),
 };
 let selected_animation = "run";
 
@@ -358,12 +351,17 @@ main_world.system(
         transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
         transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
 
-        if (selected_animation === "idle") {
+        if (selected_animation !== "run") {
           selected_animation = "run";
           sec = 0;
         }
       } else {
-        if (selected_animation === "run" && current_frame === 4) {
+        const touch = input.touch();
+
+        if (touch !== undefined && selected_animation !== "attack") {
+          selected_animation = "attack";
+          sec = 0;
+        } else if (touch === undefined && selected_animation !== "idle") {
           selected_animation = "idle";
           sec = 0;
         }

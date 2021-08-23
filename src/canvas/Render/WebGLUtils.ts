@@ -2,10 +2,7 @@ import { Context } from "./Context";
 import { ShaderGlobals } from "./ShaderGlobal";
 
 export namespace t {
-  export function clear(
-    gl: WebGL2RenderingContext,
-    color?: [number, number, number, number]
-  ) {
+  export function clear(gl: WebGL2RenderingContext, color?: [number, number, number, number]) {
     if (color) gl.clearColor(...color);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -19,10 +16,7 @@ export namespace t {
     return gl;
   }
 
-  export function buffer(
-    gl: WebGL2RenderingContext,
-    context: Context | undefined
-  ) {
+  export function buffer(gl: WebGL2RenderingContext, context: Context | undefined) {
     if (context === undefined) {
       return gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
@@ -34,11 +28,7 @@ export namespace t {
     }
   }
 
-  export function size(
-    gl: WebGL2RenderingContext,
-    width: number | string,
-    height: number | string
-  ) {
+  export function size(gl: WebGL2RenderingContext, width: number | string, height: number | string) {
     // @ts-ignore
     const canvas = gl.canvas as HTMLCanvasElement;
 
@@ -64,20 +54,12 @@ export namespace t {
 
       return { width: canvas.width, height: canvas.height };
     } else {
-      throw new Error(
-        `[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`
-      );
+      throw new Error(`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`);
     }
   }
 
-  export function shader(
-    gl: WebGL2RenderingContext,
-    src: string,
-    type: "VERTEX" | "FRAGMENT"
-  ) {
-    const shader = gl.createShader(
-      type === "VERTEX" ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER
-    )!;
+  export function shader(gl: WebGL2RenderingContext, src: string, type: "VERTEX" | "FRAGMENT") {
+    const shader = gl.createShader(type === "VERTEX" ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER)!;
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
 
@@ -93,31 +75,20 @@ export namespace t {
   export function program(
     gl: WebGL2RenderingContext,
     shaders: WebGLShader[],
-    enable_default_attributes = true
+    options: {
+      layout_attributes: { [key: string]: number } | false;
+    }
   ) {
     const program = gl.createProgram()!;
     for (const shader of shaders) {
       gl.attachShader(program, shader);
     }
 
-    if (enable_default_attributes) {
-      gl.bindAttribLocation(
-        program,
-        ShaderGlobals.Location[ShaderGlobals.Attribute.Position],
-        ShaderGlobals.Attribute.Position
-      );
-
-      gl.bindAttribLocation(
-        program,
-        ShaderGlobals.Location[ShaderGlobals.Attribute.Normal],
-        ShaderGlobals.Attribute.Normal
-      );
-
-      gl.bindAttribLocation(
-        program,
-        ShaderGlobals.Location[ShaderGlobals.Attribute.UV],
-        ShaderGlobals.Attribute.UV
-      );
+    if (options.layout_attributes) {
+      for (const attribute_name in options.layout_attributes) {
+        const position = options.layout_attributes[attribute_name]!;
+        gl.bindAttribLocation(program, position, attribute_name);
+      }
     }
 
     gl.linkProgram(program);
@@ -137,31 +108,19 @@ export namespace t {
     return program;
   }
 
-  export function get_standard_attributes_location(
-    gl: WebGL2RenderingContext,
-    program: WebGLProgram
-  ) {
+  export function get_standard_attributes_location(gl: WebGL2RenderingContext, program: WebGLProgram) {
     return {
-      position: gl.getAttribLocation(program, ShaderGlobals.Attribute.Position),
-      normal: gl.getAttribLocation(program, ShaderGlobals.Attribute.Normal),
-      uv: gl.getAttribLocation(program, ShaderGlobals.Attribute.UV),
+      position: gl.getAttribLocation(program, ShaderGlobals.Attributes.Position),
+      uv: gl.getAttribLocation(program, ShaderGlobals.Attributes.UV),
     };
   }
 
   export namespace buffer {
-    export function array(
-      gl: WebGL2RenderingContext,
-      array: Float32Array,
-      is_static = true
-    ) {
+    export function array(gl: WebGL2RenderingContext, array: Float32Array, is_static = true) {
       const buffer = gl.createBuffer();
 
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      gl.bufferData(
-        gl.ARRAY_BUFFER,
-        array,
-        is_static ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW
-      );
+      gl.bufferData(gl.ARRAY_BUFFER, array, is_static ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
       return buffer;

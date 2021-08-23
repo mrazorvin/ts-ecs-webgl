@@ -5,6 +5,8 @@ import * as ScreenVS from "./Screen.vert";
 
 // @ts-ignore
 import * as ScreenFS from "./Screen.frag";
+import { t } from "../../../Render/WebGLUtils";
+import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
 export const SCREEN_SHADER = new ShaderID();
 
@@ -13,10 +15,11 @@ export class ScreenShader extends Shader {
     super(program);
   }
 
-  static vertex_shader = ScreenVS;
-  static fragment_shader = ScreenFS;
+  static create(gl: WebGL2RenderingContext) {
+    const program = t.program(gl, [t.shader(gl, ScreenFS, "FRAGMENT"), t.shader(gl, ScreenVS, "VERTEX")], {
+      layout_attributes: ShaderGlobals.Location,
+    });
 
-  static create(gl: WebGL2RenderingContext, program: WebGLProgram) {
     gl.useProgram(program);
     const Image = gl.getUniformLocation(program, "u_Image");
     gl.useProgram(null);

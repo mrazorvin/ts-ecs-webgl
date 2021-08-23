@@ -5,6 +5,8 @@ import * as PostPassVS from "./PostPass.vert";
 
 // @ts-ignore
 import * as PostPassFS from "./PostPass.frag";
+import { t } from "../../../Render/WebGLUtils";
+import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
 export const POST_PASS_SHADER = new ShaderID();
 
@@ -13,10 +15,11 @@ export class PostPassShader extends Shader {
     super(program);
   }
 
-  static vertex_shader = PostPassVS;
-  static fragment_shader = PostPassFS;
+  static create(gl: WebGL2RenderingContext) {
+    const program = t.program(gl, [t.shader(gl, PostPassFS, "FRAGMENT"), t.shader(gl, PostPassVS, "VERTEX")], {
+      layout_attributes: ShaderGlobals.Location,
+    });
 
-  static create(gl: WebGL2RenderingContext, program: WebGLProgram) {
     gl.useProgram(program);
     const Image = gl.getUniformLocation(program, "u_Image");
     gl.useProgram(null);

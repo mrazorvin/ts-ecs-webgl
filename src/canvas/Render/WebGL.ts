@@ -1,6 +1,5 @@
 import { Resource } from "@mr/ecs/World";
 import { Shader, ShaderID } from "./Shader";
-import { t } from "./WebGLUtils";
 import { Mesh, MeshID } from "./Mesh";
 import { Texture, TextureID } from "./Texture";
 import { Context, ContextID } from "./Context";
@@ -42,17 +41,9 @@ export class WebGL extends Resource {
     return mesh.id;
   }
 
-  create_shader(
-    fragment_shader: string,
-    vertex_shader: string,
-    factory: (gl: WebGL2RenderingContext, shader: WebGLProgram) => Shader,
-    id?: ShaderID
-  ) {
-    const shader = factory(
-      this.gl,
-      t.program(this.gl, [t.shader(this.gl, fragment_shader, "FRAGMENT"), t.shader(this.gl, vertex_shader, "VERTEX")])
-    );
-    if (id !== undefined) shader.id = id;
+  create_shader(factory: (gl: WebGL2RenderingContext) => Shader, options: { id?: ShaderID }) {
+    const shader = factory(this.gl);
+    if (options.id !== undefined) shader.id = options.id;
 
     this.shaders.set(shader.id, shader);
 
@@ -83,8 +74,7 @@ export class WebGL extends Resource {
     }
 
     if (!this.shaders.has(SCREEN_SHADER)) {
-      this.create_shader(ScreenShader.fragment_shader, ScreenShader.vertex_shader, ScreenShader.create, SCREEN_SHADER);
-
+      this.create_shader(ScreenShader.create, { id: SCREEN_SHADER });
       this.create_mesh(ScreenMesh.create_screen, SCREEN_MESH);
     }
 
@@ -120,7 +110,6 @@ export class WebGL extends Resource {
     }
     this.context.clear();
 
-    window.gl = this.gl;
     this.canvas.remove();
     // @ts-expect-error
     this.canvas = null;

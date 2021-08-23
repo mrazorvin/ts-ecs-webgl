@@ -50,13 +50,13 @@ export namespace ScreenMesh {
     const vertex = Mesh.attribute_buffer(gl, {
       array: rectangle,
       component_length: 2,
-      attribute: ShaderGlobals.Attribute.Position,
+      attribute: ShaderGlobals.Attributes.Position,
     });
 
     const uv = Mesh.attribute_buffer(gl, {
       array: uv_rectangle,
       component_length: 2,
-      attribute: ShaderGlobals.Attribute.UV,
+      attribute: ShaderGlobals.Attributes.UV,
     });
 
     gl.bindVertexArray(null);

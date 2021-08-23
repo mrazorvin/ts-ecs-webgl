@@ -49,11 +49,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
     })
   );
 
-  map_shader = ctx.create_shader(
-    SpriteInstancingShader.fragment_shader,
-    SpriteInstancingShader.vertex_shader,
-    (gl, program) => SpriteInstancingShader.create(gl, program)
-  );
+  map_shader = ctx.create_shader(SpriteInstancingShader.create, {});
 
   // this code must be generic and use less constants
   const rows_amount = tiled_map.height;

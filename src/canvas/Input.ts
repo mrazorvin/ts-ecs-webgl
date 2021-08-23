@@ -1,4 +1,6 @@
-import { Resource } from "@mr/ecs/World";
+import { Entity, EntityRef, Resource } from "@mr/ecs/World";
+import { SSCDCircle, SSCDShape, SSCDVector } from "@mr/sscd";
+import { UILayout } from "./UI";
 
 export class Input extends Resource {
   static create(target: HTMLElement) {
@@ -39,6 +41,18 @@ export class Input extends Resource {
           input._movement!.click_y = input._movement!.current_y;
           input._movement!.screen_click_x = input._movement!.screen_current_x;
           input._movement!.screen_click_y = input._movement!.screen_current_y;
+
+          if (input._layout !== undefined) {
+            input._layout.lcw.test_collision(
+              new SSCDCircle(new SSCDVector(input._movement!.screen_click_x, input._movement!.screen_click_y), 2),
+              undefined,
+              () => {
+                input.stop_movement();
+                click_touch = movement_touch;
+                return false;
+              }
+            );
+          }
         }
 
         if (click_touch !== undefined) {
@@ -163,6 +177,7 @@ export class Input extends Resource {
   #movement = new PointerInfo();
   #touch = new PointerInfo();
 
+  private _layout: UILayout | undefined;
   private _movement: PointerInfo | undefined;
   private _touch: PointerInfo | undefined;
 
@@ -172,6 +187,11 @@ export class Input extends Resource {
 
   touch(): undefined | PointerInfo {
     return this._touch !== undefined ? this._touch : undefined;
+  }
+
+  set_layout(layout: UILayout | undefined) {
+    this._layout = layout;
+    // reset Pointer properties
   }
 
   private start_movement(identifier: PointerInfo["identifier"]) {
@@ -218,7 +238,9 @@ export class Input extends Resource {
     return (event: MouseEvent) => {
       event.preventDefault();
 
+      let movement = false;
       if (event.button === 0) {
+        movement = true;
         input.start_movement("right");
       } else if (event.button === 2) {
         input.start_touch("left");
@@ -234,6 +256,18 @@ export class Input extends Resource {
       target.click_y = target.current_y;
       target.screen_click_x = target.screen_current_x;
       target.screen_click_y = target.screen_current_y;
+
+      if (movement === true && input._layout !== undefined) {
+        input._layout.lcw.test_collision(
+          new SSCDCircle(new SSCDVector(target.screen_click_x, target.screen_click_y), 2),
+          undefined,
+          () => {
+            input.stop_movement();
+            input.start_touch("right");
+            return false;
+          }
+        );
+      }
     };
   }
 
@@ -241,8 +275,13 @@ export class Input extends Resource {
     return (event: MouseEvent) => {
       event.preventDefault();
 
+      const touch = input.touch();
       if (event.button === 0) {
-        input.stop_movement();
+        if (touch?.identifier === "right") {
+          input.stop_touch();
+        } else {
+          input.stop_movement();
+        }
       } else if (event.button === 2) {
         input.stop_touch();
       }

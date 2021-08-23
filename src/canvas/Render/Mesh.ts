@@ -69,60 +69,10 @@ export namespace Mesh {
     component_length: number;
   }
 
-  // export function create(
-  //   gl: WebGL2RenderingContext,
-  //   data: {
-  //     index?: Uint16Array;
-  //     vertexes: Float32Array;
-  //     normal?: Float32Array;
-  //     uv?: Float32Array;
-  //   }
-  // ): Mesh {
-  //   const vao = gl.createVertexArray();
-  //   gl.bindVertexArray(vao);
-
-  //   if (vao == null) {
-  //     throw new Error(`[WebGLUtils.mesh.vao()] can't create array buffer`);
-  //   }
-
-  //   const vertex = data.vertexes
-  //     ? attribute_buffer(gl, {
-  //         array: data.vertexes,
-  //         component_length: 3,
-  //         attribute: ShaderGlobals.Attribute.Position,
-  //       })
-  //     : null;
-  //   const normal = data.normal
-  //     ? attribute_buffer(gl, {
-  //         array: data.normal,
-  //         component_length: 3,
-  //         attribute: ShaderGlobals.Attribute.Normal,
-  //       })
-  //     : null;
-  //   const uv = data.uv
-  //     ? attribute_buffer(gl, {
-  //         array: data.uv,
-  //         component_length: 2,
-  //         attribute: ShaderGlobals.Attribute.UV,
-  //       })
-  //     : null;
-  //   const index = data.index ? index_buffer(gl, { array: data.index, component_length: 1 }) : null;
-
-  //   gl.bindVertexArray(null);
-  //   gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-  //   return new Mesh(gl.TRIANGLE_STRIP, vao, {
-  //     vertex,
-  //     normal,
-  //     uv,
-  //     index,
-  //   });
-  // }
-
   export function attribute_buffer(
     gl: WebGL2RenderingContext,
     data: {
-      attribute: ShaderGlobals.Attribute;
+      attribute: ShaderGlobals.Attributes;
       array: Float32Array;
       component_length: number;
     }

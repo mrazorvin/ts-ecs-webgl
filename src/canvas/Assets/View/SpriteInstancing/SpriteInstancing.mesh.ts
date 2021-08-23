@@ -8,7 +8,8 @@ export class SpriteInstancingMesh extends Mesh {
     public uv_buffer: Mesh.Buffer,
     public transformation_buffer: Mesh.Buffer,
     public transformation_data: Float32Array,
-    public override vao: WebGLVertexArrayObject
+    // @ts-expect-error
+    public vao: WebGLVertexArrayObject
   ) {
     super(mode, vao, {
       vertex: vertex_buffer,
@@ -66,18 +67,18 @@ export namespace SpriteInstancingMesh {
     const vertices_buffer = Mesh.attribute_buffer(gl, {
       array: vertices_data,
       component_length: 2,
-      attribute: ShaderGlobals.Attribute.Position,
+      attribute: ShaderGlobals.Attributes.Position,
     });
 
     const uv_buffer = Mesh.attribute_buffer(gl, {
       array: uv_data,
       component_length: 2,
-      attribute: ShaderGlobals.Attribute.UV,
+      attribute: ShaderGlobals.Attributes.UV,
     });
 
     const instances = 10000;
     const matrix_size = 9;
-    const attribute_transform_position = 3;
+    const attribute_transform_location = 2;
     const attributes_amount_for_mat3 = 3;
     const el_per_row_count_for_mat3 = 3;
     const transformation_data = new Float32Array(Array(matrix_size * instances));
@@ -88,7 +89,7 @@ export namespace SpriteInstancingMesh {
 
     const bytes_per_transform = Float32Array.BYTES_PER_ELEMENT * el_per_row_count_for_mat3 * attributes_amount_for_mat3;
     for (let i = 0; i < attributes_amount_for_mat3; i++) {
-      const next_location = attribute_transform_position + i;
+      const next_location = attribute_transform_location + i;
       gl.enableVertexAttribArray(next_location);
       // note the stride and offset
       const offset = i * Float32Array.BYTES_PER_ELEMENT * 3;
