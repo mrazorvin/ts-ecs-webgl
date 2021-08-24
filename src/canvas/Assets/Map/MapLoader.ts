@@ -3,7 +3,6 @@ import { WebGL } from "../../Render/WebGL";
 import * as tiled_map from "./tiled_map.json";
 import * as tiles_properties from "./ground_atlased.json";
 import { Texture } from "../../Render/Texture";
-import { SpriteMesh } from "../View/Sprite/Sprite.mesh";
 import { Transform } from "../../Transform/Transform";
 import { Static } from "../../Static";
 import { Sprite } from "../../Sprite";
@@ -21,14 +20,6 @@ const Query = query([WebGL, CollisionWorld]);
 export const MapLoader = sys(Query, async (world, ctx, sscd) => {
   const ground_image = await Texture.load_image(ground_sprite);
   const bg_texture = ctx.create_texture(ground_image, Texture.create).id;
-  const tile = ctx.create_mesh((gl) =>
-    SpriteMesh.create_rect(gl, {
-      o_width: ground_image.width,
-      o_height: ground_image.height,
-      width: 32,
-      height: 32,
-    })
-  );
 
   // this code must be generic and use less constants
   const rows_amount = tiled_map.height;
@@ -51,7 +42,12 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
 
       // TOOD: prettu ugle that we need to use transform in such way
       const entity = world.entity([
-        Sprite.create(world, SPRITE_SHADER, tile.id, bg_texture),
+        Sprite.create(world, SPRITE_SHADER, bg_texture, {
+          uv_width: 32 / ground_image.width,
+          uv_height: 32 / ground_image.height,
+          x: meta.rect[0]! / tiles_properties.grid_width,
+          y: meta.rect[1]! / tiles_properties.grid_height,
+        }),
         transform,
         Static.create(world, meta.rect[0]! / tiles_properties.grid_width, meta.rect[1]! / tiles_properties.grid_height),
       ]);

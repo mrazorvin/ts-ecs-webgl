@@ -1,11 +1,9 @@
-import { Mesh } from "../../../Render/Mesh";
+import { Mesh, MeshID } from "../../../Render/Mesh";
 import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 
-export class SpriteMesh extends Mesh {
-  uv_width = 0;
-  uv_height = 0;
-  frame_data = new Float32Array(2);
+export const SPRITE_MESH = new MeshID();
 
+export class SpriteMesh extends Mesh {
   constructor(
     mode: WebGL2RenderingContext["TRIANGLES"],
     vao: WebGLVertexArrayObject,
@@ -27,10 +25,7 @@ export class SpriteMesh extends Mesh {
 }
 
 export namespace SpriteMesh {
-  export function create_rect(
-    gl: WebGL2RenderingContext,
-    { x = 0, y = 0, width = 0, height = 0, o_width = 0, o_height = 0 }
-  ) {
+  export function create_rect(gl: WebGL2RenderingContext) {
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
 
@@ -38,27 +33,16 @@ export namespace SpriteMesh {
       throw new Error(`[WebGLUtils.mesh.vao()] can't create array buffer`);
     }
 
-    const uv_width = width / o_width;
-    const uv_height = height / o_height;
-
-    const uv_rectangle = new Float32Array([
-      ...[0, 0],
-      ...[uv_width, 0],
-      ...[0, uv_height],
-
-      ...[0, uv_height],
-      ...[uv_width, 0],
-      ...[uv_width, uv_height],
-    ]);
-
     const rectangle = new Float32Array([
-      ...[x, y],
-      ...[x + width, y],
-      ...[x, y + height],
+      // vertex 1
+      ...[0, 0],
+      ...[1, 0],
+      ...[0, 1],
 
-      ...[x, y + height],
-      ...[x + width, y],
-      ...[x + width, y + height],
+      // vertex 2
+      ...[0, 1],
+      ...[1, 0],
+      ...[1, 1],
     ]);
 
     const vertex = Mesh.attribute_buffer(gl, {
@@ -67,20 +51,40 @@ export namespace SpriteMesh {
       attribute: ShaderGlobals.Attributes.Position,
     });
 
-    const uv = Mesh.attribute_buffer(gl, {
-      array: uv_rectangle,
-      component_length: 2,
-      attribute: ShaderGlobals.Attributes.UV,
-    });
+    const sprite_buffer = gl.createBuffer()!;
+    if (sprite_buffer == null) throw new Error(`[WebGLUtils.mesh.attribute_buffer()]`);
 
-    const frame_buffer = gl.createBuffer()!;
-    const frame_data = new Float32Array(2);
-    if (frame_buffer == null) throw new Error(`[WebGLUtils.mesh.attribute_buffer()]`);
-    gl.bindBuffer(gl.ARRAY_BUFFER, frame_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, frame_data, gl.DYNAMIC_DRAW);
+    const sprite_attrib_count = 4;
+    const frame_attrib_count = 2;
+    const total_attrib_count = sprite_attrib_count + frame_attrib_count;
+    const stride = Float32Array.BYTES_PER_ELEMENT * total_attrib_count;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, sprite_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, stride, gl.DYNAMIC_DRAW);
+
+    gl.enableVertexAttribArray(ShaderGlobals.a_Sprite);
+    gl.vertexAttribPointer(
+      ShaderGlobals.a_Sprite,
+      4,
+      gl.FLOAT,
+      false,
+      stride,
+      // start of buffer
+      Float32Array.BYTES_PER_ELEMENT * 0
+    );
+    gl.vertexAttribDivisor(ShaderGlobals.a_Sprite, 1);
+
     gl.enableVertexAttribArray(ShaderGlobals.a_Frame);
-    gl.vertexAttribPointer(ShaderGlobals.a_Frame, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(
+      ShaderGlobals.a_Frame,
+      2,
+      gl.FLOAT,
+      false,
+      stride,
+      Float32Array.BYTES_PER_ELEMENT * sprite_attrib_count
+    );
     gl.vertexAttribDivisor(ShaderGlobals.a_Frame, 1);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     const attribute_transform_location = ShaderGlobals.a_Transformation;
@@ -117,16 +121,13 @@ export namespace SpriteMesh {
       vao,
       {
         vertex,
-        uv,
+        uv: null,
         normal: null,
         index: null,
       },
       transformation_buffer,
-      frame_buffer
+      sprite_buffer
     );
-
-    rect.uv_height = uv_height;
-    rect.uv_width = uv_width;
 
     return rect;
   }

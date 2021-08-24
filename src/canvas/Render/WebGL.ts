@@ -32,9 +32,9 @@ export class WebGL extends Resource {
     super();
   }
 
-  create_mesh<T extends Mesh>(factory: (gl: WebGL2RenderingContext) => T, id?: MeshID) {
+  create_mesh<T extends Mesh>(factory: (gl: WebGL2RenderingContext) => T, options: { id?: MeshID }) {
     const mesh: T = factory(this.gl);
-    if (id !== undefined) mesh.id = id;
+    if (options.id !== undefined) mesh.id = options.id;
 
     this.meshes.set(mesh.id, mesh);
 
@@ -75,7 +75,7 @@ export class WebGL extends Resource {
 
     if (!this.shaders.has(SCREEN_SHADER)) {
       this.create_shader(ScreenShader.create, { id: SCREEN_SHADER });
-      this.create_mesh(ScreenMesh.create_screen, SCREEN_MESH);
+      this.create_mesh(ScreenMesh.create_screen, { id: SCREEN_MESH });
     }
 
     const context = factory(this.gl, {

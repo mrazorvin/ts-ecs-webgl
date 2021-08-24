@@ -1,13 +1,17 @@
 #version 300 es
 
 layout(location = 0) in vec2 a_Position;
-layout(location = 1) in vec2 a_UV;
+// WIDTH, HEIGHT, uv_width, uv_height
+layout(location = 1) in vec4 a_Sprite;
 layout(location = 2) in vec2 a_Frame;
 layout(location = 3) in mat3 a_Transform;
 
-out mediump vec2 v_UV;
+out vec2 v_UV;
 
 void main(void) {
-  gl_Position = vec4(a_Transform * vec3(a_Position, 1), 1);
-  v_UV = a_UV + a_Frame;
+  vec2 Position = vec2(a_Position.x * a_Sprite.x, a_Position.y * a_Sprite.y);
+  vec2 UV = vec2(a_Position.x * a_Sprite.z, a_Position.y * a_Sprite.w);
+  vec2 Frame = vec2(a_Frame.x * a_Sprite.z, a_Frame.y * a_Sprite.w);
+  gl_Position = vec4(a_Transform * vec3(Position, 1), 1);
+  v_UV = UV + Frame;
 }

@@ -1,26 +1,29 @@
 import { ComponentFactory } from "@mr/ecs/Component";
 import { InitComponent } from "../ecs/World";
-import { SpriteMesh } from "./Assets/View/Sprite/Sprite.mesh";
+import { SpriteMesh, SPRITE_MESH } from "./Assets/View/Sprite/Sprite.mesh";
 import { SpriteShader } from "./Assets/View/Sprite/Sprite.shader";
-import { MeshID } from "./Render/Mesh";
 import { ShaderID } from "./Render/Shader";
 import { TextureID } from "./Render/Texture";
 import { WebGL } from "./Render/WebGL";
 
 export class Sprite extends InitComponent({ use_pool: 20 }) {
-  static create = ComponentFactory(Sprite, (prev, shader, mesh, texture) => {
+  static create = ComponentFactory(Sprite, (prev, shader, texture, uv) => {
     if (prev !== undefined) {
       prev.shader = shader;
-      prev.mesh = mesh;
       prev.texture = texture;
+      prev.frame = uv;
 
       return prev;
     }
 
-    return new Sprite(shader, mesh, texture);
+    return new Sprite(shader, texture, uv);
   });
 
-  constructor(public shader: ShaderID, public mesh: MeshID, public texture: TextureID) {
+  constructor(
+    public shader: ShaderID,
+    public texture: TextureID,
+    public frame: { uv_width: number; uv_height: number; x: number; y: number }
+  ) {
     super();
   }
 
@@ -28,11 +31,11 @@ export class Sprite extends InitComponent({ use_pool: 20 }) {
     ctx: WebGL,
     sprite: Sprite,
     transform_buffer: Float32Array,
-    frame_buffer: Float32Array,
+    sprite_buffer: Float32Array,
     amount: number
   ) {
     const shader = ctx.shaders.get(sprite.shader);
-    const mesh = ctx.meshes.get(sprite.mesh);
+    const mesh = ctx.meshes.get(SPRITE_MESH);
     const texture = ctx.textures.get(sprite.texture);
 
     if (mesh instanceof SpriteMesh && shader instanceof SpriteShader && texture) {
@@ -48,7 +51,7 @@ export class Sprite extends InitComponent({ use_pool: 20 }) {
       gl.bufferData(gl.ARRAY_BUFFER, transform_buffer, gl.DYNAMIC_DRAW);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, mesh.frame_buffer);
-      gl.bufferSubData(gl.ARRAY_BUFFER, 0, frame_buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, sprite_buffer, gl.DYNAMIC_DRAW);
 
       gl.drawArraysInstanced(
         gl.TRIANGLE_STRIP,

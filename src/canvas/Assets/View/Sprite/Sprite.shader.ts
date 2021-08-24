@@ -19,8 +19,9 @@ export class SpriteShader extends Shader {
   static fragment_shader = SpriteFS;
 
   static create(gl: WebGL2RenderingContext) {
+    const { a_Position } = ShaderGlobals;
     const program = t.program(gl, [t.shader(gl, SpriteFS, "FRAGMENT"), t.shader(gl, SpriteVS, "VERTEX")], {
-      layout_attributes: ShaderGlobals.Location,
+      layout_attributes: { a_Position },
     });
 
     gl.useProgram(program);
