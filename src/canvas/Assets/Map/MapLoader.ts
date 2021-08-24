@@ -2,7 +2,7 @@ import { sys } from "@mr/ecs/World";
 import { WebGL } from "../../Render/WebGL";
 import * as tiled_map from "./tiled_map.json";
 import * as tiles_properties from "./ground_atlased.json";
-import { Texture, TextureID } from "../../Render/Texture";
+import { Texture } from "../../Render/Texture";
 import { SpriteMesh } from "../View/Sprite/Sprite.mesh";
 import { Transform } from "../../Transform/Transform";
 import { Static } from "../../Static";
@@ -14,22 +14,14 @@ import * as ground_sprite from "url:./ground_tiled.png";
 import { camera_entity } from "../../Camera";
 import { CollisionShape, CollisionWorld } from "../../CollisionWorld";
 import { SSCDRectangle, SSCDVector } from "@mr/sscd";
-import { SpriteInstancingMesh } from "../View/SpriteInstancing/SpriteInstancing.mesh";
-import { SpriteInstancingShader } from "../View/SpriteInstancing/SpriteInstancing.shader";
-import { MeshID } from "../../Render/Mesh";
-import { ShaderID } from "../../Render/Shader";
 
 const query = <T extends any[]>(args: [...T]) => args;
 const Query = query([WebGL, CollisionWorld]);
 
-export let map_mesh: MeshID = undefined as any;
-export let map_shader: ShaderID = undefined as any;
-export let map_texture: TextureID = undefined as any;
-
 export const MapLoader = sys(Query, async (world, ctx, sscd) => {
   const ground_image = await Texture.load_image(ground_sprite);
-  const bg_texture = ctx.create_texture(ground_image, Texture.create);
-  const tile_mesh = ctx.create_mesh((gl) =>
+  const bg_texture = ctx.create_texture(ground_image, Texture.create).id;
+  const tile = ctx.create_mesh((gl) =>
     SpriteMesh.create_rect(gl, {
       o_width: ground_image.width,
       o_height: ground_image.height,
@@ -37,19 +29,6 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
       height: 32,
     })
   );
-
-  map_texture = bg_texture;
-
-  map_mesh = ctx.create_mesh((gl) =>
-    SpriteInstancingMesh.create_rect(gl, {
-      o_width: ground_image.width,
-      o_height: ground_image.height,
-      width: 32,
-      height: 32,
-    })
-  );
-
-  map_shader = ctx.create_shader(SpriteInstancingShader.create, {});
 
   // this code must be generic and use less constants
   const rows_amount = tiled_map.height;
@@ -72,7 +51,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
 
       // TOOD: prettu ugle that we need to use transform in such way
       const entity = world.entity([
-        Sprite.create(world, SPRITE_SHADER, tile_mesh, bg_texture),
+        Sprite.create(world, SPRITE_SHADER, tile.id, bg_texture),
         transform,
         Static.create(world, meta.rect[0]! / tiles_properties.grid_width, meta.rect[1]! / tiles_properties.grid_height),
       ]);

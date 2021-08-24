@@ -4,8 +4,13 @@ export namespace ShaderGlobals {
     UV = "a_UV",
   }
 
+  export const a_Position = 0;
+  export const a_UV = 1;
+  export const a_Frame = 2;
+  export const a_Transformation = 3;
+
   export const Location = {
-    [Attributes.Position]: 0,
-    [Attributes.UV]: 1,
+    a_Position: 0,
+    a_UV: 1,
   };
 }

@@ -530,6 +530,7 @@ export class LoopInfo extends Resource {
 }
 
 let sec = 0;
+let data: number[] = [];
 
 export class RafScheduler extends Scheduler {
   raf = requestAnimationFrame(() => null);
@@ -555,16 +556,15 @@ export class RafScheduler extends Scheduler {
     this.info.time_delta = ms_delta;
     sec += ms_delta;
 
-    if (sec >= 1) {
-      console.time("tick");
-    }
-
     this.tick();
     this.start();
 
+    data.push(performance.now() - ms_now);
+
     if (sec >= 1) {
-      console.timeEnd("tick");
+      console.log(data.reduce((acc, v) => acc + v, 0) / data.length);
       sec = 0;
+      data.length = 0;
     }
   };
 

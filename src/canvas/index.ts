@@ -20,14 +20,12 @@ import { creature, Creature } from "./Creature";
 import { Static } from "./Static";
 import { camera, Camera, camera_entity } from "./Camera";
 import { Movement } from "./Modification";
-import { MapLoader, map_mesh, map_shader, map_texture } from "./Assets/Map/MapLoader";
+import { MapLoader } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
 import { world_transform, world_transform_component } from "./WorldView";
 import { CollisionWorld, LocalCollisionWorld } from "./CollisionWorld";
 import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
-import { SpriteInstancingMesh } from "./Assets/View/SpriteInstancing/SpriteInstancing.mesh";
-import { SpriteInstancingShader } from "./Assets/View/SpriteInstancing/SpriteInstancing.shader";
 import { attack, joystick, joystick_handle } from "./Assets/UI";
 import { DesktopUI, desktop_ui, MobileUI, mobile_ui, UI, UILayout, UIManager } from "./UI";
 
@@ -118,7 +116,7 @@ main_world.system_once(
 
     const desktop_position = new SSCDVector(screen.width / 2 - 16, screen.height - 32);
     const desktop_attack = main_world.entity([
-      Sprite.create(world, sprite_shader, attack_mesh, attack_texture),
+      Sprite.create(world, sprite_shader.id, attack_mesh.id, attack_texture.id),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([desktop_position.x, desktop_position.y]),
@@ -134,7 +132,7 @@ main_world.system_once(
 
     const mobile_position = new SSCDVector(screen.width - 52, screen.height - 52);
     const mobile_attack = main_world.entity([
-      Sprite.create(world, sprite_shader, attack_mesh, attack_texture),
+      Sprite.create(world, sprite_shader.id, attack_mesh.id, attack_texture.id),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([mobile_position.x, mobile_position.y]),
@@ -159,7 +157,7 @@ main_world.system_once(
       })
     );
     main_world.entity([
-      Sprite.create(world, sprite_shader, joystick_handle_mesh, joystick_handle_texture),
+      Sprite.create(world, sprite_shader.id, joystick_handle_mesh.id, joystick_handle_texture.id),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([0, 0]),
@@ -181,7 +179,7 @@ main_world.system_once(
       })
     );
     main_world.entity([
-      Sprite.create(world, sprite_shader, joystick_mesh, joystick_texture),
+      Sprite.create(world, sprite_shader.id, joystick_mesh.id, joystick_texture.id),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([0, 0]),
@@ -209,7 +207,7 @@ main_world.system_once(
 
     // TODO: inject entities in SubWorld instead of World
     main_world.entity([
-      Sprite.create(world, sprite_shader, ogre_mesh, ogre_texture),
+      Sprite.create(world, sprite_shader.id, ogre_mesh.id, ogre_texture.id),
       Transform.create(world, {
         parent: camera_entity.ref,
         position: new Float32Array([0, 0]),
@@ -267,20 +265,19 @@ main_world.system(
   })
 );
 
+const instanced_data = new Float32Array(9 * 1000);
+
 main_world.system(
   sys([WebGL], (world, ctx) => {
     const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
-    const gl = ctx.gl;
-    if (bg_ctx === undefined || map_shader === undefined) return;
+    if (bg_ctx === undefined) return;
     else t.buffer(ctx.gl, bg_ctx);
 
-    const bg_texture = ctx.textures.get(map_texture)!.texture;
-
     let idx = 0;
-    const mesh = ctx.meshes.get(map_mesh) as SpriteInstancingMesh;
-    const data = mesh.transformation_data;
+    const data = instanced_data;
+    let sprite: Sprite | undefined = undefined;
 
-    q.run(world, q.id("render") ?? q([Transform, Sprite, Static, Visible]), (_, transform) => {
+    q.run(world, q.id("render") ?? q([Transform, Sprite, Static, Visible]), (_, transform, _sprite) => {
       const view = Transform.view(main_world, transform);
 
       data[idx * 9 + 0] = view[0]!;
@@ -294,25 +291,13 @@ main_world.system(
       data[idx * 9 + 8] = view[8]!;
 
       idx++;
+
+      sprite = _sprite;
     });
 
-    const shader = ctx.shaders.get(map_shader)! as SpriteInstancingShader;
+    if (sprite === undefined) return;
 
-    gl.useProgram(shader.program);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, bg_texture);
-    gl.uniform1i(shader.location.Image, 0);
-    gl.bindVertexArray(mesh.vao);
-    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.transformation_buffer.buffer);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, mesh.transformation_data.subarray(0, idx * 9));
-    gl.drawArraysInstanced(
-      gl.TRIANGLE_STRIP,
-      0, // offset
-      6, // num vertices per instance
-      idx - 1 // num instances
-    );
-    gl.bindVertexArray(null);
-    gl.useProgram(null);
+    Sprite.render(ctx, sprite, data.subarray(0, idx * 9), frame_buffer, idx - 1);
   })
 );
 
@@ -370,6 +355,8 @@ main_world.system(
   })
 );
 
+let frame_buffer = new Float32Array(2);
+
 main_world.system(
   sys([WebGL, LoopInfo, Input], (world, ctx, loop, input) => {
     const run_frames = animation[selected_animation as "run"];
@@ -385,13 +372,9 @@ main_world.system(
     else t.buffer(ctx.gl, m_ctx);
 
     q.run(world, q.id("render") ?? q([Sprite, Transform, Creature]), (_, sprite, transform) => {
-      Sprite.render(
-        ctx,
-        sprite,
-        Transform.view(world, transform),
-        frame!.rect[0]! / atlas.grid_width,
-        frame!.rect[1]! / atlas.grid_height
-      );
+      // frame_buffer[0] = frame!.rect[0]! / atlas.grid_width * uv_width;
+      // frame_buffer[1] = frame!.rect[1]! / atlas.grid_height * uw_height;
+      Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
     });
   })
 );
@@ -411,7 +394,7 @@ main_world.system(
               movement.screen_click_x - transform.width / 2,
               movement.screen_click_y - transform.height / 2,
             ]);
-            Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+            Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
           }
 
           if (movement !== undefined && ui.id === "joystick_handle") {
@@ -419,15 +402,15 @@ main_world.system(
               movement.screen_current_x - transform.width / 2,
               movement.screen_current_y - transform.height / 2,
             ]);
-            Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+            Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
           }
         } else {
-          Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+          Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
         }
       });
     } else {
       q.run(world, q.id("render") ?? q([Sprite, Transform, UI, DesktopUI]), (_, sprite, transform) => {
-        Sprite.render(ctx, sprite, Transform.view(world, transform), 0, 0);
+        Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
       });
     }
   })

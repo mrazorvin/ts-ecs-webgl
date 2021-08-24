@@ -11,14 +11,7 @@ import { ShaderGlobals } from "../../../Render/ShaderGlobal";
 export const SPRITE_SHADER = new ShaderID();
 
 export class SpriteShader extends Shader {
-  constructor(
-    program: WebGLProgram,
-    public location: {
-      Image: WebGLUniformLocation;
-      Transform: WebGLUniformLocation;
-      Frame: WebGLUniformLocation;
-    }
-  ) {
+  constructor(program: WebGLProgram, public location: { Image: WebGLUniformLocation }) {
     super(program);
   }
 
@@ -32,20 +25,14 @@ export class SpriteShader extends Shader {
 
     gl.useProgram(program);
     const Image = gl.getUniformLocation(program, "u_Image");
-    const Frame = gl.getUniformLocation(program, "u_Frame");
-    const Transform = gl.getUniformLocation(program, "u_Transform");
     gl.useProgram(null);
 
-    if (Image && Transform && Frame) {
-      return new SpriteShader(program, { Image, Transform, Frame });
+    if (Image) {
+      return new SpriteShader(program, { Image });
     } else {
       throw new Error(
         `[${this.name} -> create()] -> 
-          all locations must be valid ${JSON.stringify({
-            Image,
-            Transform,
-            Frame,
-          })}`
+          all locations must be valid ${JSON.stringify({ Image })}`
       );
     }
   }

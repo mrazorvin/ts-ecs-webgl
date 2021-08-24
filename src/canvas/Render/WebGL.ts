@@ -32,13 +32,13 @@ export class WebGL extends Resource {
     super();
   }
 
-  create_mesh(factory: (gl: WebGL2RenderingContext) => Mesh, id?: MeshID) {
-    const mesh = factory(this.gl);
+  create_mesh<T extends Mesh>(factory: (gl: WebGL2RenderingContext) => T, id?: MeshID) {
+    const mesh: T = factory(this.gl);
     if (id !== undefined) mesh.id = id;
 
     this.meshes.set(mesh.id, mesh);
 
-    return mesh.id;
+    return { id: mesh.id, mesh };
   }
 
   create_shader(factory: (gl: WebGL2RenderingContext) => Shader, options: { id?: ShaderID }) {
@@ -47,7 +47,7 @@ export class WebGL extends Resource {
 
     this.shaders.set(shader.id, shader);
 
-    return shader.id;
+    return { id: shader.id, shader };
   }
 
   create_texture(
@@ -60,7 +60,7 @@ export class WebGL extends Resource {
 
     this.textures.set(texture.id, texture);
 
-    return texture.id;
+    return { id: texture.id, texture };
   }
 
   create_context(
@@ -86,7 +86,7 @@ export class WebGL extends Resource {
     context.id = id;
     this.context.set(id, context);
 
-    return context.id;
+    return { id: context.id, context };
   }
 
   dispose() {
