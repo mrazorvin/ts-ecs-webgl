@@ -1,512 +1,248 @@
 {
-    "fill_rate": 0.9376744031906128,
-    "grid_height": 0,
-    "grid_width": 0,
-    "height": 84,
-    "image": "djiin.png",
-    "name": "djiin",
-    "padding_x": 0,
-    "padding_y": 0,
-    "pot": false,
-    "regions": [
-        {
-            "idx": 17,
-            "name": "djinn-bandit-attack-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                384,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 32,
-            "name": "djinn-bandit-attack-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                768,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 31,
-            "name": "djinn-bandit-attack-02",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                720,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 30,
-            "name": "djinn-bandit-attack-03",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                720,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 29,
-            "name": "djinn-bandit-attack-04",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                672,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 28,
-            "name": "djinn-bandit-die-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                672,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 27,
-            "name": "djinn-bandit-die-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                624,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 26,
-            "name": "djinn-bandit-die-02",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                624,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 25,
-            "name": "djinn-bandit-die-03",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                576,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 24,
-            "name": "djinn-bandit-die-04",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                576,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 23,
-            "name": "djinn-bandit-die-05",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                528,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 22,
-            "name": "djinn-bandit-die-06",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                528,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 21,
-            "name": "djinn-bandit-die-07",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                480,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 20,
-            "name": "djinn-bandit-die-08",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                480,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 19,
-            "name": "djinn-bandit-fall-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                432,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 18,
-            "name": "djinn-bandit-fall-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                432,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 9,
-            "name": "djinn-bandit-hurt-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                192,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 1,
-            "name": "djinn-bandit-hurt-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                0,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 2,
-            "name": "djinn-bandit-hurt-02",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                48,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 3,
-            "name": "djinn-bandit-idle-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                48,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 4,
-            "name": "djinn-bandit-idle-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                96,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 5,
-            "name": "djinn-bandit-idle-02",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                96,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 6,
-            "name": "djinn-bandit-idle-03",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                144,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 7,
-            "name": "djinn-bandit-jump-loop-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                144,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 8,
-            "name": "djinn-bandit-jump-loop-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                192,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 0,
-            "name": "djinn-bandit-jump-rdy-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                0,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 10,
-            "name": "djinn-bandit-jump-rdy-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                240,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 11,
-            "name": "djinn-bandit-run-00",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                240,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 12,
-            "name": "djinn-bandit-run-01",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                288,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 13,
-            "name": "djinn-bandit-run-02",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                288,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 14,
-            "name": "djinn-bandit-run-03",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                336,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 15,
-            "name": "djinn-bandit-run-04",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                336,
-                42,
-                48,
-                42
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 16,
-            "name": "djinn-bandit-run-05",
-            "origin": [
-                24,
-                21
-            ],
-            "rect": [
-                384,
-                0,
-                48,
-                42
-            ],
-            "rotated": false
-        }
-    ],
-    "regions_count": 33,
-    "rotations": false,
-    "using_grid": false,
-    "width": 816
+  "fill_rate": 0.9376744031906128,
+  "grid_height": 42,
+  "grid_width": 48,
+  "height": 84,
+  "image": "djiin.png",
+  "name": "djiin",
+  "padding_x": 0,
+  "padding_y": 0,
+  "pot": false,
+  "regions": [
+    {
+      "idx": 17,
+      "name": "djinn-bandit-attack-00",
+      "origin": [24, 21],
+      "rect": [384, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 32,
+      "name": "djinn-bandit-attack-01",
+      "origin": [24, 21],
+      "rect": [768, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 31,
+      "name": "djinn-bandit-attack-02",
+      "origin": [24, 21],
+      "rect": [720, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 30,
+      "name": "djinn-bandit-attack-03",
+      "origin": [24, 21],
+      "rect": [720, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 29,
+      "name": "djinn-bandit-attack-04",
+      "origin": [24, 21],
+      "rect": [672, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 28,
+      "name": "djinn-bandit-die-00",
+      "origin": [24, 21],
+      "rect": [672, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 27,
+      "name": "djinn-bandit-die-01",
+      "origin": [24, 21],
+      "rect": [624, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 26,
+      "name": "djinn-bandit-die-02",
+      "origin": [24, 21],
+      "rect": [624, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 25,
+      "name": "djinn-bandit-die-03",
+      "origin": [24, 21],
+      "rect": [576, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 24,
+      "name": "djinn-bandit-die-04",
+      "origin": [24, 21],
+      "rect": [576, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 23,
+      "name": "djinn-bandit-die-05",
+      "origin": [24, 21],
+      "rect": [528, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 22,
+      "name": "djinn-bandit-die-06",
+      "origin": [24, 21],
+      "rect": [528, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 21,
+      "name": "djinn-bandit-die-07",
+      "origin": [24, 21],
+      "rect": [480, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 20,
+      "name": "djinn-bandit-die-08",
+      "origin": [24, 21],
+      "rect": [480, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 19,
+      "name": "djinn-bandit-fall-00",
+      "origin": [24, 21],
+      "rect": [432, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 18,
+      "name": "djinn-bandit-fall-01",
+      "origin": [24, 21],
+      "rect": [432, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 9,
+      "name": "djinn-bandit-hurt-00",
+      "origin": [24, 21],
+      "rect": [192, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 1,
+      "name": "djinn-bandit-hurt-01",
+      "origin": [24, 21],
+      "rect": [0, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 2,
+      "name": "djinn-bandit-hurt-02",
+      "origin": [24, 21],
+      "rect": [48, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 3,
+      "name": "djinn-bandit-idle-00",
+      "origin": [24, 21],
+      "rect": [48, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 4,
+      "name": "djinn-bandit-idle-01",
+      "origin": [24, 21],
+      "rect": [96, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 5,
+      "name": "djinn-bandit-idle-02",
+      "origin": [24, 21],
+      "rect": [96, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 6,
+      "name": "djinn-bandit-idle-03",
+      "origin": [24, 21],
+      "rect": [144, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 7,
+      "name": "djinn-bandit-jump-loop-00",
+      "origin": [24, 21],
+      "rect": [144, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 8,
+      "name": "djinn-bandit-jump-loop-01",
+      "origin": [24, 21],
+      "rect": [192, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 0,
+      "name": "djinn-bandit-jump-rdy-00",
+      "origin": [24, 21],
+      "rect": [0, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 10,
+      "name": "djinn-bandit-jump-rdy-01",
+      "origin": [24, 21],
+      "rect": [240, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 11,
+      "name": "djinn-bandit-run-00",
+      "origin": [24, 21],
+      "rect": [240, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 12,
+      "name": "djinn-bandit-run-01",
+      "origin": [24, 21],
+      "rect": [288, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 13,
+      "name": "djinn-bandit-run-02",
+      "origin": [24, 21],
+      "rect": [288, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 14,
+      "name": "djinn-bandit-run-03",
+      "origin": [24, 21],
+      "rect": [336, 0, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 15,
+      "name": "djinn-bandit-run-04",
+      "origin": [24, 21],
+      "rect": [336, 42, 48, 42],
+      "rotated": false
+    },
+    {
+      "idx": 16,
+      "name": "djinn-bandit-run-05",
+      "origin": [24, 21],
+      "rect": [384, 0, 48, 42],
+      "rotated": false
+    }
+  ],
+  "regions_count": 33,
+  "rotations": false,
+  "using_grid": false,
+  "width": 816
 }

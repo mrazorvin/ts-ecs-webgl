@@ -1,632 +1,304 @@
 {
-    "fill_rate": 0.9116535782814026,
-    "grid_height": 0,
-    "grid_width": 0,
-    "height": 266,
-    "image": "mandrake.png",
-    "name": "mandrake",
-    "padding_x": 0,
-    "padding_y": 0,
-    "pot": false,
-    "regions": [
-        {
-            "idx": 31,
-            "name": "mandrake-attack-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                228,
-                114,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 22,
-            "name": "mandrake-attack-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                114,
-                76,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 23,
-            "name": "mandrake-attack-02",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                171,
-                76,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 24,
-            "name": "mandrake-attack-03",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                228,
-                76,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 25,
-            "name": "mandrake-attack-04",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                285,
-                76,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 26,
-            "name": "mandrake-attack-05",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                114,
-                114,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 27,
-            "name": "mandrake-attack-06",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                114,
-                152,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 28,
-            "name": "mandrake-die-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                114,
-                190,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 29,
-            "name": "mandrake-die-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                114,
-                228,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 30,
-            "name": "mandrake-die-02",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                171,
-                114,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 21,
-            "name": "mandrake-die-03",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                285,
-                38,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 32,
-            "name": "mandrake-die-04",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                285,
-                114,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 33,
-            "name": "mandrake-die-05",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                171,
-                152,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 34,
-            "name": "mandrake-die-06",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                171,
-                190,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 35,
-            "name": "mandrake-die-07",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                171,
-                228,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 36,
-            "name": "mandrake-die-08",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                228,
-                152,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 37,
-            "name": "mandrake-die-09",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                285,
-                152,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 38,
-            "name": "mandrake-fall-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                228,
-                190,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 39,
-            "name": "mandrake-fall-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                285,
-                190,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 40,
-            "name": "mandrake-hurt-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                228,
-                228,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 11,
-            "name": "mandrake-hurt-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                285,
-                0,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 1,
-            "name": "mandrake-hurt-02",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                0,
-                38,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 2,
-            "name": "mandrake-idle-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                0,
-                76,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 3,
-            "name": "mandrake-idle-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                0,
-                114,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 4,
-            "name": "mandrake-idle-02",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                0,
-                152,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 5,
-            "name": "mandrake-idle-03",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                0,
-                190,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 6,
-            "name": "mandrake-jump-loop-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                0,
-                228,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 7,
-            "name": "mandrake-jump-loop-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                57,
-                0,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 8,
-            "name": "mandrake-jump-rdy-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                114,
-                0,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 9,
-            "name": "mandrake-jump-rdy-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                171,
-                0,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 10,
-            "name": "mandrake-run-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                228,
-                0,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 0,
-            "name": "mandrake-run-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                0,
-                0,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 12,
-            "name": "mandrake-run-02",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                57,
-                38,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 13,
-            "name": "mandrake-run-03",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                57,
-                76,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 14,
-            "name": "mandrake-run-04",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                57,
-                114,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 15,
-            "name": "mandrake-run-05",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                57,
-                152,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 16,
-            "name": "mandrake-show-00",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                57,
-                190,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 17,
-            "name": "mandrake-show-01",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                57,
-                228,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 18,
-            "name": "mandrake-show-02",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                114,
-                38,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 19,
-            "name": "mandrake-show-03",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                171,
-                38,
-                57,
-                38
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 20,
-            "name": "mandrake-show-04",
-            "origin": [
-                28,
-                19
-            ],
-            "rect": [
-                228,
-                38,
-                57,
-                38
-            ],
-            "rotated": false
-        }
-    ],
-    "regions_count": 41,
-    "rotations": false,
-    "using_grid": false,
-    "width": 342
+  "fill_rate": 0.9116535782814026,
+  "grid_height": 38,
+  "grid_width": 57,
+  "height": 266,
+  "image": "mandrake.png",
+  "name": "mandrake",
+  "padding_x": 0,
+  "padding_y": 0,
+  "pot": false,
+  "regions": [
+    {
+      "idx": 31,
+      "name": "mandrake-attack-00",
+      "origin": [28, 19],
+      "rect": [228, 114, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 22,
+      "name": "mandrake-attack-01",
+      "origin": [28, 19],
+      "rect": [114, 76, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 23,
+      "name": "mandrake-attack-02",
+      "origin": [28, 19],
+      "rect": [171, 76, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 24,
+      "name": "mandrake-attack-03",
+      "origin": [28, 19],
+      "rect": [228, 76, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 25,
+      "name": "mandrake-attack-04",
+      "origin": [28, 19],
+      "rect": [285, 76, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 26,
+      "name": "mandrake-attack-05",
+      "origin": [28, 19],
+      "rect": [114, 114, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 27,
+      "name": "mandrake-attack-06",
+      "origin": [28, 19],
+      "rect": [114, 152, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 28,
+      "name": "mandrake-die-00",
+      "origin": [28, 19],
+      "rect": [114, 190, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 29,
+      "name": "mandrake-die-01",
+      "origin": [28, 19],
+      "rect": [114, 228, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 30,
+      "name": "mandrake-die-02",
+      "origin": [28, 19],
+      "rect": [171, 114, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 21,
+      "name": "mandrake-die-03",
+      "origin": [28, 19],
+      "rect": [285, 38, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 32,
+      "name": "mandrake-die-04",
+      "origin": [28, 19],
+      "rect": [285, 114, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 33,
+      "name": "mandrake-die-05",
+      "origin": [28, 19],
+      "rect": [171, 152, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 34,
+      "name": "mandrake-die-06",
+      "origin": [28, 19],
+      "rect": [171, 190, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 35,
+      "name": "mandrake-die-07",
+      "origin": [28, 19],
+      "rect": [171, 228, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 36,
+      "name": "mandrake-die-08",
+      "origin": [28, 19],
+      "rect": [228, 152, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 37,
+      "name": "mandrake-die-09",
+      "origin": [28, 19],
+      "rect": [285, 152, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 38,
+      "name": "mandrake-fall-00",
+      "origin": [28, 19],
+      "rect": [228, 190, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 39,
+      "name": "mandrake-fall-01",
+      "origin": [28, 19],
+      "rect": [285, 190, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 40,
+      "name": "mandrake-hurt-00",
+      "origin": [28, 19],
+      "rect": [228, 228, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 11,
+      "name": "mandrake-hurt-01",
+      "origin": [28, 19],
+      "rect": [285, 0, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 1,
+      "name": "mandrake-hurt-02",
+      "origin": [28, 19],
+      "rect": [0, 38, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 2,
+      "name": "mandrake-idle-00",
+      "origin": [28, 19],
+      "rect": [0, 76, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 3,
+      "name": "mandrake-idle-01",
+      "origin": [28, 19],
+      "rect": [0, 114, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 4,
+      "name": "mandrake-idle-02",
+      "origin": [28, 19],
+      "rect": [0, 152, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 5,
+      "name": "mandrake-idle-03",
+      "origin": [28, 19],
+      "rect": [0, 190, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 6,
+      "name": "mandrake-jump-loop-00",
+      "origin": [28, 19],
+      "rect": [0, 228, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 7,
+      "name": "mandrake-jump-loop-01",
+      "origin": [28, 19],
+      "rect": [57, 0, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 8,
+      "name": "mandrake-jump-rdy-00",
+      "origin": [28, 19],
+      "rect": [114, 0, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 9,
+      "name": "mandrake-jump-rdy-01",
+      "origin": [28, 19],
+      "rect": [171, 0, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 10,
+      "name": "mandrake-run-00",
+      "origin": [28, 19],
+      "rect": [228, 0, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 0,
+      "name": "mandrake-run-01",
+      "origin": [28, 19],
+      "rect": [0, 0, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 12,
+      "name": "mandrake-run-02",
+      "origin": [28, 19],
+      "rect": [57, 38, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 13,
+      "name": "mandrake-run-03",
+      "origin": [28, 19],
+      "rect": [57, 76, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 14,
+      "name": "mandrake-run-04",
+      "origin": [28, 19],
+      "rect": [57, 114, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 15,
+      "name": "mandrake-run-05",
+      "origin": [28, 19],
+      "rect": [57, 152, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 16,
+      "name": "mandrake-show-00",
+      "origin": [28, 19],
+      "rect": [57, 190, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 17,
+      "name": "mandrake-show-01",
+      "origin": [28, 19],
+      "rect": [57, 228, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 18,
+      "name": "mandrake-show-02",
+      "origin": [28, 19],
+      "rect": [114, 38, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 19,
+      "name": "mandrake-show-03",
+      "origin": [28, 19],
+      "rect": [171, 38, 57, 38],
+      "rotated": false
+    },
+    {
+      "idx": 20,
+      "name": "mandrake-show-04",
+      "origin": [28, 19],
+      "rect": [228, 38, 57, 38],
+      "rotated": false
+    }
+  ],
+  "regions_count": 41,
+  "rotations": false,
+  "using_grid": false,
+  "width": 342
 }

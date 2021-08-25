@@ -1,542 +1,262 @@
 {
-    "fill_rate": 0.9148439168930054,
-    "grid_height": 0,
-    "grid_width": 0,
-    "height": 276,
-    "image": "red_ogre.png",
-    "name": "red_ogre",
-    "padding_x": 0,
-    "padding_y": 0,
-    "pot": false,
-    "regions": [
-        {
-            "idx": 27,
-            "name": "red-ogre-attack-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                219,
-                138,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 19,
-            "name": "red-ogre-attack-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                365,
-                46,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 20,
-            "name": "red-ogre-attack-02",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                146,
-                92,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 21,
-            "name": "red-ogre-attack-03",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                146,
-                138,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 22,
-            "name": "red-ogre-attack-04",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                146,
-                184,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 23,
-            "name": "red-ogre-attack-05",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                146,
-                230,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 24,
-            "name": "red-ogre-attack-06",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                219,
-                92,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 25,
-            "name": "red-ogre-attack-07",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                292,
-                92,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 26,
-            "name": "red-ogre-die-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                365,
-                92,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 18,
-            "name": "red-ogre-die-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                292,
-                46,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 28,
-            "name": "red-ogre-die-02",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                219,
-                184,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 29,
-            "name": "red-ogre-die-03",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                219,
-                230,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 30,
-            "name": "red-ogre-die-04",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                292,
-                138,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 31,
-            "name": "red-ogre-die-05",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                365,
-                138,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 32,
-            "name": "red-ogre-die-06",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                292,
-                184,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 33,
-            "name": "red-ogre-die-07",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                365,
-                184,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 34,
-            "name": "red-ogre-fall-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                292,
-                230,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 9,
-            "name": "red-ogre-fall-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                73,
-                138,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 1,
-            "name": "red-ogre-hurt-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                0,
-                46,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 2,
-            "name": "red-ogre-hurt-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                0,
-                92,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 3,
-            "name": "red-ogre-hurt-02",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                0,
-                138,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 4,
-            "name": "red-ogre-idle-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                0,
-                184,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 5,
-            "name": "red-ogre-idle-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                0,
-                230,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 6,
-            "name": "red-ogre-idle-02",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                73,
-                0,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 7,
-            "name": "red-ogre-idle-03",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                73,
-                46,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 8,
-            "name": "red-ogre-jump-loop-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                73,
-                92,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 0,
-            "name": "red-ogre-jump-loop-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                0,
-                0,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 10,
-            "name": "red-ogre-jump-rdy-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                73,
-                184,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 11,
-            "name": "red-ogre-jump-rdy-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                73,
-                230,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 12,
-            "name": "red-ogre-run-00",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                146,
-                0,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 13,
-            "name": "red-ogre-run-01",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                219,
-                0,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 14,
-            "name": "red-ogre-run-02",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                292,
-                0,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 15,
-            "name": "red-ogre-run-03",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                365,
-                0,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 16,
-            "name": "red-ogre-run-04",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                146,
-                46,
-                73,
-                46
-            ],
-            "rotated": false
-        },
-        {
-            "idx": 17,
-            "name": "red-ogre-run-05",
-            "origin": [
-                36,
-                23
-            ],
-            "rect": [
-                219,
-                46,
-                73,
-                46
-            ],
-            "rotated": false
-        }
-    ],
-    "regions_count": 35,
-    "rotations": false,
-    "using_grid": false,
-    "width": 438
+  "fill_rate": 0.9148439168930054,
+  "grid_height": 46,
+  "grid_width": 73,
+  "height": 276,
+  "image": "red_ogre.png",
+  "name": "red_ogre",
+  "padding_x": 0,
+  "padding_y": 0,
+  "pot": false,
+  "regions": [
+    {
+      "idx": 27,
+      "name": "red-ogre-attack-00",
+      "origin": [36, 23],
+      "rect": [219, 138, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 19,
+      "name": "red-ogre-attack-01",
+      "origin": [36, 23],
+      "rect": [365, 46, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 20,
+      "name": "red-ogre-attack-02",
+      "origin": [36, 23],
+      "rect": [146, 92, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 21,
+      "name": "red-ogre-attack-03",
+      "origin": [36, 23],
+      "rect": [146, 138, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 22,
+      "name": "red-ogre-attack-04",
+      "origin": [36, 23],
+      "rect": [146, 184, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 23,
+      "name": "red-ogre-attack-05",
+      "origin": [36, 23],
+      "rect": [146, 230, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 24,
+      "name": "red-ogre-attack-06",
+      "origin": [36, 23],
+      "rect": [219, 92, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 25,
+      "name": "red-ogre-attack-07",
+      "origin": [36, 23],
+      "rect": [292, 92, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 26,
+      "name": "red-ogre-die-00",
+      "origin": [36, 23],
+      "rect": [365, 92, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 18,
+      "name": "red-ogre-die-01",
+      "origin": [36, 23],
+      "rect": [292, 46, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 28,
+      "name": "red-ogre-die-02",
+      "origin": [36, 23],
+      "rect": [219, 184, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 29,
+      "name": "red-ogre-die-03",
+      "origin": [36, 23],
+      "rect": [219, 230, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 30,
+      "name": "red-ogre-die-04",
+      "origin": [36, 23],
+      "rect": [292, 138, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 31,
+      "name": "red-ogre-die-05",
+      "origin": [36, 23],
+      "rect": [365, 138, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 32,
+      "name": "red-ogre-die-06",
+      "origin": [36, 23],
+      "rect": [292, 184, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 33,
+      "name": "red-ogre-die-07",
+      "origin": [36, 23],
+      "rect": [365, 184, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 34,
+      "name": "red-ogre-fall-00",
+      "origin": [36, 23],
+      "rect": [292, 230, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 9,
+      "name": "red-ogre-fall-01",
+      "origin": [36, 23],
+      "rect": [73, 138, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 1,
+      "name": "red-ogre-hurt-00",
+      "origin": [36, 23],
+      "rect": [0, 46, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 2,
+      "name": "red-ogre-hurt-01",
+      "origin": [36, 23],
+      "rect": [0, 92, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 3,
+      "name": "red-ogre-hurt-02",
+      "origin": [36, 23],
+      "rect": [0, 138, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 4,
+      "name": "red-ogre-idle-00",
+      "origin": [36, 23],
+      "rect": [0, 184, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 5,
+      "name": "red-ogre-idle-01",
+      "origin": [36, 23],
+      "rect": [0, 230, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 6,
+      "name": "red-ogre-idle-02",
+      "origin": [36, 23],
+      "rect": [73, 0, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 7,
+      "name": "red-ogre-idle-03",
+      "origin": [36, 23],
+      "rect": [73, 46, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 8,
+      "name": "red-ogre-jump-loop-00",
+      "origin": [36, 23],
+      "rect": [73, 92, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 0,
+      "name": "red-ogre-jump-loop-01",
+      "origin": [36, 23],
+      "rect": [0, 0, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 10,
+      "name": "red-ogre-jump-rdy-00",
+      "origin": [36, 23],
+      "rect": [73, 184, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 11,
+      "name": "red-ogre-jump-rdy-01",
+      "origin": [36, 23],
+      "rect": [73, 230, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 12,
+      "name": "red-ogre-run-00",
+      "origin": [36, 23],
+      "rect": [146, 0, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 13,
+      "name": "red-ogre-run-01",
+      "origin": [36, 23],
+      "rect": [219, 0, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 14,
+      "name": "red-ogre-run-02",
+      "origin": [36, 23],
+      "rect": [292, 0, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 15,
+      "name": "red-ogre-run-03",
+      "origin": [36, 23],
+      "rect": [365, 0, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 16,
+      "name": "red-ogre-run-04",
+      "origin": [36, 23],
+      "rect": [146, 46, 73, 46],
+      "rotated": false
+    },
+    {
+      "idx": 17,
+      "name": "red-ogre-run-05",
+      "origin": [36, 23],
+      "rect": [219, 46, 73, 46],
+      "rotated": false
+    }
+  ],
+  "regions_count": 35,
+  "rotations": false,
+  "using_grid": false,
+  "width": 438
 }

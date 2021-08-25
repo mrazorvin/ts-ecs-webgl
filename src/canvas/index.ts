@@ -10,9 +10,6 @@ import { Transform } from "./Transform/Transform";
 import { Context, ContextID } from "./Render/Context";
 import { Screen } from "./Screen";
 
-// @ts-ignore
-import * as ogre_sprite from "url:./Assets/Monsters/Ogre/Ogre.png";
-import * as atlas from "./Assets/Monsters/Ogre/Atlas.json";
 import { PostPassShader, POST_PASS_SHADER } from "./Assets/View/PostPass/PostPass.shader";
 import { PostPass, POST_PASS_CONTEXT } from "./Assets/View/PostPass/PostPass";
 import { Input } from "./Input";
@@ -28,8 +25,11 @@ import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
 import { attack, joystick, joystick_handle } from "./Assets/UI";
 import { DesktopUI, desktop_ui, MobileUI, mobile_ui, UI, UILayout, UIManager } from "./UI";
+import { red_ogre } from "./Assets/Monsters/Red Ogre";
 
 glMatrix.setMatrixArrayType(Array);
+
+const hero = red_ogre;
 
 // this value must somehow refer to 32x32 grid size, for simplification reason
 const ROWS = navigator.maxTouchPoints > 1 ? 80 : 160;
@@ -185,26 +185,22 @@ main_world.system_once(
 
     input.set_layout(navigator.maxTouchPoints > 1 ? mobile_layout : desktop_layout);
 
-    const ogre_image = await Texture.load_image(ogre_sprite);
-
-    // entities initialization should be some how implemented from the JSON in separate system
-    const ogre_texture = ctx.create_texture(ogre_image, Texture.create);
-
-    console.warn(ogre_image.width);
+    const hero_image = await Texture.load_image(hero.texture_src);
+    const hero_texture = ctx.create_texture(hero_image, Texture.create);
 
     // TODO: inject entities in SubWorld instead of World
     main_world.entity([
-      Sprite.create(world, SPRITE_SHADER, ogre_texture.id, {
-        uv_width: atlas.grid_width / ogre_image.width,
-        uv_height: atlas.grid_height / ogre_image.height,
+      Sprite.create(world, SPRITE_SHADER, hero_texture.id, {
+        uv_width: hero.atlas.grid_width / hero_image.width,
+        uv_height: hero.atlas.grid_height / hero_image.height,
         x: 0,
         y: 0,
       }),
       Transform.create(world, {
         parent: camera_entity.ref,
         position: new Float32Array([0, 0]),
-        height: atlas.grid_height,
-        width: atlas.grid_width,
+        height: hero.atlas.grid_height,
+        width: hero.atlas.grid_width,
       }),
       creature,
       Movement.create(world, 0, 0),
@@ -215,10 +211,11 @@ main_world.system_once(
 );
 
 const animation = {
-  run: atlas.regions.filter((region) => region.name.includes("run")),
-  idle: atlas.regions.filter((region) => region.name.includes("idle")),
-  attack: atlas.regions.filter((region) => region.name.includes("attack")),
+  run: hero.atlas.regions.filter((region) => region.name.includes("run")),
+  idle: hero.atlas.regions.filter((region) => region.name.includes("idle")),
+  attack: hero.atlas.regions.filter((region) => region.name.includes("attack")),
 };
+
 let selected_animation = "run";
 
 // TODO: implement animation automat, move animation to ... ? Sprite or Animation component
@@ -376,8 +373,8 @@ main_world.system(
       frame_buffer[1] = transform.height;
       frame_buffer[2] = sprite.frame.uv_width;
       frame_buffer[3] = sprite.frame.uv_height;
-      frame_buffer[4] = frame!.rect[0]! / atlas.grid_width;
-      frame_buffer[5] = frame!.rect[1]! / atlas.grid_height;
+      frame_buffer[4] = frame!.rect[0]! / hero.atlas.grid_width;
+      frame_buffer[5] = frame!.rect[1]! / hero.atlas.grid_height;
       Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
     });
   })
