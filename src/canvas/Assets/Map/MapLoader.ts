@@ -4,7 +4,6 @@ import * as tiled_map from "./tiled_map.json";
 import * as tiles_properties from "./ground_atlased.json";
 import { Texture } from "../../Render/Texture";
 import { Transform } from "../../Transform/Transform";
-import { Static } from "../../Static";
 import { Sprite } from "../../Sprite";
 import { SPRITE_SHADER } from "../View/Sprite/Sprite.shader";
 
@@ -13,6 +12,7 @@ import * as ground_sprite from "url:./ground_tiled.png";
 import { camera_entity } from "../../Camera";
 import { CollisionShape, CollisionWorld } from "../../CollisionWorld";
 import { SSCDRectangle, SSCDVector } from "@mr/sscd";
+import { static_comp } from "../../Static";
 
 const query = <T extends any[]>(args: [...T]) => args;
 const Query = query([WebGL, CollisionWorld]);
@@ -49,7 +49,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
           y: meta.rect[1]! / tiles_properties.grid_height,
         }),
         transform,
-        Static.create(world, meta.rect[0]! / tiles_properties.grid_width, meta.rect[1]! / tiles_properties.grid_height),
+        static_comp,
       ]);
 
       const shape = sscd.attach(

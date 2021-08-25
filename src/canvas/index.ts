@@ -13,23 +13,25 @@ import { Screen } from "./Screen";
 import { PostPassShader, POST_PASS_SHADER } from "./Assets/View/PostPass/PostPass.shader";
 import { PostPass, POST_PASS_CONTEXT } from "./Assets/View/PostPass/PostPass";
 import { Input } from "./Input";
-import { creature, Creature } from "./Creature";
-import { Static } from "./Static";
+import { hero, Hero } from "./Hero";
 import { camera, Camera, camera_entity } from "./Camera";
 import { Movement } from "./Modification";
 import { MapLoader } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
 import { world_transform, world_transform_component } from "./WorldView";
-import { CollisionWorld, LocalCollisionWorld } from "./CollisionWorld";
+import { CollisionShape, CollisionWorld, LocalCollisionWorld } from "./CollisionWorld";
 import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
 import { attack, joystick, joystick_handle } from "./Assets/UI";
 import { DesktopUI, desktop_ui, MobileUI, mobile_ui, UI, UILayout, UIManager } from "./UI";
 import { red_ogre } from "./Assets/Monsters/Red Ogre";
+import { monsters } from "./Assets/Monsters";
+import { Creature, creature } from "./Creature";
+import { Static } from "./Static";
 
 glMatrix.setMatrixArrayType(Array);
 
-const hero = red_ogre;
+const hero_assets = red_ogre;
 
 // this value must somehow refer to 32x32 grid size, for simplification reason
 const ROWS = navigator.maxTouchPoints > 1 ? 80 : 160;
@@ -89,7 +91,7 @@ window.onresize = () => main_world.system_once(resize_system);
 main_world.system_once(resize_system);
 
 main_world.system_once(
-  sys([WebGL, Screen, Input], async (world, ctx, screen, input) => {
+  sys([WebGL, Screen, Input, CollisionWorld], async (world, ctx, screen, input, sscd) => {
     t.clear(ctx.gl, [0, 0, 0, 0]);
     t.blend(ctx.gl);
 
@@ -114,7 +116,7 @@ main_world.system_once(
 
     const desktop_position = new SSCDVector(screen.width / 2 - 16, screen.height - 32);
     const desktop_attack = main_world.entity([
-      Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame),
+      Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame, 4),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([desktop_position.x, desktop_position.y]),
@@ -185,35 +187,82 @@ main_world.system_once(
 
     input.set_layout(navigator.maxTouchPoints > 1 ? mobile_layout : desktop_layout);
 
-    const hero_image = await Texture.load_image(hero.texture_src);
+    const hero_image = await Texture.load_image(hero_assets.texture_src);
     const hero_texture = ctx.create_texture(hero_image, Texture.create);
 
     // TODO: inject entities in SubWorld instead of World
-    main_world.entity([
+    const transform = Transform.create(world, {
+      parent: camera_entity.ref,
+      position: new Float32Array([0, 0]),
+      height: hero_assets.atlas.grid_height,
+      width: hero_assets.atlas.grid_width,
+    });
+    const hero_entity = main_world.entity([
       Sprite.create(world, SPRITE_SHADER, hero_texture.id, {
-        uv_width: hero.atlas.grid_width / hero_image.width,
-        uv_height: hero.atlas.grid_height / hero_image.height,
+        uv_width: hero_assets.atlas.grid_width / hero_image.width,
+        uv_height: hero_assets.atlas.grid_height / hero_image.height,
         x: 0,
         y: 0,
       }),
-      Transform.create(world, {
-        parent: camera_entity.ref,
-        position: new Float32Array([0, 0]),
-        height: hero.atlas.grid_height,
-        width: hero.atlas.grid_width,
-      }),
-      creature,
+      transform,
+      hero,
       Movement.create(world, 0, 0),
     ]);
+
+    const shape_manager = CollisionShape.manager(world);
+
+    const shape = sscd.attach(
+      world,
+      hero_entity.ref,
+      new SSCDRectangle(
+        new SSCDVector(transform.position![0]! + transform.width / 2, transform.position![1]! + transform.width / 2),
+        new SSCDVector(transform.width, transform.width)
+      )
+    );
+
+    shape_manager.attach(hero_entity, shape);
+
+    let x = 16;
+    let y = 16;
+    for (const monster of monsters) {
+      const monster_image = await Texture.load_image(monster.texture_src);
+      const monster_texture = ctx.create_texture(monster_image, Texture.create);
+      const transform = Transform.create(world, {
+        parent: camera_entity.ref,
+        position: new Float32Array([(x += 16), (y += 16)]),
+        height: monster.atlas.grid_height,
+        width: monster.atlas.grid_width,
+      });
+      const monster_entity = main_world.entity([
+        Sprite.create(world, SPRITE_SHADER, monster_texture.id, {
+          uv_width: monster.atlas.grid_width / monster_image.width,
+          uv_height: monster.atlas.grid_height / monster_image.height,
+          x: 0,
+          y: 0,
+        }),
+        transform,
+        creature,
+      ]);
+
+      const shape = sscd.attach(
+        world,
+        monster_entity.ref,
+        new SSCDRectangle(
+          new SSCDVector(transform.position![0]! + transform.width / 2, transform.position![1]! + transform.width / 2),
+          new SSCDVector(transform.width, transform.width)
+        )
+      );
+      shape_manager.attach(monster_entity, shape);
+    }
 
     main_world.system_once(MapLoader);
   })
 );
 
 const animation = {
-  run: hero.atlas.regions.filter((region) => region.name.includes("run")),
-  idle: hero.atlas.regions.filter((region) => region.name.includes("idle")),
-  attack: hero.atlas.regions.filter((region) => region.name.includes("attack")),
+  run: hero_assets.atlas.regions.filter((region) => region.name.includes("run")),
+  idle: hero_assets.atlas.regions.filter((region) => region.name.includes("idle")),
+  attack: hero_assets.atlas.regions.filter((region) => region.name.includes("attack")),
 };
 
 let selected_animation = "run";
@@ -243,7 +292,7 @@ main_world.system(
 
 main_world.system(
   sys([Input, LocalCollisionWorld], (world, input, lcw) => {
-    q.run(world, q.id("move") ?? q([Transform, Movement, Creature]), (_, transform, modification) => {
+    q.run(world, q.id("move") ?? q([Transform, Movement, Hero]), (_, transform, modification) => {
       // make a static method from Modification class
       const movement = input.movement();
       if (movement !== undefined) {
@@ -254,53 +303,9 @@ main_world.system(
   })
 );
 
-const instanced_data = new Float32Array(9 * 1000);
-const sprite_data = new Float32Array(6 * 1000);
-
-main_world.system(
-  sys([WebGL], (world, ctx) => {
-    const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
-    if (bg_ctx === undefined) return;
-    else t.buffer(ctx.gl, bg_ctx);
-
-    let idx = 0;
-    const data = instanced_data;
-    let sprite: Sprite | undefined = undefined;
-
-    q.run(world, q.id("render") ?? q([Transform, Sprite, Static, Visible]), (_, transform, _sprite) => {
-      const view = Transform.view(main_world, transform);
-      const frame = _sprite.frame;
-
-      data[idx * 9 + 0] = view[0]!;
-      data[idx * 9 + 1] = view[1]!;
-      data[idx * 9 + 2] = view[2]!;
-      data[idx * 9 + 3] = view[3]!;
-      data[idx * 9 + 4] = view[4]!;
-      data[idx * 9 + 5] = view[5]!;
-      data[idx * 9 + 6] = view[6]!;
-      data[idx * 9 + 7] = view[7]!;
-      data[idx * 9 + 8] = view[8]!;
-      sprite_data[idx * 6 + 0] = transform.width;
-      sprite_data[idx * 6 + 1] = transform.height;
-      sprite_data[idx * 6 + 2] = frame.uv_width;
-      sprite_data[idx * 6 + 3] = frame.uv_height;
-      sprite_data[idx * 6 + 4] = frame.x;
-      sprite_data[idx * 6 + 5] = frame.y;
-
-      idx++;
-
-      sprite = _sprite;
-    });
-
-    if (sprite === undefined) return;
-
-    Sprite.render(ctx, sprite, data.subarray(0, idx * 9), sprite_data.subarray(0, idx * 9), idx - 1);
-  })
-);
-
 main_world.system(
   sys([Input, Camera], (world, input, camera) => {
-    q.run(world, q.id("animation") ?? q([Transform, Movement, Creature]), (_, transform, modification) => {
+    q.run(world, q.id("animation") ?? q([Transform, Movement, Hero]), (_, transform, modification) => {
       const movement = input.movement();
 
       // part of contract even if we don't move camera, we still need to call function at least once
@@ -352,8 +357,6 @@ main_world.system(
   })
 );
 
-let frame_buffer = new Float32Array(6);
-
 main_world.system(
   sys([WebGL, LoopInfo, Input], (world, ctx, loop, input) => {
     const run_frames = animation[selected_animation as "run"];
@@ -364,21 +367,66 @@ main_world.system(
     current_frame = Math.round(sec / time_per_frame) % run_frames.length;
     const frame = run_frames[current_frame];
 
-    const m_ctx = ctx.context.get(MONSTER_CONTEXT);
-    if (m_ctx === undefined) return;
-    else t.buffer(ctx.gl, m_ctx);
-
-    q.run(world, q.id("render") ?? q([Sprite, Transform, Creature]), (_, sprite, transform) => {
-      frame_buffer[0] = transform.width;
-      frame_buffer[1] = transform.height;
-      frame_buffer[2] = sprite.frame.uv_width;
-      frame_buffer[3] = sprite.frame.uv_height;
-      frame_buffer[4] = frame!.rect[0]! / hero.atlas.grid_width;
-      frame_buffer[5] = frame!.rect[1]! / hero.atlas.grid_height;
-      Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
+    q.run(world, q.id("animation") ?? q([Sprite, Hero]), (_, sprite) => {
+      sprite.frame.x = frame?.rect[0] / hero_assets.atlas.grid_width;
+      sprite.frame.y = frame?.rect[1] / hero_assets.atlas.grid_height;
     });
   })
 );
+
+const instanced_data = new Float32Array(9 * 1000);
+const sprite_data = new Float32Array(6 * 1000);
+
+main_world.system(
+  sys([WebGL], (world, ctx) => {
+    const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
+    if (bg_ctx === undefined) return;
+    else t.buffer(ctx.gl, bg_ctx);
+
+    let idx = 0;
+    const data = instanced_data;
+    let sprite: Sprite | undefined = undefined;
+
+    const render = (_: unknown, transform: Transform, _sprite: Sprite) => {
+      const view = Transform.view(main_world, transform);
+      const frame = _sprite.frame;
+
+      if (sprite !== undefined && sprite.texture !== _sprite.texture) {
+        Sprite.render(ctx, sprite, data.subarray(0, idx * 9), sprite_data.subarray(0, idx * 9), idx);
+        idx = 0;
+      }
+
+      data[idx * 9 + 0] = view[0]!;
+      data[idx * 9 + 1] = view[1]!;
+      data[idx * 9 + 2] = view[2]!;
+      data[idx * 9 + 3] = view[3]!;
+      data[idx * 9 + 4] = view[4]!;
+      data[idx * 9 + 5] = view[5]!;
+      data[idx * 9 + 6] = view[6]!;
+      data[idx * 9 + 7] = view[7]!;
+      data[idx * 9 + 8] = view[8]!;
+      sprite_data[idx * 6 + 0] = transform.width;
+      sprite_data[idx * 6 + 1] = transform.height;
+      sprite_data[idx * 6 + 2] = frame.uv_width;
+      sprite_data[idx * 6 + 3] = frame.uv_height;
+      sprite_data[idx * 6 + 4] = frame.x;
+      sprite_data[idx * 6 + 5] = frame.y;
+
+      idx++;
+
+      sprite = _sprite;
+    };
+
+    q.run(world, q.id("render_static") ?? q([Transform, Sprite, Static, Visible]), render);
+    q.run(world, q.id("render_creature") ?? q([Transform, Sprite, Creature, Visible]), render);
+    q.run(world, q.id("render_hero") ?? q([Transform, Sprite, Hero]), render);
+
+    if (sprite === undefined) return;
+    Sprite.render(ctx, sprite, data.subarray(0, idx * 9), sprite_data.subarray(0, idx * 9), idx);
+  })
+);
+
+let frame_buffer = new Float32Array(6);
 
 main_world.system(
   sys([Input, WebGL], (world, input, ctx) => {
