@@ -1,0 +1,527 @@
+{
+    "fill_rate": 0.8922896385192871,
+    "grid_height": 0,
+    "grid_width": 0,
+    "height": 276,
+    "image": "satyr.png",
+    "name": "satyr",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 26,
+            "name": "satyr-attack-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                340,
+                92,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "satyr-attack-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                272,
+                46,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "satyr-attack-02",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                340,
+                46,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "satyr-attack-03",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                136,
+                92,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "satyr-attack-04",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                136,
+                138,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "satyr-attack-05",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                136,
+                184,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "satyr-attack-06",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                136,
+                230,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "satyr-die-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                204,
+                92,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "satyr-die-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                272,
+                92,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "satyr-die-02",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                204,
+                46,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 27,
+            "name": "satyr-die-03",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                204,
+                138,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 28,
+            "name": "satyr-die-04",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                204,
+                184,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 29,
+            "name": "satyr-die-05",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                204,
+                230,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 30,
+            "name": "satyr-die-06",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                272,
+                138,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 31,
+            "name": "satyr-die-07",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                340,
+                138,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 32,
+            "name": "satyr-fall-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                272,
+                184,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 33,
+            "name": "satyr-fall-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                340,
+                184,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "satyr-hurt-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                68,
+                138,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "satyr-hurt-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                0,
+                46,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "satyr-hurt-02",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                0,
+                92,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "satyr-idle-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                0,
+                138,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "satyr-idle-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                0,
+                184,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "satyr-idle-02",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                0,
+                230,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "satyr-idle-03",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                68,
+                0,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "satyr-jump-loop-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                68,
+                46,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "satyr-jump-loop-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                68,
+                92,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "satyr-jump-rdy-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                0,
+                0,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "satyr-jump-rdy-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                68,
+                184,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "satyr-run-00",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                68,
+                230,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "satyr-run-01",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                136,
+                0,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "satyr-run-02",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                204,
+                0,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 14,
+            "name": "satyr-run-03",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                272,
+                0,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "satyr-run-04",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                340,
+                0,
+                68,
+                46
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "satyr-run-05",
+            "origin": [
+                34,
+                23
+            ],
+            "rect": [
+                136,
+                46,
+                68,
+                46
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 34,
+    "rotations": false,
+    "using_grid": false,
+    "width": 408
+}

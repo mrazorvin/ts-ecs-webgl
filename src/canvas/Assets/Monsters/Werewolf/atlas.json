@@ -1,0 +1,542 @@
+{
+    "fill_rate": 0.9369350075721741,
+    "grid_height": 0,
+    "grid_width": 0,
+    "height": 516,
+    "image": "werewolf.png",
+    "name": "werewolf",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 27,
+            "name": "werewolf-attack-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                387,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "werewolf-attack-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                258,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "werewolf-attack-02",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                258,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "werewolf-attack-03",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                301,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "werewolf-attack-04",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                301,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "werewolf-attack-05",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                301,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "werewolf-attack-06",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                344,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "werewolf-die-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                344,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "werewolf-die-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                344,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "werewolf-die-02",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                258,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 28,
+            "name": "werewolf-die-03",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                430,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 29,
+            "name": "werewolf-die-04",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                473,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 30,
+            "name": "werewolf-die-05",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                387,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 31,
+            "name": "werewolf-die-06",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                387,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 32,
+            "name": "werewolf-die-07",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                430,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 33,
+            "name": "werewolf-die-08",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                430,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 34,
+            "name": "werewolf-fall-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                473,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "werewolf-fall-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                129,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "werewolf-hurt-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                0,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "werewolf-hurt-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                0,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "werewolf-hurt-02",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                43,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "werewolf-idle-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                43,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "werewolf-idle-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                43,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "werewolf-idle-02",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                86,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "werewolf-idle-03",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                86,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "werewolf-jump-loop-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                86,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "werewolf-jump-loop-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                0,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "werewolf-jump-rdy-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                129,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "werewolf-jump-rdy-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                129,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "werewolf-run-00",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                172,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "werewolf-run-01",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                172,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 14,
+            "name": "werewolf-run-02",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                172,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "werewolf-run-03",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                0,
+                215,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "werewolf-run-04",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                73,
+                215,
+                73,
+                43
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "werewolf-run-05",
+            "origin": [
+                36,
+                21
+            ],
+            "rect": [
+                146,
+                215,
+                73,
+                43
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 35,
+    "rotations": false,
+    "using_grid": false,
+    "width": 219
+}

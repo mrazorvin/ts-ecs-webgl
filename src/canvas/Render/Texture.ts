@@ -1,12 +1,16 @@
-import { pixi_compressed_textures } from "./Parser";
-// @ts-expect-error
-import * as url from "url:./Ogre.astc";
-
-let result: any;
-async function init() {
-  result = pixi_compressed_textures.ASTCLoader.load(await (await (await fetch(url)).blob()).arrayBuffer());
-}
-init();
+// import * as url from "url:./Ogre.astc";
+// import { pixi_compressed_textures } from "./Parser";
+// let result: any;
+// async function init() {
+//   result = pixi_compressed_textures.ASTCLoader.load(await (await (await fetch(url)).blob()).arrayBuffer());
+// }
+// init();
+// if (!image.src.includes("Ogre")) {
+//   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+// } else {
+//   var ext = gl.getExtension("WEBGL_compressed_texture_astc");
+//   gl.compressedTexImage2D(gl.TEXTURE_2D, 0, result.internalFormat, result.width, result.height, 0, result.astcData);
+// }
 
 export class Texture {
   id = new TextureID();
@@ -34,9 +38,9 @@ export namespace Texture {
       const img = new Image();
       img.src = path;
 
-      if (img.complete) return setTimeout(() => resolve(img), 2000);
+      if (img.complete) return resolve(img);
       else {
-        img.onload = () => setTimeout(() => resolve(img), 2000);
+        img.onload = () => resolve(img);
         img.onerror = () => reject(img);
       }
     });
@@ -53,12 +57,7 @@ export namespace Texture {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    if (!image.src.includes("Ogre")) {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    } else {
-      var ext = gl.getExtension("WEBGL_compressed_texture_astc");
-      gl.compressedTexImage2D(gl.TEXTURE_2D, 0, result.internalFormat, result.width, result.height, 0, result.astcData);
-    }
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
     gl.bindTexture(gl.TEXTURE_2D, null);
 
     return new Texture(image, texture);

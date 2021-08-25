@@ -1,0 +1,422 @@
+{
+    "fill_rate": 0.916650116443634,
+    "grid_height": 0,
+    "grid_width": 0,
+    "height": 159,
+    "image": "wasp.png",
+    "name": "wasp",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 14,
+            "name": "wasp-attack-00",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                168,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "wasp-attack-01",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                336,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "wasp-die-00",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                294,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "wasp-die-01",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                336,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "wasp-die-02",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                294,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "wasp-die-03",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                252,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "wasp-die-04",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                252,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "wasp-die-05",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                336,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "wasp-die-06",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                294,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "wasp-die-07",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                252,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "wasp-die-08",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                210,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "wasp-die-09",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                210,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "wasp-die-10",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                210,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "wasp-die-11",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                0,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "wasp-die-12",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                168,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "wasp-hurt-00",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                168,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "wasp-hurt-01",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                126,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "wasp-hurt-02",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                126,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "wasp-idle-00",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                126,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "wasp-idle-01",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                84,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "wasp-idle-02",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                84,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "wasp-idle-03",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                84,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "wasp-idle-04",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                42,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "wasp-idle-05",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                42,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "wasp-move-00",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                42,
+                0,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "wasp-move-01",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                0,
+                106,
+                42,
+                53
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "wasp-move-02",
+            "origin": [
+                21,
+                26
+            ],
+            "rect": [
+                0,
+                53,
+                42,
+                53
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 27,
+    "rotations": false,
+    "using_grid": false,
+    "width": 378
+}

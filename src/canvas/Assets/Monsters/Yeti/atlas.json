@@ -1,0 +1,632 @@
+{
+    "fill_rate": 0.8832336664199829,
+    "grid_height": 0,
+    "grid_width": 0,
+    "height": 228,
+    "image": "yeti.png",
+    "name": "yeti",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 28,
+            "name": "yeti-attack-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                511,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 29,
+            "name": "yeti-attack-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                511,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 30,
+            "name": "yeti-attack-02",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                511,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "yeti-attack-03",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                365,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 32,
+            "name": "yeti-attack-04",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                584,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 33,
+            "name": "yeti-attack-05",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                657,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 31,
+            "name": "yeti-attack2-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                511,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "yeti-attack2-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                365,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "yeti-attack2-02",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                365,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "yeti-attack2-03",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                438,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "yeti-attack2-04",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                438,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "yeti-attack2-05",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                438,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 27,
+            "name": "yeti-attack2-06",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                438,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 34,
+            "name": "yeti-die-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                730,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 35,
+            "name": "yeti-die-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                584,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 36,
+            "name": "yeti-die-02",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                584,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 37,
+            "name": "yeti-die-03",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                584,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 38,
+            "name": "yeti-die-04",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                657,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 39,
+            "name": "yeti-die-05",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                730,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 40,
+            "name": "yeti-die-06",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                657,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "yeti-die-07",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                146,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "yeti-die-08",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                0,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "yeti-fall-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                0,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "yeti-fall-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                0,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "yeti-hurt-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                73,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "yeti-hurt-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                73,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "yeti-hurt-02",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                73,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "yeti-idle-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                73,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "yeti-idle-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                146,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "yeti-idle-02",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                146,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "yeti-idle-03",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                146,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "yeti-jump-loop-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                0,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "yeti-jump-loop-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                219,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "yeti-jump-rdy-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                219,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 14,
+            "name": "yeti-jump-rdy-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                219,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "yeti-run-00",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                219,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "yeti-run-01",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                292,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "yeti-run-02",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                292,
+                57,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "yeti-run-03",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                292,
+                114,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "yeti-run-04",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                292,
+                171,
+                73,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "yeti-run-05",
+            "origin": [
+                36,
+                28
+            ],
+            "rect": [
+                365,
+                0,
+                73,
+                57
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 41,
+    "rotations": false,
+    "using_grid": false,
+    "width": 803
+}

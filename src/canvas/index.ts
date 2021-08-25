@@ -55,7 +55,7 @@ if (navigator.maxTouchPoints > 1) {
 }
 
 const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
-  const { width, height } = t.size(ctx.gl, "100%", "100%");
+  const { width, height, canvas_w, canvas_h } = t.size(ctx.gl, "100%", "100%");
   const width_ratio = width / (height / ROWS);
 
   // all following code must be part of different contracts
@@ -74,8 +74,8 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
 
   input_ctx.container_offset_x = gl.canvas.offsetLeft;
   input_ctx.container_offset_y = gl.canvas.offsetTop;
-  input_ctx.container_width = width;
-  input_ctx.container_height = height;
+  input_ctx.container_width = canvas_w;
+  input_ctx.container_height = canvas_h;
   input_ctx.world_height = ROWS * 2;
   input_ctx.world_width = width_ratio * 2;
   screen.height = ROWS * 2;
@@ -148,8 +148,8 @@ main_world.system_once(
     const joystick_handle_texture = ctx.create_texture(joystick_handler_image, Texture.create);
     main_world.entity([
       Sprite.create(world, SPRITE_SHADER, joystick_handle_texture.id, {
-        uv_width: 1 / 3,
-        uv_height: 1 / 3,
+        uv_width: 1,
+        uv_height: 1,
         x: 0,
         y: 0,
       }),
@@ -168,8 +168,8 @@ main_world.system_once(
 
     main_world.entity([
       Sprite.create(world, SPRITE_SHADER, joystick_texture.id, {
-        uv_height: 1 / 4,
-        uv_width: 1 / 4,
+        uv_height: 1,
+        uv_width: 1,
         x: 0,
         y: 0,
       }),

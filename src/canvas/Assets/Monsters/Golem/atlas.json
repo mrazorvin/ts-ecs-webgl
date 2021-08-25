@@ -1,0 +1,722 @@
+{
+    "fill_rate": 0.9388114809989929,
+    "grid_height": 0,
+    "grid_width": 0,
+    "height": 228,
+    "image": "golem.png",
+    "name": "golem",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 35,
+            "name": "golem-attack-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                592,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "golem-attack-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                444,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 37,
+            "name": "golem-attack-02",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                740,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 38,
+            "name": "golem-attack-03",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                814,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 39,
+            "name": "golem-attack-04",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                666,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 40,
+            "name": "golem-attack-05",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                666,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 41,
+            "name": "golem-attack-06",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                666,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 36,
+            "name": "golem-attack2-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                666,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "golem-attack2-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                444,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "golem-attack2-02",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                444,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 27,
+            "name": "golem-attack2-03",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                444,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 28,
+            "name": "golem-attack2-04",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                518,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 29,
+            "name": "golem-attack2-05",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                518,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 30,
+            "name": "golem-attack2-06",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                518,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 31,
+            "name": "golem-attack2-07",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                518,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 32,
+            "name": "golem-attack2-08",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                592,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 33,
+            "name": "golem-attack2-09",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                592,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 34,
+            "name": "golem-attack2-10",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                592,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 42,
+            "name": "golem-die-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                740,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 43,
+            "name": "golem-die-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                814,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 44,
+            "name": "golem-die-02",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                740,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 45,
+            "name": "golem-die-03",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                814,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 46,
+            "name": "golem-die-04",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                740,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "golem-die-05",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                222,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "golem-die-06",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                0,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "golem-die-07",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                0,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "golem-die-08",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                0,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "golem-fall-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                74,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "golem-fall-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                74,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "golem-hurt-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                74,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "golem-hurt-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                74,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "golem-hurt-02",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                148,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "golem-idle-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                148,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "golem-idle-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                148,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "golem-idle-02",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                148,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "golem-idle-03",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                0,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "golem-idle-04",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                222,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 14,
+            "name": "golem-jump-loop-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                222,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "golem-jump-loop-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                222,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "golem-jump-ready-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                296,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "golem-jump-ready-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                296,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "golem-run-00",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                296,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "golem-run-01",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                296,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "golem-run-02",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                370,
+                0,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "golem-run-03",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                370,
+                57,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "golem-run-04",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                370,
+                114,
+                74,
+                57
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "golem-run-05",
+            "origin": [
+                37,
+                28
+            ],
+            "rect": [
+                370,
+                171,
+                74,
+                57
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 47,
+    "rotations": false,
+    "using_grid": false,
+    "width": 888
+}

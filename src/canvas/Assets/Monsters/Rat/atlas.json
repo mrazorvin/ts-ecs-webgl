@@ -1,0 +1,437 @@
+{
+    "fill_rate": 0.8376068472862244,
+    "grid_height": 0,
+    "grid_width": 0,
+    "height": 44,
+    "image": "rat.png",
+    "name": "rat",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 14,
+            "name": "rat-attack-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                294,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 27,
+            "name": "rat-attack-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                546,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "rat-attack-02",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                504,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "rat-attack-03",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                546,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "rat-attack-04",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                504,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "rat-attack-05",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                462,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "rat-die-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                462,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "rat-die-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                420,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "rat-die-02",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                420,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "rat-die-03",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                378,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "rat-die-04",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                378,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "rat-fall-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                336,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "rat-fall-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                336,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "rat-hurt-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                294,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "rat-hurt-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                0,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "rat-hurt-02",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                252,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "rat-idle-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                252,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "rat-idle-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                210,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "rat-idle-02",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                210,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "rat-idle-03",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                168,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "rat-jump-loop-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                168,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "rat-jump-loop-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                126,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "rat-jump-rdy-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                126,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "rat-jump-rdy-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                84,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "rat-run-00",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                84,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "rat-run-01",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                42,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "rat-run-02",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                42,
+                0,
+                42,
+                22
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "rat-run-03",
+            "origin": [
+                21,
+                11
+            ],
+            "rect": [
+                0,
+                22,
+                42,
+                22
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 28,
+    "rotations": false,
+    "using_grid": false,
+    "width": 588
+}

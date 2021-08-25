@@ -51,7 +51,12 @@ class DefaultContext extends Context {
 }
 
 export namespace Context {
-  export function create(gl: WebGL2RenderingContext, options: Pick<Context, "width" | "height" | "shader" | "mesh">) {
+  export function create(
+    gl: WebGL2RenderingContext,
+    options: Pick<Context, "width" | "height" | "shader" | "mesh"> & {
+      mag_filter?: typeof gl.LINEAR | typeof gl.NEAREST;
+    }
+  ) {
     const render_buffer = gl.createRenderbuffer();
     const frame_buffer = gl.createFramebuffer();
     const texture = gl.createTexture();
@@ -73,8 +78,9 @@ export namespace Context {
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    console.log(options.mag_filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, options.mag_filter ?? gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, options.mag_filter ?? gl.NEAREST);
 
     // TODO: Switch to RGBA_F16 - to support HDR
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, options.width, options.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);

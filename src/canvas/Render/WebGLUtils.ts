@@ -31,6 +31,7 @@ export namespace t {
   export function size(gl: WebGL2RenderingContext, width: number | string, height: number | string) {
     // @ts-ignore
     const canvas = gl.canvas as HTMLCanvasElement;
+    const dpr = window.devicePixelRatio;
 
     if (typeof width === "number" && typeof height === "number") {
       canvas.style.width = `${width}px`;
@@ -41,18 +42,18 @@ export namespace t {
 
       gl.viewport(0, 0, width, height);
 
-      return { width, height };
+      return { width, height, canvas_w: width, canvas_h: height };
     } else if (typeof width === "string" && typeof height === "string") {
       canvas.style.width = width;
       canvas.style.height = height;
 
       const rect = canvas.getBoundingClientRect();
 
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      gl.viewport(0, 0, rect.width, rect.height);
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      gl.viewport(0, 0, rect.width * dpr, rect.height * dpr);
 
-      return { width: canvas.width, height: canvas.height };
+      return { width: canvas.width, height: canvas.height, canvas_w: rect.width, canvas_h: rect.height };
     } else {
       throw new Error(`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`);
     }

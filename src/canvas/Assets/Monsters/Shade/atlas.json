@@ -1,0 +1,437 @@
+{
+    "fill_rate": 0.9068950414657593,
+    "grid_height": 0,
+    "grid_width": 0,
+    "height": 100,
+    "image": "Shade.png",
+    "name": "Shade",
+    "padding_x": 0,
+    "padding_y": 0,
+    "pot": false,
+    "regions": [
+        {
+            "idx": 14,
+            "name": "shade-attack-00",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                413,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 27,
+            "name": "shade-attack-01",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                767,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 26,
+            "name": "shade-attack-02",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                708,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 25,
+            "name": "shade-attack-03",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                767,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 24,
+            "name": "shade-attack-04",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                708,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 23,
+            "name": "shade-attack-05",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                649,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 22,
+            "name": "shade-attack-06",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                649,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 21,
+            "name": "shade-die-00",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                590,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 20,
+            "name": "shade-die-01",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                590,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 19,
+            "name": "shade-die-02",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                531,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 18,
+            "name": "shade-die-03",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                531,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 17,
+            "name": "shade-die-04",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                472,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 16,
+            "name": "shade-die-05",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                472,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 15,
+            "name": "shade-die-06",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                413,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 0,
+            "name": "shade-die-07",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                0,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 13,
+            "name": "shade-die-08",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                354,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 12,
+            "name": "shade-die-09",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                354,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 11,
+            "name": "shade-hurt-00",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                295,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 10,
+            "name": "shade-hurt-01",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                295,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 9,
+            "name": "shade-hurt-02",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                236,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 8,
+            "name": "shade-idle-00",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                236,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 7,
+            "name": "shade-idle-01",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                177,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 6,
+            "name": "shade-idle-02",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                177,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 5,
+            "name": "shade-idle-03",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                118,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 4,
+            "name": "shade-move-00",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                118,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 3,
+            "name": "shade-move-01",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                59,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 2,
+            "name": "shade-move-02",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                59,
+                0,
+                59,
+                50
+            ],
+            "rotated": false
+        },
+        {
+            "idx": 1,
+            "name": "shade-move-03",
+            "origin": [
+                29,
+                25
+            ],
+            "rect": [
+                0,
+                50,
+                59,
+                50
+            ],
+            "rotated": false
+        }
+    ],
+    "regions_count": 28,
+    "rotations": false,
+    "using_grid": false,
+    "width": 826
+}
