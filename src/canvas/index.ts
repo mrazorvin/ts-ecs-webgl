@@ -24,14 +24,15 @@ import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
 import { attack, joystick, joystick_handle } from "./Assets/UI";
 import { DesktopUI, desktop_ui, MobileUI, mobile_ui, UI, UILayout, UIManager } from "./UI";
-import { red_ogre } from "./Assets/Monsters/Red Ogre";
 import { monsters } from "./Assets/Monsters";
 import { Creature, creature } from "./Creature";
 import { Static } from "./Static";
+import { werewolf } from "./Assets/Monsters/Werewolf";
+import { CreatureLayer, UILayer } from "./Layers";
 
 glMatrix.setMatrixArrayType(Array);
 
-const hero_assets = red_ogre;
+const hero_assets = werewolf;
 
 // this value must somehow refer to 32x32 grid size, for simplification reason
 const ROWS = navigator.maxTouchPoints > 1 ? 80 : 160;
@@ -132,7 +133,7 @@ main_world.system_once(
 
     const mobile_position = new SSCDVector(screen.width - 52, screen.height - 52);
     const mobile_attack = main_world.entity([
-      Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame),
+      Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame, UILayer),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([mobile_position.x, mobile_position.y]),
@@ -149,12 +150,18 @@ main_world.system_once(
     const joystick_handler_image = await Texture.load_image(joystick_handle);
     const joystick_handle_texture = ctx.create_texture(joystick_handler_image, Texture.create);
     main_world.entity([
-      Sprite.create(world, SPRITE_SHADER, joystick_handle_texture.id, {
-        uv_width: 1,
-        uv_height: 1,
-        x: 0,
-        y: 0,
-      }),
+      Sprite.create(
+        world,
+        SPRITE_SHADER,
+        joystick_handle_texture.id,
+        {
+          uv_width: 1,
+          uv_height: 1,
+          x: 0,
+          y: 0,
+        },
+        UILayer
+      ),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([0, 0]),
@@ -169,12 +176,18 @@ main_world.system_once(
     const joystick_texture = ctx.create_texture(joystick_image, Texture.create);
 
     main_world.entity([
-      Sprite.create(world, SPRITE_SHADER, joystick_texture.id, {
-        uv_height: 1,
-        uv_width: 1,
-        x: 0,
-        y: 0,
-      }),
+      Sprite.create(
+        world,
+        SPRITE_SHADER,
+        joystick_texture.id,
+        {
+          uv_height: 1,
+          uv_width: 1,
+          x: 0,
+          y: 0,
+        },
+        UILayer
+      ),
       Transform.create(world, {
         parent: world_transform.ref,
         position: new Float32Array([0, 0]),
@@ -198,12 +211,18 @@ main_world.system_once(
       width: hero_assets.atlas.grid_width,
     });
     const hero_entity = main_world.entity([
-      Sprite.create(world, SPRITE_SHADER, hero_texture.id, {
-        uv_width: hero_assets.atlas.grid_width / hero_image.width,
-        uv_height: hero_assets.atlas.grid_height / hero_image.height,
-        x: 0,
-        y: 0,
-      }),
+      Sprite.create(
+        world,
+        SPRITE_SHADER,
+        hero_texture.id,
+        {
+          uv_width: hero_assets.atlas.grid_width / hero_image.width,
+          uv_height: hero_assets.atlas.grid_height / hero_image.height,
+          x: 0,
+          y: 0,
+        },
+        CreatureLayer
+      ),
       transform,
       hero,
       Movement.create(world, 0, 0),
@@ -234,12 +253,18 @@ main_world.system_once(
         width: monster.atlas.grid_width,
       });
       const monster_entity = main_world.entity([
-        Sprite.create(world, SPRITE_SHADER, monster_texture.id, {
-          uv_width: monster.atlas.grid_width / monster_image.width,
-          uv_height: monster.atlas.grid_height / monster_image.height,
-          x: 0,
-          y: 0,
-        }),
+        Sprite.create(
+          world,
+          SPRITE_SHADER,
+          monster_texture.id,
+          {
+            uv_width: monster.atlas.grid_width / monster_image.width,
+            uv_height: monster.atlas.grid_height / monster_image.height,
+            x: 0,
+            y: 0,
+          },
+          CreatureLayer
+        ),
         transform,
         creature,
       ]);
@@ -374,8 +399,36 @@ main_world.system(
   })
 );
 
+interface Tag {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  view: Float32Array;
+  frame: {
+    uv_width: number;
+    uv_height: number;
+    x: number;
+    y: number;
+  };
+}
+
+const default_view = new Float32Array(9);
+const default_frame = { uv_width: 0, uv_height: 0, x: 0, y: 0 };
 const instanced_data = new Float32Array(9 * 1000);
 const sprite_data = new Float32Array(6 * 1000);
+const samplerArray: number[] = [];
+const tagsCache = Array(1000).map(
+  (): Tag => ({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    view: default_view,
+    frame: default_frame,
+  })
+);
+const taggedEntities: Tag[] = [];
 
 main_world.system(
   sys([WebGL], (world, ctx) => {
@@ -387,13 +440,52 @@ main_world.system(
     const data = instanced_data;
     let sprite: Sprite | undefined = undefined;
 
+    let cache: { [key: string]: number } = {};
+    let cache_size = 0;
+
+    const gl = ctx.gl;
+    const shader = ctx.shaders.get(SPRITE_SHADER)! as SpriteShader;
+    const mesh = ctx.meshes.get(SPRITE_MESH)! as SpriteMesh;
+
+    gl.useProgram(shader.program);
+    gl.bindVertexArray(mesh.vao);
+
     const render = (_: unknown, transform: Transform, _sprite: Sprite) => {
       const view = Transform.view(main_world, transform);
       const frame = _sprite.frame;
 
-      if (sprite !== undefined && sprite.texture !== _sprite.texture) {
-        Sprite.render(ctx, sprite, data.subarray(0, idx * 9), sprite_data.subarray(0, idx * 9), idx);
-        idx = 0;
+      const texture_pos = cache[_sprite.texture.id];
+      if (sprite === undefined || (sprite.texture !== _sprite.texture && texture_pos === undefined)) {
+        if (cache_size === 15) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, mesh.transform_buffer);
+          gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+
+          gl.bindBuffer(gl.ARRAY_BUFFER, mesh.frame_buffer);
+          gl.bufferData(gl.ARRAY_BUFFER, sprite_data, gl.DYNAMIC_DRAW);
+
+          gl.uniform1iv(shader.location.Image, samplerArray);
+
+          gl.drawArraysInstanced(
+            gl.TRIANGLE_STRIP,
+            0, // offset
+            6, // num vertices per instance
+            idx // num instances
+          );
+
+          idx = 0;
+          cache = {};
+          cache_size = 0;
+          samplerArray.length = 0;
+        }
+
+        const texture = ctx.textures.get(_sprite.texture)!;
+
+        gl.activeTexture(gl.TEXTURE0 + cache_size);
+        gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+
+        samplerArray[cache_size] = cache_size;
+        cache[_sprite.texture.id] = cache_size;
+        cache_size += 1;
       }
 
       data[idx * 9 + 0] = view[0]!;
@@ -405,12 +497,13 @@ main_world.system(
       data[idx * 9 + 6] = view[6]!;
       data[idx * 9 + 7] = view[7]!;
       data[idx * 9 + 8] = view[8]!;
-      sprite_data[idx * 6 + 0] = transform.width;
-      sprite_data[idx * 6 + 1] = transform.height;
-      sprite_data[idx * 6 + 2] = frame.uv_width;
-      sprite_data[idx * 6 + 3] = frame.uv_height;
-      sprite_data[idx * 6 + 4] = frame.x;
-      sprite_data[idx * 6 + 5] = frame.y;
+      sprite_data[idx * 7 + 0] = transform.width;
+      sprite_data[idx * 7 + 1] = transform.height;
+      sprite_data[idx * 7 + 2] = frame.uv_width;
+      sprite_data[idx * 7 + 3] = frame.uv_height;
+      sprite_data[idx * 7 + 4] = frame.x;
+      sprite_data[idx * 7 + 5] = frame.y;
+      sprite_data[idx * 7 + 6] = texture_pos ?? cache_size - 1;
 
       idx++;
 
@@ -421,8 +514,26 @@ main_world.system(
     q.run(world, q.id("render_creature") ?? q([Transform, Sprite, Creature, Visible]), render);
     q.run(world, q.id("render_hero") ?? q([Transform, Sprite, Hero]), render);
 
-    if (sprite === undefined) return;
-    Sprite.render(ctx, sprite, data.subarray(0, idx * 9), sprite_data.subarray(0, idx * 9), idx);
+    if (cache_size !== 0) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, mesh.transform_buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, mesh.frame_buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, sprite_data, gl.DYNAMIC_DRAW);
+
+      gl.uniform1iv(shader.location.Image, samplerArray);
+
+      gl.drawArraysInstanced(
+        gl.TRIANGLE_STRIP,
+        0, // offset
+        6, // num vertices per instance
+        idx // num instances
+      );
+    }
+
+    samplerArray.length = 0;
+    gl.bindVertexArray(null);
+    gl.useProgram(null);
   })
 );
 

@@ -27,9 +27,13 @@ export class Texture {
   }
 }
 
+let id_seq = 0;
+
 export class TextureID {
   // @ts-expect-error
   #type: TextureID;
+
+  constructor(public id = `${id_seq++}`) {}
 }
 
 export namespace Texture {

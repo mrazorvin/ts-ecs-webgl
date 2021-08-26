@@ -13,6 +13,7 @@ import { camera_entity } from "../../Camera";
 import { CollisionShape, CollisionWorld } from "../../CollisionWorld";
 import { SSCDRectangle, SSCDVector } from "@mr/sscd";
 import { static_comp } from "../../Static";
+import { TerrainLayer } from "../../Layers";
 
 const query = <T extends any[]>(args: [...T]) => args;
 const Query = query([WebGL, CollisionWorld]);
@@ -42,12 +43,18 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
 
       // TOOD: prettu ugle that we need to use transform in such way
       const entity = world.entity([
-        Sprite.create(world, SPRITE_SHADER, bg_texture, {
-          uv_width: 32 / ground_image.width,
-          uv_height: 32 / ground_image.height,
-          x: meta.rect[0]! / tiles_properties.grid_width,
-          y: meta.rect[1]! / tiles_properties.grid_height,
-        }),
+        Sprite.create(
+          world,
+          SPRITE_SHADER,
+          bg_texture,
+          {
+            uv_width: 32 / ground_image.width,
+            uv_height: 32 / ground_image.height,
+            x: meta.rect[0]! / tiles_properties.grid_width,
+            y: meta.rect[1]! / tiles_properties.grid_height,
+          },
+          TerrainLayer
+        ),
         transform,
         static_comp,
       ]);

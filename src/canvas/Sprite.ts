@@ -7,22 +7,24 @@ import { TextureID } from "./Render/Texture";
 import { WebGL } from "./Render/WebGL";
 
 export class Sprite extends InitComponent({ use_pool: 20 }) {
-  static create = ComponentFactory(Sprite, (prev, shader, texture, uv) => {
+  static create = ComponentFactory(Sprite, (prev, shader, texture, uv, layer) => {
     if (prev !== undefined) {
       prev.shader = shader;
       prev.texture = texture;
       prev.frame = uv;
+      prev.layer = layer;
 
       return prev;
     }
 
-    return new Sprite(shader, texture, uv);
+    return new Sprite(shader, texture, uv, layer);
   });
 
   constructor(
     public shader: ShaderID,
     public texture: TextureID,
-    public frame: { uv_width: number; uv_height: number; x: number; y: number }
+    public frame: { uv_width: number; uv_height: number; x: number; y: number },
+    public layer: number
   ) {
     super();
   }
@@ -45,6 +47,7 @@ export class Sprite extends InitComponent({ use_pool: 20 }) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture.texture);
       gl.uniform1i(shader.location.Image, 0);
+
       gl.bindVertexArray(mesh.vao);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, mesh.transform_buffer);

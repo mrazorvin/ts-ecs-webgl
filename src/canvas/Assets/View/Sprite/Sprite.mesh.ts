@@ -55,7 +55,7 @@ export namespace SpriteMesh {
     if (sprite_buffer == null) throw new Error(`[WebGLUtils.mesh.attribute_buffer()]`);
 
     const sprite_attrib_count = 4;
-    const frame_attrib_count = 2;
+    const frame_attrib_count = 3;
     const total_attrib_count = sprite_attrib_count + frame_attrib_count;
     const stride = Float32Array.BYTES_PER_ELEMENT * total_attrib_count;
 
@@ -65,7 +65,7 @@ export namespace SpriteMesh {
     gl.enableVertexAttribArray(ShaderGlobals.a_Sprite);
     gl.vertexAttribPointer(
       ShaderGlobals.a_Sprite,
-      4,
+      sprite_attrib_count,
       gl.FLOAT,
       false,
       stride,
@@ -77,7 +77,7 @@ export namespace SpriteMesh {
     gl.enableVertexAttribArray(ShaderGlobals.a_Frame);
     gl.vertexAttribPointer(
       ShaderGlobals.a_Frame,
-      2,
+      frame_attrib_count,
       gl.FLOAT,
       false,
       stride,
