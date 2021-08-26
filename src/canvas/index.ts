@@ -402,6 +402,8 @@ main_world.system(
 interface Tag {
   width: number;
   height: number;
+  layer: number;
+  texture: Texture.ID;
   x: number;
   y: number;
   view: Float32Array;
@@ -418,16 +420,20 @@ const default_frame = { uv_width: 0, uv_height: 0, x: 0, y: 0 };
 const instanced_data = new Float32Array(9 * 1000);
 const sprite_data = new Float32Array(6 * 1000);
 const samplerArray: number[] = [];
-const tagsCache = Array(1000).map(
-  (): Tag => ({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-    view: default_view,
-    frame: default_frame,
-  })
-);
+const tagsCache = Array(1000)
+  .fill(0)
+  .map(
+    (): Tag => ({
+      x: 0,
+      y: 0,
+      layer: 0,
+      width: 0,
+      height: 0,
+      texture: {} as Texture.ID,
+      view: default_view,
+      frame: default_frame,
+    })
+  );
 const taggedEntities: Tag[] = [];
 
 main_world.system(
@@ -436,27 +442,55 @@ main_world.system(
     if (bg_ctx === undefined) return;
     else t.buffer(ctx.gl, bg_ctx);
 
-    let idx = 0;
-    const data = instanced_data;
-    let sprite: Sprite | undefined = undefined;
-
-    let cache: { [key: string]: number } = {};
-    let cache_size = 0;
-
     const gl = ctx.gl;
     const shader = ctx.shaders.get(SPRITE_SHADER)! as SpriteShader;
     const mesh = ctx.meshes.get(SPRITE_MESH)! as SpriteMesh;
 
+    let taggedEntitiesSize = 0;
+
+    const render = (_: unknown, transform: Transform, sprite: Sprite) => {
+      const view = Transform.view(main_world, transform);
+      const tag = tagsCache[taggedEntitiesSize]!;
+      tag.width = transform.width;
+      tag.height = transform.height;
+      tag.x = transform.position![0]!;
+      tag.y = transform.position![0]!;
+      tag.layer = sprite.layer;
+      tag.frame = sprite.frame;
+      tag.texture = sprite.texture;
+      tag.view = view;
+      taggedEntities[taggedEntitiesSize] = tag;
+      taggedEntitiesSize += 1;
+    };
+
+    q.run(world, q.id("render_static") ?? q([Transform, Sprite, Static, Visible]), render);
+    q.run(world, q.id("render_hero") ?? q([Transform, Sprite, Hero]), render);
+    q.run(world, q.id("render_creature") ?? q([Transform, Sprite, Creature, Visible]), render);
+
+    taggedEntities.length = taggedEntitiesSize;
+
+    taggedEntities.sort((v1, v2) => {
+      if (v1.layer !== v2.layer) return v1.layer > v2.layer ? 1 : -1;
+      if (v1.y !== v2.y) return v1.y + v1.height > v2.y + v2.height ? 1 : -1;
+      if (v1.x !== v2.x) return v1.x > v2.x ? 1 : -1;
+
+      return 0;
+    });
+
+    const data = instanced_data;
+
+    let idx = 0;
+    let cache: { [key: string]: number } = {};
+    let cache_size = 0;
+
     gl.useProgram(shader.program);
     gl.bindVertexArray(mesh.vao);
 
-    const render = (_: unknown, transform: Transform, _sprite: Sprite) => {
-      const view = Transform.view(main_world, transform);
-      const frame = _sprite.frame;
-
-      const texture_pos = cache[_sprite.texture.id];
-      if (sprite === undefined || (sprite.texture !== _sprite.texture && texture_pos === undefined)) {
+    for (const tag of taggedEntities) {
+      const texture_pos = cache[tag.texture.id];
+      if (texture_pos === undefined) {
         if (cache_size === 15) {
+          // render values
           gl.bindBuffer(gl.ARRAY_BUFFER, mesh.transform_buffer);
           gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
 
@@ -472,21 +506,25 @@ main_world.system(
             idx // num instances
           );
 
+          // reset loop values
           idx = 0;
           cache = {};
           cache_size = 0;
           samplerArray.length = 0;
         }
 
-        const texture = ctx.textures.get(_sprite.texture)!;
+        const texture = ctx.textures.get(tag.texture)!;
 
         gl.activeTexture(gl.TEXTURE0 + cache_size);
         gl.bindTexture(gl.TEXTURE_2D, texture.texture);
 
         samplerArray[cache_size] = cache_size;
-        cache[_sprite.texture.id] = cache_size;
+        cache[tag.texture.id] = cache_size;
         cache_size += 1;
       }
+
+      const view = tag.view;
+      const frame = tag.frame;
 
       data[idx * 9 + 0] = view[0]!;
       data[idx * 9 + 1] = view[1]!;
@@ -497,8 +535,8 @@ main_world.system(
       data[idx * 9 + 6] = view[6]!;
       data[idx * 9 + 7] = view[7]!;
       data[idx * 9 + 8] = view[8]!;
-      sprite_data[idx * 7 + 0] = transform.width;
-      sprite_data[idx * 7 + 1] = transform.height;
+      sprite_data[idx * 7 + 0] = tag.width;
+      sprite_data[idx * 7 + 1] = tag.height;
       sprite_data[idx * 7 + 2] = frame.uv_width;
       sprite_data[idx * 7 + 3] = frame.uv_height;
       sprite_data[idx * 7 + 4] = frame.x;
@@ -506,13 +544,7 @@ main_world.system(
       sprite_data[idx * 7 + 6] = texture_pos ?? cache_size - 1;
 
       idx++;
-
-      sprite = _sprite;
-    };
-
-    q.run(world, q.id("render_static") ?? q([Transform, Sprite, Static, Visible]), render);
-    q.run(world, q.id("render_creature") ?? q([Transform, Sprite, Creature, Visible]), render);
-    q.run(world, q.id("render_hero") ?? q([Transform, Sprite, Hero]), render);
+    }
 
     if (cache_size !== 0) {
       gl.bindBuffer(gl.ARRAY_BUFFER, mesh.transform_buffer);

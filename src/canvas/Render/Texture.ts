@@ -36,7 +36,11 @@ export class TextureID {
   constructor(public id = `${id_seq++}`) {}
 }
 
+export namespace TextureID {}
+
 export namespace Texture {
+  export import ID = TextureID;
+
   export async function load_image(path: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image();
