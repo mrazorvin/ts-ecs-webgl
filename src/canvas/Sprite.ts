@@ -46,7 +46,7 @@ export class Sprite extends InitComponent({ use_pool: 20 }) {
       gl.useProgram(shader.program);
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture.texture);
-      gl.uniform1i(shader.location.Image, 0);
+      gl.uniform1iv(shader.location.Image, [0]);
 
       gl.bindVertexArray(mesh.vao);
 

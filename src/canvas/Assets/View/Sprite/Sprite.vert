@@ -3,11 +3,13 @@
 layout(location = 0) in vec2 a_Position;
 // WIDTH, HEIGHT, uv_width, uv_height
 layout(location = 1) in vec4 a_Sprite;
-layout(location = 2) in vec3 a_Frame;
+layout(location = 2) in vec4 a_Frame;
 layout(location = 3) in mat3 a_Transform;
 
 out vec2 v_UV;
+flat out vec2 v_Resloution;
 flat out int v_Image;
+flat out float v_Color;
 
 void main(void) {
   vec2 Position = vec2(a_Position.x * a_Sprite.x, a_Position.y * a_Sprite.y);
@@ -16,4 +18,6 @@ void main(void) {
   gl_Position = vec4(a_Transform * vec3(Position, 1), 1);
   v_UV = UV + Frame;
   v_Image = int(a_Frame.z);
+  v_Color = a_Frame.w;
+  v_Resloution = vec2(a_Sprite.x / a_Sprite.z, a_Sprite.y / a_Sprite.w);
 }

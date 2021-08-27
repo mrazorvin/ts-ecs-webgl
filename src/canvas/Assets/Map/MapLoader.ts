@@ -37,7 +37,8 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
       const transform = Transform.create(world, {
         width: 32,
         height: 32,
-        position: new Float32Array([column * 32, row * 32]),
+        x: column * 32,
+        y: row * 32,
         parent: camera_entity.ref,
       });
 
@@ -63,7 +64,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
         world,
         entity.ref,
         new SSCDRectangle(
-          new SSCDVector(transform.position![0]! + transform.width / 2, transform.position![1]! + transform.width / 2),
+          new SSCDVector(transform.x + transform.width / 2, transform.y + transform.width / 2),
           new SSCDVector(transform.width, transform.width)
         )
       );

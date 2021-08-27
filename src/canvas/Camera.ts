@@ -9,7 +9,7 @@ export class Camera extends Resource {
   }
 
   set_position(x: number, y: number) {
-    this.transform.position = new Float32Array([-x, -y]);
+    this.transform.position(-x, -y);
   }
 
   dispose() {}
@@ -20,7 +20,8 @@ export const camera_transform = Transform.create(main_world, {
   parent: world_transform.ref,
   height: 0,
   width: 0,
-  position: new Float32Array([0, 0]),
+  x: 0,
+  y: 0,
 });
 export const camera_entity = main_world.entity([camera_transform]);
 export const camera = new Camera(camera_transform, camera_entity.ref);

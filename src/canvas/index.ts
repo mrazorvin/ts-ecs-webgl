@@ -1,4 +1,4 @@
-import { glMatrix, vec2 } from "gl-matrix";
+import { glMatrix, mat3, vec2 } from "gl-matrix";
 import { EntityRef, LoopInfo, q, RafScheduler, sys } from "@mr/ecs/World";
 import { SpriteMesh, SPRITE_MESH } from "./Assets/View/Sprite/Sprite.mesh";
 import { SpriteShader, SPRITE_SHADER } from "./Assets/View/Sprite/Sprite.shader";
@@ -27,12 +27,12 @@ import { DesktopUI, desktop_ui, MobileUI, mobile_ui, UI, UILayout, UIManager } f
 import { monsters } from "./Assets/Monsters";
 import { Creature, creature } from "./Creature";
 import { Static } from "./Static";
-import { werewolf } from "./Assets/Monsters/Werewolf";
 import { CreatureLayer, UILayer } from "./Layers";
+import { red_ogre } from "./Assets/Monsters/Red Ogre";
 
 glMatrix.setMatrixArrayType(Array);
 
-const hero_assets = werewolf;
+const hero_assets = red_ogre;
 
 // this value must somehow refer to 32x32 grid size, for simplification reason
 const ROWS = navigator.maxTouchPoints > 1 ? 80 : 160;
@@ -67,7 +67,8 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   // in development mode on the end of systems, we will iterate over all contracts and check of they still valid
   // in production mode contracts will be no-op
 
-  world_transform_component.scale = new Float32Array([1 / width_ratio, -1 / ROWS]);
+  world_transform_component.scale(1 / width_ratio, -1 / ROWS);
+  camera.transform.position(0, 0);
 
   ctx.create_context(BACKGROUND_CONTEXT, { width, height }, Context.create);
   ctx.create_context(MONSTER_CONTEXT, { width, height }, Context.create);
@@ -85,7 +86,6 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   screen.width = width_ratio * 2;
   input_ctx.camera_width = camera.transform.width = width_ratio * 2;
   input_ctx.camera_height = camera.transform.height = ROWS * 2;
-  camera.transform.position = new Float32Array([0, 0]);
 });
 
 window.onresize = () => main_world.system_once(resize_system);
@@ -120,7 +120,8 @@ main_world.system_once(
       Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame, 4),
       Transform.create(world, {
         parent: world_transform.ref,
-        position: new Float32Array([desktop_position.x, desktop_position.y]),
+        x: desktop_position.x,
+        y: desktop_position.y,
         height: attack_image.height,
         width: attack_image.width,
       }),
@@ -136,7 +137,8 @@ main_world.system_once(
       Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame, UILayer),
       Transform.create(world, {
         parent: world_transform.ref,
-        position: new Float32Array([mobile_position.x, mobile_position.y]),
+        x: mobile_position.x,
+        y: mobile_position.y,
         height: attack_image.height,
         width: attack_image.width,
       }),
@@ -164,7 +166,8 @@ main_world.system_once(
       ),
       Transform.create(world, {
         parent: world_transform.ref,
-        position: new Float32Array([0, 0]),
+        x: 0,
+        y: 0,
         height: Math.floor(joystick_handler_image.height / 3),
         width: Math.floor(joystick_handler_image.width / 3),
       }),
@@ -190,7 +193,8 @@ main_world.system_once(
       ),
       Transform.create(world, {
         parent: world_transform.ref,
-        position: new Float32Array([0, 0]),
+        x: 0,
+        y: 0,
         height: joystick_image.height / 4,
         width: joystick_image.width / 4,
       }),
@@ -203,10 +207,10 @@ main_world.system_once(
     const hero_image = await Texture.load_image(hero_assets.texture_src);
     const hero_texture = ctx.create_texture(hero_image, Texture.create);
 
-    // TODO: inject entities in SubWorld instead of World
     const transform = Transform.create(world, {
       parent: camera_entity.ref,
-      position: new Float32Array([0, 0]),
+      x: 0,
+      y: 0,
       height: hero_assets.atlas.grid_height,
       width: hero_assets.atlas.grid_width,
     });
@@ -234,7 +238,7 @@ main_world.system_once(
       world,
       hero_entity.ref,
       new SSCDRectangle(
-        new SSCDVector(transform.position![0]! + transform.width / 2, transform.position![1]! + transform.width / 2),
+        new SSCDVector(transform.x + transform.width / 2, transform.y + transform.width / 2),
         new SSCDVector(transform.width, transform.width)
       )
     );
@@ -248,7 +252,8 @@ main_world.system_once(
       const monster_texture = ctx.create_texture(monster_image, Texture.create);
       const transform = Transform.create(world, {
         parent: camera_entity.ref,
-        position: new Float32Array([(x += 16), (y += 16)]),
+        x: (x += 16),
+        y: (y += 16),
         height: monster.atlas.grid_height,
         width: monster.atlas.grid_width,
       });
@@ -273,7 +278,7 @@ main_world.system_once(
         world,
         monster_entity.ref,
         new SSCDRectangle(
-          new SSCDVector(transform.position![0]! + transform.width / 2, transform.position![1]! + transform.width / 2),
+          new SSCDVector(transform.x + transform.width / 2, transform.y + transform.width / 2),
           new SSCDVector(transform.width, transform.width)
         )
       );
@@ -302,7 +307,7 @@ main_world.system(
 
     sscd.world.test_collision<SSCDShape<EntityRef>>(
       new SSCDRectangle(
-        new SSCDVector(-Math.min(camera.transform.position![0], 0), -Math.min(camera.transform.position![1], 0)),
+        new SSCDVector(-Math.min(camera.transform.x, 0), -Math.min(camera.transform.y, 0)),
         new SSCDVector(camera.transform.width + 64, camera.transform.height + 64)
       ),
       undefined,
@@ -334,16 +339,11 @@ main_world.system(
       const movement = input.movement();
 
       // part of contract even if we don't move camera, we still need to call function at least once
-      camera.set_position(
-        transform.position[0] - camera.transform.width / 2,
-        transform.position[1] - camera.transform.height / 2
-      );
+      camera.set_position(transform.x - camera.transform.width / 2, transform.y - camera.transform.height / 2);
 
       // part of contract camera position synchronization
-      if (camera.transform.position) {
-        input.context_info.camera_x = -camera.transform.position[0];
-        input.context_info.camera_y = -camera.transform.position[1];
-      }
+      input.context_info.camera_x = -camera.transform.x;
+      input.context_info.camera_y = -camera.transform.y;
 
       // those code some how connected to animation chain + movement behavior
       // think a better way to organize it
@@ -357,11 +357,12 @@ main_world.system(
         movement !== undefined
       ) {
         // instead of new buffer we could use buffer buffer switch, specify buffer switch little bit more
-        const pos = new Float32Array(2);
+        const pos = [0, 0] as [number, number];
         vec2.normalize(pos, modification.target as [number, number]);
         const direction = pos[0];
-        transform.position = vec2.subtract(pos, transform.position, pos) as Float32Array;
-        transform.scale = new Float32Array([direction > 0 ? 1 : -1, 1]);
+        const new_position = vec2.subtract(pos, [transform.x, transform.y], pos);
+        transform.position(new_position[0]!, new_position[1]!);
+        transform.scale(direction > 0 ? 1 : -1, 1);
 
         if (selected_animation !== "run") {
           selected_animation = "run";
@@ -393,8 +394,8 @@ main_world.system(
     const frame = run_frames[current_frame];
 
     q.run(world, q.id("animation") ?? q([Sprite, Hero]), (_, sprite) => {
-      sprite.frame.x = frame?.rect[0] / hero_assets.atlas.grid_width;
-      sprite.frame.y = frame?.rect[1] / hero_assets.atlas.grid_height;
+      sprite.frame.x = frame?.rect[0]! / hero_assets.atlas.grid_width;
+      sprite.frame.y = frame?.rect[1]! / hero_assets.atlas.grid_height;
     });
   })
 );
@@ -407,6 +408,7 @@ interface Tag {
   x: number;
   y: number;
   view: Float32Array;
+  e_type: undefined | Static | Hero | Creature | UI;
   frame: {
     uv_width: number;
     uv_height: number;
@@ -432,9 +434,11 @@ const tagsCache = Array(1000)
       texture: {} as Texture.ID,
       view: default_view,
       frame: default_frame,
+      e_type: undefined,
     })
   );
 const taggedEntities: Tag[] = [];
+const shadow_matrix = new Float32Array(9);
 
 main_world.system(
   sys([WebGL], (world, ctx) => {
@@ -448,17 +452,18 @@ main_world.system(
 
     let taggedEntitiesSize = 0;
 
-    const render = (_: unknown, transform: Transform, sprite: Sprite) => {
+    const render = (_: unknown, transform: Transform, sprite: Sprite, e_type: unknown) => {
       const view = Transform.view(main_world, transform);
       const tag = tagsCache[taggedEntitiesSize]!;
       tag.width = transform.width;
       tag.height = transform.height;
-      tag.x = transform.position![0]!;
-      tag.y = transform.position![0]!;
+      tag.x = transform.x;
+      tag.y = transform.y;
       tag.layer = sprite.layer;
       tag.frame = sprite.frame;
       tag.texture = sprite.texture;
       tag.view = view;
+      tag.e_type = e_type as undefined;
       taggedEntities[taggedEntitiesSize] = tag;
       taggedEntitiesSize += 1;
     };
@@ -466,6 +471,7 @@ main_world.system(
     q.run(world, q.id("render_static") ?? q([Transform, Sprite, Static, Visible]), render);
     q.run(world, q.id("render_hero") ?? q([Transform, Sprite, Hero]), render);
     q.run(world, q.id("render_creature") ?? q([Transform, Sprite, Creature, Visible]), render);
+    q.run(world, q.id("render") ?? q([Transform, Sprite, UI, DesktopUI]), render);
 
     taggedEntities.length = taggedEntitiesSize;
 
@@ -526,6 +532,32 @@ main_world.system(
       const view = tag.view;
       const frame = tag.frame;
 
+      if (tag.e_type instanceof Hero || tag.e_type instanceof Creature) {
+        shadow_matrix.set(view);
+        mat3.translate(shadow_matrix, shadow_matrix, [tag.width / 4, tag.height / 1.6]);
+        mat3.scale(shadow_matrix, shadow_matrix, [1 / 2, 1 / 2]);
+        mat3.rotate(shadow_matrix, shadow_matrix, 0.5);
+
+        data[idx * 9 + 0] = shadow_matrix[0]! * 2;
+        data[idx * 9 + 1] = shadow_matrix[1]! + 0.002;
+        data[idx * 9 + 2] = shadow_matrix[2]!;
+        data[idx * 9 + 3] = shadow_matrix[3]!;
+        data[idx * 9 + 4] = shadow_matrix[4]!;
+        data[idx * 9 + 5] = shadow_matrix[5]!;
+        data[idx * 9 + 6] = shadow_matrix[6]!;
+        data[idx * 9 + 7] = shadow_matrix[7]!;
+        data[idx * 9 + 8] = shadow_matrix[8]!;
+        sprite_data[idx * 8 + 0] = tag.width;
+        sprite_data[idx * 8 + 1] = tag.height;
+        sprite_data[idx * 8 + 2] = frame.uv_width;
+        sprite_data[idx * 8 + 3] = frame.uv_height;
+        sprite_data[idx * 8 + 4] = frame.x;
+        sprite_data[idx * 8 + 5] = frame.y;
+        sprite_data[idx * 8 + 6] = texture_pos ?? cache_size - 1;
+        sprite_data[idx * 8 + 7] = 12;
+        idx++;
+      }
+
       data[idx * 9 + 0] = view[0]!;
       data[idx * 9 + 1] = view[1]!;
       data[idx * 9 + 2] = view[2]!;
@@ -535,13 +567,14 @@ main_world.system(
       data[idx * 9 + 6] = view[6]!;
       data[idx * 9 + 7] = view[7]!;
       data[idx * 9 + 8] = view[8]!;
-      sprite_data[idx * 7 + 0] = tag.width;
-      sprite_data[idx * 7 + 1] = tag.height;
-      sprite_data[idx * 7 + 2] = frame.uv_width;
-      sprite_data[idx * 7 + 3] = frame.uv_height;
-      sprite_data[idx * 7 + 4] = frame.x;
-      sprite_data[idx * 7 + 5] = frame.y;
-      sprite_data[idx * 7 + 6] = texture_pos ?? cache_size - 1;
+      sprite_data[idx * 8 + 0] = tag.width;
+      sprite_data[idx * 8 + 1] = tag.height;
+      sprite_data[idx * 8 + 2] = frame.uv_width;
+      sprite_data[idx * 8 + 3] = frame.uv_height;
+      sprite_data[idx * 8 + 4] = frame.x;
+      sprite_data[idx * 8 + 5] = frame.y;
+      sprite_data[idx * 8 + 6] = texture_pos ?? cache_size - 1;
+      sprite_data[idx * 8 + 7] = 0;
 
       idx++;
     }
@@ -585,38 +618,30 @@ main_world.system(
         frame_buffer[3] = sprite.frame.uv_height;
         frame_buffer[4] = sprite.frame.x;
         frame_buffer[5] = sprite.frame.y;
+        frame_buffer[6] = 0;
+        frame_buffer[7] = 0;
 
         if (ui.id === "joystick" || ui.id === "joystick_handle") {
+          // @ts-expect-error
           const movement = input._movement;
           if (movement !== undefined && ui.id === "joystick") {
-            transform.position = new Float32Array([
+            transform.position(
               movement.screen_click_x - transform.width / 2,
-              movement.screen_click_y - transform.height / 2,
-            ]);
+              movement.screen_click_y - transform.height / 2
+            );
             Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
           }
 
           if (movement !== undefined && ui.id === "joystick_handle") {
-            transform.position = new Float32Array([
+            transform.position(
               movement.screen_current_x - transform.width / 2,
-              movement.screen_current_y - transform.height / 2,
-            ]);
+              movement.screen_current_y - transform.height / 2
+            );
             Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
           }
         } else {
           Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
         }
-      });
-    } else {
-      q.run(world, q.id("render") ?? q([Sprite, Transform, UI, DesktopUI]), (_, sprite, transform) => {
-        frame_buffer[0] = transform.width;
-        frame_buffer[1] = transform.height;
-        frame_buffer[2] = sprite.frame.uv_width;
-        frame_buffer[3] = sprite.frame.uv_height;
-        frame_buffer[4] = sprite.frame.x;
-        frame_buffer[5] = sprite.frame.y;
-
-        Sprite.render(ctx, sprite, Transform.view(world, transform), frame_buffer, 1);
       });
     }
   })

@@ -55,7 +55,7 @@ export namespace SpriteMesh {
     if (sprite_buffer == null) throw new Error(`[WebGLUtils.mesh.attribute_buffer()]`);
 
     const sprite_attrib_count = 4;
-    const frame_attrib_count = 3;
+    const frame_attrib_count = 4;
     const total_attrib_count = sprite_attrib_count + frame_attrib_count;
     const stride = Float32Array.BYTES_PER_ELEMENT * total_attrib_count;
 

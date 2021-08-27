@@ -1,158 +1,138 @@
 import { ComponentFactory } from "@mr/ecs/Component";
 import { glMatrix, mat3 } from "gl-matrix";
 import { EntityRef, InitComponent, World } from "../../ecs/World";
-import { DependenciesUtils } from "../Utils/DependenciesUtils";
 
-const setView =
-  DependenciesUtils.compileMemoizeFactory<[TranslateVec2, Scale, Rotation, ParentView, ParentViewChanged]>(5);
+function fast_transform(
+  out: number[] | Float32Array,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  rotate: number,
+  scale_x: number,
+  scale_y: number
+) {
+  const s = rotate === 0 ? 0 : Math.sin(rotate);
+  const c = rotate === 0 ? 1 : Math.cos(rotate);
+  const center_x = width / 2;
+  const center_y = height / 2;
 
-type TranslateVec2 = Float32Array | undefined;
-type Scale = Float32Array | undefined;
-type Rotation = number | undefined;
-type ParentView = Float32Array | undefined;
-type ParentViewChanged = number | undefined;
+  out[0] = c * scale_x;
+  out[1] = s * scale_x;
+  out[2] = 0;
+  out[3] = -s * scale_y;
+  out[4] = +c * scale_y;
+  out[5] = 0;
+  out[6] = -center_x * (c * scale_x) - center_y * (-s * scale_y) + (center_x + x);
+  out[7] = -center_x * (s * scale_x) - center_y * (+c * scale_y) + (center_y + y);
+  out[8] = 1;
 
-export class Transform extends InitComponent({ use_pool: 100 }) {
-  static create = ComponentFactory(Transform, (prev, config) => {
-    if (prev !== undefined) {
-      prev._parent = config.parent;
-      prev._changed = 0;
+  return out;
+}
 
-      prev.height = config.height;
-      prev.width = config.width;
-      prev.to_center_offset[0] = config.width / 2;
-      prev.to_center_offset[1] = config.height / 2;
-      prev.to_origin_offset[0] = -config.width / 2;
-      prev.to_origin_offset[1] = -config.height / 2;
+export class Transform extends InitComponent({ use_pool: false }) {
+  static create = ComponentFactory(Transform, (_, config) => new Transform(config));
 
-      if (config.position) {
-        prev.position = config.position;
-      } else if (prev.position) {
-        prev.position[0] = 0;
-        prev.position[1] = 0;
-      }
+  version: number;
+  meta: {
+    parent: EntityRef | undefined;
+    last_parent_version: number | undefined;
+    view: Float32Array;
+  };
 
-      if (config.scale !== undefined) {
-        prev.scale = config.scale;
-      } else if (prev.scale) {
-        prev.scale[0] = 1;
-        prev.scale[1] = 1;
-      }
-
-      prev.rotation = config.rotation;
-
-      // @ts-expect-error
-      prev.getView.clear();
-
-      return prev;
-    }
-
-    return new Transform(config);
-  });
-
-  // TODO: all those values must be always defined
-  //       it's hell to check them on non existence each time when
-  //       we want to use it
-  position: Float32Array | undefined;
-  scale: Float32Array | undefined;
-  rotation: number | undefined;
-
+  x: number;
+  y: number;
+  scale_x: number;
+  scale_y: number;
+  rotation: number;
   height: number;
   width: number;
 
-  // TODO: it's possible that we don't need this values at all
-  readonly to_center_offset: [number, number];
-  readonly to_origin_offset: [number, number];
-
-  _changed: number;
-  _parent: EntityRef | undefined;
-  _view: Float32Array;
-
-  // OPTIMIZATION: Generate matrix in single operation, instead of multiple functions call
-  // TODO: scale must be scalar inside the class
-  // TRANSLATE: Should be split on x and y, otherwise matrix mutation doesn't reflected
-  getView = setView((translate, scale, rotation, parent) => {
-    const view = this._view;
-    this._changed += 1;
-
-    let matrix = translate ? mat3.fromTranslation(view, translate) : undefined;
-    if (rotation || scale) {
-      matrix =
-        matrix === undefined
-          ? mat3.fromTranslation(view, this.to_center_offset)
-          : mat3.translate(matrix, matrix, this.to_center_offset);
-      matrix =
-        rotation === undefined
-          ? matrix
-          : matrix === undefined
-          ? mat3.fromRotation(view, glMatrix.toRadian(rotation))
-          : mat3.rotate(matrix, matrix, glMatrix.toRadian(rotation));
-      matrix =
-        scale === undefined
-          ? matrix
-          : matrix === undefined
-          ? mat3.fromScaling(view, scale)
-          : mat3.scale(matrix, matrix, scale);
-      matrix = mat3.translate(matrix, matrix, this.to_origin_offset);
+  getView(parent_view: Float32Array | undefined, parent_version: number | undefined): Float32Array {
+    const meta = this.meta;
+    if ((this.version & 1) === 1 || meta.last_parent_version !== parent_version) {
+      this.version += 1;
+      meta.last_parent_version = parent_version;
+      const view = fast_transform(
+        meta.view,
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+        glMatrix.toRadian(this.rotation),
+        this.scale_x,
+        this.scale_y
+      ) as Float32Array;
+      return parent_view !== undefined ? (mat3.multiply(view, parent_view, view) as Float32Array) : view;
     }
 
-    if (matrix) {
-      return (parent === undefined ? matrix : mat3.multiply(matrix, parent, matrix)) as Float32Array;
-    } else {
-      return (parent === undefined ? mat3.identity(view) : parent) as Float32Array;
-    }
-  });
+    return meta.view;
+  }
 
   constructor(config: {
     parent?: EntityRef | undefined;
-    position?: Float32Array;
-    scale?: Float32Array;
+    x: number;
+    y: number;
+    scale_x?: number;
+    scale_y?: number;
     rotation?: number;
     height: number;
     width: number;
   }) {
     super();
 
-    this._view = new Float32Array(9);
-    this._parent = config.parent;
-    this._changed = 0;
+    this.meta = {
+      view: new Float32Array(9),
+      parent: config.parent,
+      last_parent_version: undefined,
+    };
 
+    this.version = 1;
     this.height = config.height;
     this.width = config.width;
-    this.to_center_offset = [this.width / 2, this.height / 2];
-    this.to_origin_offset = [-this.width / 2, -this.height / 2];
+    this.x = config.x ?? 0;
+    this.y = config.y ?? 0;
+    this.scale_x = config.scale_x ?? 1;
+    this.scale_y = config.scale_y ?? 1;
+    this.rotation = config.rotation ?? 0;
+  }
 
-    this.position = config.position;
-    this.scale = config.scale;
-    this.rotation = config.rotation;
+  scale(x: number | undefined, y: number | undefined) {
+    let change: undefined | number;
+    if (x !== undefined) change = this.scale_x = x;
+    if (y !== undefined) change = this.scale_y = y;
+    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
+  }
+
+  position(x: number | undefined, y: number | undefined) {
+    let change: undefined | number;
+    if (x !== undefined) change = this.x = x;
+    if (y !== undefined) change = this.y = y;
+    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
+  }
+
+  dimension(width: number | undefined, height: number | undefined) {
+    let change: undefined | number;
+    if (width !== undefined) change = this.width = width;
+    if (height !== undefined) change = this.height = height;
+    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
+  }
+
+  rotate(angle: number | undefined) {
+    let change: undefined | number;
+    if (angle !== undefined) change = this.rotation = angle;
+    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
   }
 }
 
 export namespace Transform {
-  // OPTIMIZATION: Inject parent entities into Transform component
   export function view(world: World, transform: Transform): Float32Array {
-    const parent = transform._parent?.entity;
+    const parent = transform.meta.parent?.entity;
     const parent_transform = parent ? Transform.get(parent) : undefined;
 
-    // pointers: [
-    //
-    //    { start_x: 1, start_y: 2, current_x: 1, current_y: 2, id: 23  },  -> find is click was made outside of ui, and use first one as mouse
-    //    { start_x: 1, start_y: 2, current_x: 1, current_y: 2, id: 23  },  -> find is click was made on ui so,
-    //
-    // ]
-    //
-    // similar logic could be used to track mouse click as 2 separate instances i.e 2 pointers
-    // so we could detect direction by using following logick on mouse click we will take direction from center of view
-    // from joystick we will take direction from center of last click
-    // from testing purposes we can simulate joystick with drag event from mouse
-    // we could even calculate average movement speed
-
     const result = transform.getView(
-      transform.position,
-      transform.scale,
-      transform.rotation,
       parent_transform !== undefined ? Transform.view(world, parent_transform) : undefined,
-      parent_transform?._changed
+      parent_transform?.version
     );
 
     return result;
