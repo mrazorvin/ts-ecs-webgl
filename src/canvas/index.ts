@@ -403,11 +403,11 @@ main_world.system(
 interface Tag {
   width: number;
   height: number;
-  layer: number;
-  texture: Texture.ID;
   x: number;
   y: number;
-  view: Float32Array;
+  layer: number;
+  texture: Texture.ID;
+  transform: Transform;
   e_type: undefined | Static | Hero | Creature | UI;
   frame: {
     uv_width: number;
@@ -417,10 +417,16 @@ interface Tag {
   };
 }
 
-const default_view = new Float32Array(9);
+const default_transform = new Transform({ x: 0, y: 0, height: 0, width: 0 });
 const default_frame = { uv_width: 0, uv_height: 0, x: 0, y: 0 };
 const instanced_data = new Float32Array(9 * 1000);
-const sprite_data = new Float32Array(6 * 1000);
+const instanced_data_arrays = Array(1000)
+  .fill(1)
+  .map((_, i) => instanced_data.subarray(i * 9, i * 9 + 9));
+const sprite_data = new Float32Array(8 * 1000);
+const sprite_data_arrays = Array(1000)
+  .fill(1)
+  .map((_, i) => sprite_data.subarray(i * 8, i * 8 + 8));
 const samplerArray: number[] = [];
 const tagsCache = Array(1000)
   .fill(0)
@@ -428,11 +434,11 @@ const tagsCache = Array(1000)
     (): Tag => ({
       x: 0,
       y: 0,
-      layer: 0,
       width: 0,
       height: 0,
+      layer: 0,
       texture: {} as Texture.ID,
-      view: default_view,
+      transform: default_transform,
       frame: default_frame,
       e_type: undefined,
     })
@@ -453,7 +459,6 @@ main_world.system(
     let taggedEntitiesSize = 0;
 
     const render = (_: unknown, transform: Transform, sprite: Sprite, e_type: unknown) => {
-      const view = Transform.view(main_world, transform);
       const tag = tagsCache[taggedEntitiesSize]!;
       tag.width = transform.width;
       tag.height = transform.height;
@@ -462,7 +467,7 @@ main_world.system(
       tag.layer = sprite.layer;
       tag.frame = sprite.frame;
       tag.texture = sprite.texture;
-      tag.view = view;
+      tag.transform = transform;
       tag.e_type = e_type as undefined;
       taggedEntities[taggedEntitiesSize] = tag;
       taggedEntitiesSize += 1;
@@ -529,52 +534,46 @@ main_world.system(
         cache_size += 1;
       }
 
-      const view = tag.view;
+      let shadow_data: undefined | Float32Array;
+      let shadow_sprite: undefined | Float32Array;
+      if (tag.e_type instanceof Hero || tag.e_type instanceof Creature) {
+        shadow_data = instanced_data_arrays[idx]!;
+        shadow_sprite = sprite_data_arrays[idx]!;
+        idx++;
+      }
+      const instance_data = instanced_data_arrays[idx]!;
+      const sprite = sprite_data_arrays[idx]!;
+      const view = Transform.view(world, tag.transform);
       const frame = tag.frame;
 
-      if (tag.e_type instanceof Hero || tag.e_type instanceof Creature) {
+      if (shadow_data !== undefined && shadow_sprite !== undefined) {
         shadow_matrix.set(view);
         mat3.translate(shadow_matrix, shadow_matrix, [tag.width / 4, tag.height / 1.6]);
         mat3.scale(shadow_matrix, shadow_matrix, [1 / 2, 1 / 2]);
         mat3.rotate(shadow_matrix, shadow_matrix, 0.5);
 
-        data[idx * 9 + 0] = shadow_matrix[0]! * 2;
-        data[idx * 9 + 1] = shadow_matrix[1]! + 0.002;
-        data[idx * 9 + 2] = shadow_matrix[2]!;
-        data[idx * 9 + 3] = shadow_matrix[3]!;
-        data[idx * 9 + 4] = shadow_matrix[4]!;
-        data[idx * 9 + 5] = shadow_matrix[5]!;
-        data[idx * 9 + 6] = shadow_matrix[6]!;
-        data[idx * 9 + 7] = shadow_matrix[7]!;
-        data[idx * 9 + 8] = shadow_matrix[8]!;
-        sprite_data[idx * 8 + 0] = tag.width;
-        sprite_data[idx * 8 + 1] = tag.height;
-        sprite_data[idx * 8 + 2] = frame.uv_width;
-        sprite_data[idx * 8 + 3] = frame.uv_height;
-        sprite_data[idx * 8 + 4] = frame.x;
-        sprite_data[idx * 8 + 5] = frame.y;
-        sprite_data[idx * 8 + 6] = texture_pos ?? cache_size - 1;
-        sprite_data[idx * 8 + 7] = 12;
-        idx++;
+        shadow_matrix[0] *= 2;
+        shadow_matrix[1] += 0.002;
+        shadow_data.set(shadow_matrix);
+        shadow_sprite[0] = tag.width;
+        shadow_sprite[1] = tag.height;
+        shadow_sprite[2] = frame.uv_width;
+        shadow_sprite[3] = frame.uv_height;
+        shadow_sprite[4] = frame.x;
+        shadow_sprite[5] = frame.y;
+        shadow_sprite[6] = texture_pos ?? cache_size - 1;
+        shadow_sprite[7] = 12; // TODO: replace this shit random number
       }
 
-      data[idx * 9 + 0] = view[0]!;
-      data[idx * 9 + 1] = view[1]!;
-      data[idx * 9 + 2] = view[2]!;
-      data[idx * 9 + 3] = view[3]!;
-      data[idx * 9 + 4] = view[4]!;
-      data[idx * 9 + 5] = view[5]!;
-      data[idx * 9 + 6] = view[6]!;
-      data[idx * 9 + 7] = view[7]!;
-      data[idx * 9 + 8] = view[8]!;
-      sprite_data[idx * 8 + 0] = tag.width;
-      sprite_data[idx * 8 + 1] = tag.height;
-      sprite_data[idx * 8 + 2] = frame.uv_width;
-      sprite_data[idx * 8 + 3] = frame.uv_height;
-      sprite_data[idx * 8 + 4] = frame.x;
-      sprite_data[idx * 8 + 5] = frame.y;
-      sprite_data[idx * 8 + 6] = texture_pos ?? cache_size - 1;
-      sprite_data[idx * 8 + 7] = 0;
+      instance_data.set(view);
+      sprite[0] = tag.width;
+      sprite[1] = tag.height;
+      sprite[2] = frame.uv_width;
+      sprite[3] = frame.uv_height;
+      sprite[4] = frame.x;
+      sprite[5] = frame.y;
+      sprite[6] = texture_pos ?? cache_size - 1;
+      sprite[7] = 0;
 
       idx++;
     }
