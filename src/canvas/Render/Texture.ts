@@ -54,20 +54,40 @@ export namespace Texture {
     });
   }
 
-  export function create(gl: WebGL2RenderingContext, image: HTMLImageElement) {
+  export function create(gl: WebGL2RenderingContext, image: HTMLImageElement, normal_image?: HTMLImageElement) {
     const texture = gl.createTexture();
     if (texture == null) {
       throw new Error(`[Texture -> create()] WebGL can't allocate mem for texture`);
     }
 
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    gl.bindTexture(gl.TEXTURE_2D, null);
+    // texture arrays
+    // https://gamedev.stackexchange.com/questions/147854/unpacking-sprite-sheet-into-2d-texture-array
 
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
+    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, image.width, image.height, 2);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, image.width, image.height, 1, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    if (normal_image !== undefined) {
+      console.log("created", normal_image);
+      gl.texSubImage3D(
+        gl.TEXTURE_2D_ARRAY,
+        0,
+        0,
+        0,
+        1,
+        normal_image.width,
+        normal_image.height,
+        1,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        normal_image
+      );
+    }
+    gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
     return new Texture(image, texture);
   }
 }

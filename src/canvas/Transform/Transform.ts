@@ -99,15 +99,15 @@ export class Transform extends InitComponent({ use_pool: false }) {
 
   scale(x: number | undefined, y: number | undefined) {
     let change: undefined | number;
-    if (x !== undefined) change = this.scale_x = x;
-    if (y !== undefined) change = this.scale_y = y;
+    if (x !== undefined && x !== this.scale_x) change = this.scale_x = x;
+    if (y !== undefined && y !== this.scale_y) change = this.scale_y = y;
     if (change !== undefined && (this.version & 1) === 0) this.version += 1;
   }
 
   position(x: number | undefined, y: number | undefined) {
     let change: undefined | number;
-    if (x !== undefined) change = this.x = x;
-    if (y !== undefined) change = this.y = y;
+    if (x !== undefined && this.x !== x) change = this.x = x;
+    if (y !== undefined && this.y !== y) change = this.y = y;
     if (change !== undefined && (this.version & 1) === 0) this.version += 1;
   }
 

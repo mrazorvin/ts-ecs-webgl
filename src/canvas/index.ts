@@ -10,8 +10,6 @@ import { Transform } from "./Transform/Transform";
 import { Context, ContextID } from "./Render/Context";
 import { Screen } from "./Screen";
 
-import { PostPassShader, POST_PASS_SHADER } from "./Assets/View/PostPass/PostPass.shader";
-import { PostPass, POST_PASS_CONTEXT } from "./Assets/View/PostPass/PostPass";
 import { Input } from "./Input";
 import { hero, Hero } from "./Hero";
 import { camera, Camera, camera_entity } from "./Camera";
@@ -36,8 +34,7 @@ const hero_assets = red_ogre;
 
 // this value must somehow refer to 32x32 grid size, for simplification reason
 const ROWS = navigator.maxTouchPoints > 1 ? 80 : 160;
-const BACKGROUND_CONTEXT = new ContextID();
-const MONSTER_CONTEXT = new ContextID();
+const MAIN_CONTEXT = new ContextID();
 
 const scheduler = new RafScheduler(main_world);
 const gl = WebGL.setup(document, "app");
@@ -70,9 +67,7 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   world_transform_component.scale(1 / width_ratio, -1 / ROWS);
   camera.transform.position(0, 0);
 
-  ctx.create_context(BACKGROUND_CONTEXT, { width, height }, Context.create);
-  ctx.create_context(MONSTER_CONTEXT, { width, height }, Context.create);
-  ctx.create_context(POST_PASS_CONTEXT, { width, height, shader: POST_PASS_SHADER }, PostPass.create);
+  ctx.create_context(MAIN_CONTEXT, { width, height }, Context.create);
 
   const input_ctx = input.context_info;
 
@@ -102,7 +97,6 @@ main_world.system_once(
     layout_manager.layouts.set("desktop", desktop_layout);
     layout_manager.layouts.set("mobile", mobile_layout);
 
-    ctx.create_shader(PostPassShader.create, { id: POST_PASS_SHADER });
     ctx.create_mesh(SpriteMesh.create_rect, { id: SPRITE_MESH });
     ctx.create_shader(SpriteShader.create, { id: SPRITE_SHADER });
 
@@ -204,8 +198,10 @@ main_world.system_once(
 
     input.set_layout(navigator.maxTouchPoints > 1 ? mobile_layout : desktop_layout);
 
-    const hero_image = await Texture.load_image(hero_assets.texture_src);
-    const hero_texture = ctx.create_texture(hero_image, Texture.create);
+    const hero_image = await Texture.load_image(hero_assets.sheet_src);
+    const hero_n_image =
+      hero_assets.sheet_n_src !== undefined ? await Texture.load_image(hero_assets.sheet_n_src) : undefined;
+    const hero_texture = ctx.create_texture(hero_image, (gl, image) => Texture.create(gl, image, hero_n_image));
 
     const transform = Transform.create(world, {
       parent: camera_entity.ref,
@@ -248,7 +244,7 @@ main_world.system_once(
     let x = 16;
     let y = 16;
     for (const monster of monsters) {
-      const monster_image = await Texture.load_image(monster.texture_src);
+      const monster_image = await Texture.load_image(monster.sheet_src);
       const monster_texture = ctx.create_texture(monster_image, Texture.create);
       const transform = Transform.create(world, {
         parent: camera_entity.ref,
@@ -448,7 +444,7 @@ const shadow_matrix = new Float32Array(9);
 
 main_world.system(
   sys([WebGL], (world, ctx) => {
-    const bg_ctx = ctx.context.get(BACKGROUND_CONTEXT);
+    const bg_ctx = ctx.context.get(MAIN_CONTEXT);
     if (bg_ctx === undefined) return;
     else t.buffer(ctx.gl, bg_ctx);
 
@@ -527,7 +523,7 @@ main_world.system(
         const texture = ctx.textures.get(tag.texture)!;
 
         gl.activeTexture(gl.TEXTURE0 + cache_size);
-        gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+        gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture.texture);
 
         samplerArray[cache_size] = cache_size;
         cache[tag.texture.id] = cache_size;
@@ -605,7 +601,7 @@ let frame_buffer = new Float32Array(6);
 
 main_world.system(
   sys([Input, WebGL], (world, input, ctx) => {
-    const m_ctx = ctx.context.get(MONSTER_CONTEXT);
+    const m_ctx = ctx.context.get(MAIN_CONTEXT);
     if (m_ctx === undefined) return;
     else t.buffer(ctx.gl, m_ctx);
 
@@ -648,22 +644,18 @@ main_world.system(
 
 main_world.system(
   sys([WebGL], (_, ctx) => {
-    const pp_ctx = ctx.context.get(POST_PASS_CONTEXT);
-    const bg_context = ctx.context.get(BACKGROUND_CONTEXT);
-    const monster_context = ctx.context.get(MONSTER_CONTEXT);
+    const main_context = ctx.context.get(MAIN_CONTEXT);
 
-    if (pp_ctx instanceof PostPass && bg_context && monster_context) {
-      // part of contact
-      t.buffer(ctx.gl, pp_ctx);
-      Context.render(ctx, bg_context);
-      Context.render(ctx, monster_context);
-      t.buffer(ctx.gl, undefined);
-      PostPass.render(ctx, pp_ctx);
+    if (main_context) {
+      const { gl } = ctx;
+      const { frame_buffer, width, height } = main_context;
+
+      ctx.gl.bindFramebuffer(gl.READ_FRAMEBUFFER, frame_buffer);
+      ctx.gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+      gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
       // part of contract
-      bg_context.need_clear = true;
-      monster_context.need_clear = true;
-      pp_ctx.need_clear = true;
+      main_context.need_clear = true;
     }
   })
 );
