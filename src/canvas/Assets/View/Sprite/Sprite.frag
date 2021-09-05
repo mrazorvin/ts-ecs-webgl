@@ -65,44 +65,6 @@ vec4 sampler(int pos, vec2 uv) {
     return blur9(u_Image[15], uv, resolution, direction);
 }
 
-vec4 my_texture1(int pos, vec2 uv) {
-  float width = 1.5;
-  vec2 pixels = uv * v_Resloution;
-
-  vec2 pixels_floor = floor(pixels + 0.5);
-  vec2 pixels_fract = fract(pixels + 0.5);
-  vec2 pixels_aa = fwidth(pixels) * width * 0.5;
-  pixels_fract = smoothstep(vec2(0.5) - pixels_aa, vec2(0.5) + pixels_aa, pixels_fract);
-
-  return sampler(pos, (pixels_floor + pixels_fract - 0.5) / v_Resloution);
-}
-vec4 my_texture2(int pos, vec2 uv) {
-  vec2 pixel = uv * v_Resloution;
-
-  vec2 seam = floor(pixel + 0.5);
-  vec2 dudv = fwidth(pixel);
-  pixel = seam + clamp((pixel - seam) / dudv, -0.5, 0.5);
-
-  return sampler(pos, pixel / v_Resloution);
-}
-
-vec2 v2len(in vec2 a, in vec2 b) {
-  return sqrt(a * a + b * b);
-}
-
-vec4 my_texture4(int pos, vec2 uv) {
-  vec2 pixels = uv * v_Resloution; // enter texel coordinate space.
-
-  vec2 seam = floor(pixels + .5); // find the nearest seam between texels.
-
-    // here's where the magic happens. scale up the distance to the seam so that all
-    // interpolation happens in a one-pixel-wide space.
-  pixels = (pixels - seam) / v2len(dFdx(pixels), dFdy(pixels)) + seam;
-
-  pixels = clamp(pixels, seam - .5, seam + .5); // clamp to the center of a texel.
-
-  return sampler(pos, pixels / v_Resloution);// convert back to 0..1 coordinate space.
-}
 
 struct BandlimitedPixelInfo {
   vec2 uv0;

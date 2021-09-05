@@ -544,7 +544,7 @@ main_world.system(
 
       if (shadow_data !== undefined && shadow_sprite !== undefined) {
         shadow_matrix.set(view);
-        mat3.translate(shadow_matrix, shadow_matrix, [tag.width / 4, tag.height / 1.6]);
+        mat3.translate(shadow_matrix, shadow_matrix, [tag.width / 4.4, tag.height / 1.65]);
         mat3.scale(shadow_matrix, shadow_matrix, [1 / 2, 1 / 2]);
         mat3.rotate(shadow_matrix, shadow_matrix, 0.5);
 

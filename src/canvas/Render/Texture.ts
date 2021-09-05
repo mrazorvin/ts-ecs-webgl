@@ -64,7 +64,7 @@ export namespace Texture {
     // https://gamedev.stackexchange.com/questions/147854/unpacking-sprite-sheet-into-2d-texture-array
 
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
-    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, image.width, image.height, 2);
+    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, image.width, image.height, normal_image !== undefined ? 2 : 1);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);

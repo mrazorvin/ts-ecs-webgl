@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC</title>
+  </head>
+  <body>
+    <script type="module">
+      import { default as Peer } from "https://cdn.jsdelivr.net/npm/simple-peer-light@9.10.0/simplepeer.min.js";
+
+      const { offer, id } = await fetch("/offer").then((response) => response.json());
+      const is_master = offer == null;
+      const is_slave = offer != null;
+      const peer = new Peer({
+        initiator: offer == null,
+        trickle: false,
+      });
+      if (is_slave) peer.signal(offer);
+
+      peer.on("error", (err) => console.log("error", err));
+
+      peer.on("signal", (data) => {
+        console.log({ data });
+
+        if (is_slave) {
+          return fetch("/answer", { method: "POST", body: JSON.stringify({ id, answer: data }) });
+        }
+
+        const source = new window.EventSource(`/?${JSON.stringify({ offer: data })}`);
+        source.onmessage = async (message) => {
+          try {
+            if (!message || !message.data) return console.error("skipping empty message");
+            const { answer } = JSON.parse(message.data);
+
+            if (answer) {
+              await peer.signal(answer);
+              source.onmessage = undefined;
+            }
+          } catch (error) {
+            console.error("invalid message", error);
+          }
+        };
+      });
+
+      peer.on("connect", () => {
+        console.log("connect");
+        peer.send("whatever" + Math.random());
+      });
+
+      peer.on("data", (data) => {
+        console.log("data: " + data);
+      });
+
+      window.peer = peer;
+    </script>
+  </body>
+</html>
