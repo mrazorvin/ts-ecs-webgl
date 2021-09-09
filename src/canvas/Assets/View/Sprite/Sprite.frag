@@ -11,7 +11,7 @@ in vec2 v_UV;
 
 out vec4 o_Color;
 
-vec4 blur9(sampler2DArray image, vec2 uv, vec2 resolution, vec2 direction) {
+vec4 blur9(highp sampler2DArray image, vec2 uv, vec2 resolution, vec2 direction) {
   vec4 pixel = texture(image, vec3(uv, 0));
   if(v_Color > 8.0) {
     vec4 color = vec4(0.0);

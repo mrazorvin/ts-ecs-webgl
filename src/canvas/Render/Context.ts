@@ -17,12 +17,16 @@ export abstract class Context {
   mesh: MeshID;
   width: number;
   height: number;
+  layers: number;
 
   id: ContextID;
   need_clear: boolean;
 
   constructor(
-    params: Pick<Context, "frame_buffer" | "render_buffer" | "shader" | "mesh" | "height" | "width" | "texture">
+    params: Pick<
+      Context,
+      "frame_buffer" | "render_buffer" | "shader" | "mesh" | "height" | "width" | "texture" | "layers"
+    >
   ) {
     this.id = new ContextID();
     this.need_clear = false;
@@ -33,6 +37,7 @@ export abstract class Context {
     this.render_buffer = params.render_buffer;
     this.frame_buffer = params.frame_buffer;
     this.texture = params.texture;
+    this.layers = params.layers;
   }
 
   default_dispose(gl: WebGL2RenderingContext) {
@@ -55,12 +60,14 @@ export namespace Context {
     gl: WebGL2RenderingContext,
     options: Pick<Context, "width" | "height" | "shader" | "mesh"> & {
       mag_filter?: typeof gl.LINEAR | typeof gl.NEAREST;
+      layers?: number;
     }
   ) {
     const render_buffer = gl.createRenderbuffer();
     const frame_buffer = gl.createFramebuffer();
     const texture = gl.createTexture();
     const all_runtime_exists = render_buffer && frame_buffer && texture;
+    const layers = options.layers ?? 1;
 
     if (!all_runtime_exists) {
       throw new Error(
@@ -74,21 +81,21 @@ export namespace Context {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, frame_buffer);
     gl.bindRenderbuffer(gl.RENDERBUFFER, render_buffer);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    console.log(options.mag_filter);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, options.mag_filter ?? gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, options.mag_filter ?? gl.NEAREST);
-
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
     // TODO: Switch to RGBA_F16 - to support HDR
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, options.width, options.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, options.width, options.height, layers);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, options.mag_filter ?? gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, options.mag_filter ?? gl.NEAREST);
 
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, options.width, options.height);
+    for (let i = 0; i < layers; i++) {
+      gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, texture, 0, i);
+    }
 
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, render_buffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, options.width, options.height);
 
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -99,6 +106,7 @@ export namespace Context {
       render_buffer,
       frame_buffer,
       ...options,
+      layers,
     });
   }
 

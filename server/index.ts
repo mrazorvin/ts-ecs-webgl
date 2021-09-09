@@ -7,14 +7,40 @@ const VERSION = `0.0.1b`;
 module.exports = function start() {
   const decoder = new TextDecoder();
   const app = App();
-  const clients = new Set<WebSocket>();
+  const clients = new Map<string, { sockets: WebSocket[]; next_id: number }>();
 
   app.ws("/*", {
-    open: (ws) => clients.add(ws),
-    close: (ws) => clients.delete(ws),
+    upgrade: (res, req, context) => {
+      res.upgrade(
+        { url: new URLSearchParams(req.getQuery()).get("id") ?? "" },
+        req.getHeader("sec-websocket-key"),
+        req.getHeader("sec-websocket-protocol"),
+        req.getHeader("sec-websocket-extensions"),
+        context
+      );
+    },
+    open: (ws) => {
+      const id = ws.url;
+      const client = clients.get(id) ?? { next_id: 0, sockets: [] };
+      client.sockets.push(ws);
+      clients.set(id, client);
+    },
+    close: (ws) => {
+      const id = ws.url;
+      const client = clients.get(id);
+      if (client != null) {
+        client.sockets = client.sockets.filter((socket) => socket !== ws);
+      }
+    },
     message: (ws, message, isBinary) => {
-      log_info(`message: ${decoder.decode(message)}`);
-      ws.send(message, isBinary, true);
+      const id = ws.url;
+      const client = clients.get(id);
+      if (client == null) return;
+      if (client.next_id >= client.sockets.length) client.next_id = 0;
+      const socket = client.sockets[client.next_id];
+      socket?.send(message, isBinary, true);
+      log_info(`message: [${id}:${client.next_id}] ${decoder.decode(message)}`);
+      client.next_id += 1;
     },
   });
 
@@ -34,6 +60,7 @@ module.exports = function start() {
 
   return () => {
     us_listen_socket_close(listen_socket);
-    for (const client of clients) client.end(1012);
+    for (const client of clients.values()) client.sockets.forEach((socket) => socket.end(1012));
+    clients.clear();
   };
 };

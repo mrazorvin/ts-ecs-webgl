@@ -1,23 +1,52 @@
 import { Dexie } from "dexie";
 
-let ws: undefined | WebSocket;
-let connecting: undefined | ReturnType<typeof setInterval>;
+function uuidv4() {
+  const a = crypto.getRandomValues(new Uint16Array(8));
+  let i = 0;
+  // @ts-expect-error
+  return "00-0-4-1-000".replace(/[^-]/g, (s: string) => ((a[i++] + s * 0x10000) >> s).toString(16).padStart(4, "0"));
+}
 
-function connect(on_message: (data: string) => unknown, subject: { subscribe: any; unsubscribe: any }) {
-  if (ws != null && ws.readyState < 2) ws.close();
-  try {
-    const send_message = (message: string) => ws?.send(message);
-    ws = new WebSocket("ws://localhost:9000");
-    ws.onopen = () => subject.subscribe(send_message);
-    ws.onmessage = (event) => on_message(event.data as string);
-    ws.onclose = () => {
-      subject.unsubscribe(send_message);
-      if (connecting != null) connecting = clearInterval(connecting)!;
-      connecting = setInterval(() => connect(on_message, subject), 1000);
-    };
-    if (connecting != null) clearInterval(connecting);
-  } catch (error) {
-    console.error(error);
+class Socket {
+  id: string;
+  interval: undefined | ReturnType<typeof setInterval>;
+  sockets: WebSocket[];
+  next_socket: number;
+
+  constructor(public pool_size: number, public on_message: (message: string) => unknown) {
+    this.id = uuidv4();
+    this.sockets = [];
+    this.next_socket = 0;
+  }
+
+  connect() {
+    if (this.sockets.length < this.pool_size) {
+      for (let i = this.sockets.length; i < this.pool_size; i++) {
+        const ws = new WebSocket(`ws://localhost:9000?id=${this.id}`);
+        ws.onmessage = (event) => this.on_message(event.data);
+        ws.onclose = () => (this.sockets = this.sockets.filter((socket) => socket !== ws));
+        ws.onerror = console.error;
+        this.sockets.push(ws);
+      }
+    }
+
+    if (this.interval == null) {
+      this.interval = setInterval(() => this.connect(), 1000);
+    }
+  }
+
+  send(message: string) {
+    if (this.next_socket >= this.sockets.length) this.next_socket = 0;
+
+    for (let i = this.next_socket; i < this.sockets.length; i++) {
+      const socket = this.sockets[i];
+      if (socket.readyState === 1) {
+        socket.send(message);
+        break;
+      }
+    }
+
+    this.next_socket += 1;
   }
 }
 
@@ -47,12 +76,6 @@ const subject = {
 
 function start() {
   const db = new Database();
-  const on_message = (message: string) => {
-    const data = JSON.parse(message);
-    db.messages.put({ message: data }).then((id) => {
-      postMessage([{ message: data, id }]);
-    });
-  };
 
   const messages: Array<{ id?: number; message: string }> = [];
   db.messages
@@ -61,8 +84,16 @@ function start() {
       postMessage(messages);
     });
 
-  connecting = setInterval(() => connect(on_message, subject), 1000);
-  onmessage = ({ data }) => subject.next(JSON.stringify(data));
+  onmessage = ({ data }) => socket.send(JSON.stringify(data));
+  const on_message = (message: string) => {
+    const data = JSON.parse(message);
+    db.messages.put({ message: data }).then((id) => {
+      postMessage([{ message: data, id }]);
+    });
+  };
+
+  const socket = new Socket(6, on_message);
+  socket.connect();
 }
 
 start();

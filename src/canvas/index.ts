@@ -27,6 +27,10 @@ import { Creature, creature } from "./Creature";
 import { Static } from "./Static";
 import { CreatureLayer, UILayer } from "./Layers";
 import { red_ogre } from "./Assets/Monsters/Red Ogre";
+import { LightGlobalShader, LIGHT_GLOBAL_SHADER } from "./Assets/World/Light/LightGlobal.shader";
+import { SCREEN_MESH } from "./Assets/View/Screen/Screen.mesh";
+import { Shader } from "./Render/Shader";
+import { LightShader, LIGHT_SHADER } from "./Assets/World/Light/Light.shader";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -35,6 +39,7 @@ const hero_assets = red_ogre;
 // this value must somehow refer to 32x32 grid size, for simplification reason
 const ROWS = navigator.maxTouchPoints > 1 ? 80 : 160;
 const MAIN_CONTEXT = new ContextID();
+const LIGHT_CONTEXT = new ContextID();
 
 const scheduler = new RafScheduler(main_world);
 const gl = WebGL.setup(document, "app");
@@ -45,14 +50,7 @@ main_world.resource(camera);
 main_world.resource(new CollisionWorld());
 main_world.resource(new LocalCollisionWorld());
 
-if (navigator.maxTouchPoints > 1) {
-  window.addEventListener("touchstart", () => {
-    document.documentElement.requestFullscreen({ navigationUI: "hide" });
-    setTimeout(() => main_world.resource(new Screen()), 2000);
-  });
-} else {
-  main_world.resource(new Screen());
-}
+main_world.resource(new Screen());
 
 const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   const { width, height, canvas_w, canvas_h } = t.size(ctx.gl, "100%", "100%");
@@ -68,6 +66,7 @@ const resize_system = sys([WebGL, Screen, Input], (_, ctx, screen, input) => {
   camera.transform.position(0, 0);
 
   ctx.create_context(MAIN_CONTEXT, { width, height }, Context.create);
+  ctx.create_context(LIGHT_CONTEXT, { width, height }, Context.create);
 
   const input_ctx = input.context_info;
 
@@ -99,6 +98,8 @@ main_world.system_once(
 
     ctx.create_mesh(SpriteMesh.create_rect, { id: SPRITE_MESH });
     ctx.create_shader(SpriteShader.create, { id: SPRITE_SHADER });
+    ctx.create_shader(LightGlobalShader.create, { id: LIGHT_GLOBAL_SHADER });
+    ctx.create_shader(LightShader.create, { id: LIGHT_SHADER });
 
     const attack_image = await Texture.load_image(attack);
     const attack_texture = ctx.create_texture(attack_image, Texture.create);
@@ -642,19 +643,75 @@ main_world.system(
   })
 );
 
+const light_matrix = new Float32Array(9);
+let time = 0;
+
+main_world.system(
+  sys([WebGL, Camera], (world, ctx) => {
+    const gl = ctx.gl;
+
+    const light_ctx = ctx.context.get(LIGHT_CONTEXT);
+    const light_shader = ctx.shaders.get(LIGHT_SHADER);
+    const light_mesh = ctx.meshes.get(SPRITE_MESH);
+
+    t.buffer(ctx.gl, light_ctx);
+
+    if (light_ctx && light_shader instanceof LightShader && light_mesh) {
+      q.run(world, q.id("light") ?? q([Transform, Hero]), (_, transform) => {
+        gl.useProgram(light_shader.program);
+        const light_transform = new Transform({
+          width: 320,
+          height: 320,
+          x: transform.x + transform.width / 2 - 160,
+          y: transform.y + transform.height / 2 - 160,
+          parent: transform.meta.parent,
+        });
+        light_matrix.set(Transform.view(world, light_transform));
+        gl.uniformMatrix3fv(light_shader.location.Transform, false, light_matrix);
+        gl.uniform2f(light_shader.location.Resolution, light_ctx.width, light_ctx.height);
+        gl.uniform2f(light_shader.location.WidthHeight, light_transform.width, light_transform.height);
+        gl.uniform1f(light_shader.location.Time, (time += 0.001));
+        Shader.render_mesh(gl, light_mesh);
+        gl.useProgram(null);
+      });
+    }
+
+    t.buffer(ctx.gl, undefined);
+
+    const m_ctx = ctx.context.get(MAIN_CONTEXT);
+    const shader = ctx.shaders.get(LIGHT_GLOBAL_SHADER);
+    const mesh = ctx.meshes.get(SCREEN_MESH);
+    if (shader instanceof LightGlobalShader && mesh && m_ctx && light_ctx) {
+      gl.useProgram(shader.program);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, m_ctx.texture);
+      gl.uniform1i(shader.location.Image, 0);
+
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D_ARRAY, light_ctx.texture);
+      gl.uniform1i(shader.location.Lights, 1);
+
+      Shader.render_mesh(gl, mesh);
+      gl.useProgram(null);
+    }
+  })
+);
+
 main_world.system(
   sys([WebGL], (_, ctx) => {
     const main_context = ctx.context.get(MAIN_CONTEXT);
+    const light_context = ctx.context.get(LIGHT_CONTEXT);
 
-    if (main_context) {
-      const { gl } = ctx;
-      const { frame_buffer, width, height } = main_context;
-
-      ctx.gl.bindFramebuffer(gl.READ_FRAMEBUFFER, frame_buffer);
-      ctx.gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
-      gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+    if (main_context && light_context) {
+      // const { gl } = ctx;
+      // const { frame_buffer, width, height } = main_context;
+      //
+      // ctx.gl.bindFramebuffer(gl.READ_FRAMEBUFFER, frame_buffer);
+      // ctx.gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+      // gl.blitFramebuffer(0, 0, width, height, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
 
       // part of contract
+      light_context.need_clear = true;
       main_context.need_clear = true;
     }
   })
