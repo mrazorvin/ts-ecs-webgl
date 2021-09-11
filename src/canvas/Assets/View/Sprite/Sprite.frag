@@ -9,7 +9,8 @@ flat in float v_Color;
 flat in int v_Image;
 in vec2 v_UV;
 
-out vec4 o_Color;
+layout(location = 0) out vec4 o_Color;
+layout(location = 1) out vec4 o_Shadow;
 
 vec4 blur9(highp sampler2DArray image, vec2 uv, vec2 resolution, vec2 direction) {
   vec4 pixel = texture(image, vec3(uv, 0));
@@ -64,7 +65,6 @@ vec4 sampler(int pos, vec2 uv) {
   if(pos == 15)
     return blur9(u_Image[15], uv, resolution, direction);
 }
-
 
 struct BandlimitedPixelInfo {
   vec2 uv0;
@@ -143,7 +143,7 @@ BandlimitedPixelInfo compute_pixel_weights(vec2 uv, vec2 res, vec2 inv_size, flo
 vec4 sample_bandlimited_pixel_array(int pos, vec2 uv, BandlimitedPixelInfo info) {
   vec4 color = sampler(pos, uv);
   mediump vec4 bandlimited = info.weights.x * sampler(pos, info.uv0);
-  if (info.weights.x < 1.0) {
+  if(info.weights.x < 1.0) {
     bandlimited += info.weights.y * sampler(pos, info.uv1);
     bandlimited += info.weights.z * sampler(pos, info.uv2);
     bandlimited += info.weights.w * sampler(pos, info.uv3);
@@ -159,10 +159,15 @@ void main(void) {
   // vec4 color = my_texture2(v_Image, v_UV);
 
   if(v_Color > 8.0 && color.a > 0.01) {
-    color.r *= 0.05;
-    color.g *= 0.05;
-    color.b *= 0.05;
-    color.a = color.a > 0.3 ? 0.25 : color.a;
+    color.r = 0.07;
+    color.g = 0.07;
+    color.b = 0.07;
+    color.a = 1.0;
+    o_Shadow = color;
+  } else {
+    o_Color = color;
+    if(color.a > 0.01) {
+      o_Shadow = vec4(vec3(0.0), 1.0);
+    }
   }
-  o_Color = color;
 }

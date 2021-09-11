@@ -65,7 +65,7 @@ export class WebGL extends Resource {
 
   create_context(
     id: ContextID,
-    options: Pick<Context, "width" | "height"> & Partial<Pick<Context, "shader" | "mesh">>,
+    options: Pick<Context, "width" | "height"> & Partial<Pick<Context, "shader" | "mesh"> & { layers?: number }>,
     factory: (gl: WebGL2RenderingContext, params: Parameters<typeof Context.create>[1]) => Context
   ) {
     const prev = this.context.get(id);

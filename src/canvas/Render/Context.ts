@@ -90,9 +90,13 @@ export namespace Context {
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, options.mag_filter ?? gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, options.mag_filter ?? gl.NEAREST);
 
+    let attachments: number[] = [];
     for (let i = 0; i < layers; i++) {
+      attachments.push(gl.COLOR_ATTACHMENT0 + i);
       gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, texture, 0, i);
     }
+
+    gl.drawBuffers(attachments);
 
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, render_buffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, options.width, options.height);
