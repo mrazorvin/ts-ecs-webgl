@@ -89,3 +89,32 @@ const Sprite = Build(
 
 // method non exist because sprite contains references to  
 Sprite.serializable()
+
+
+// collect hero-info sub-world attributes
+// 3 messages types
+// - global world (all provided entities and components must be injected into global world)
+// - local world (all provided entities must be injected into sub-world)
+// - all of possible solution is to store all effects in global space and then re-apply them
+//   for each creature (no sub-world message, needed), but then it's require to iterate over 
+//   each global effect tha currently affect creature and apply it, but we need how to detect
+//   which component currently belongs to which creature, since we don't want to run this effects 
+//   on inactive creatures
+// ??? how to effectively setup creature resource like attributes & resources 
+// it's possible to som-how store partial world to component, if component part of the world
+// we can store all entities related information in sub-worlds include effects like auras etc...,
+// but then on render we must iterate over... alternative
+// items, buffs ... etc store in sub-world and sub-world, once per XXX time create their visual representation in global world, then this will work only for visible creatures, adn remove duplication, but how to do that ? 
+// this also enable artificial intelligence, i.e worlds communication must be bi-directional
+// we should be able to affect global world from sub-world (i.e create effect from aura, create items 
+// this also means that we must have a way to inject components in both direction from database
+// cross-world ? references 
+// web-worker will schedule and order-entities to prevents invalid references creation by re-creating read-only world
+// what about mutable references (should be stored in special optional object)
+
+// hacks:
+// calculate custom values from attributes:
+// attack speed = base + ATTRIBUTE * 23
+
+// we could use skyrim like inventory to disable custom item positions and inventory management
+// we could store Hero items and effects in global world if effects and items will be similarly

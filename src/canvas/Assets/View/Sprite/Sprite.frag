@@ -12,24 +12,25 @@ in vec2 v_UV;
 layout(location = 0) out vec4 o_Color;
 layout(location = 1) out vec4 o_Shadow;
 
-vec4 blur9(highp sampler2DArray image, vec2 uv, vec2 resolution, vec2 direction) {
-  vec4 pixel = texture(image, vec3(uv, 0));
-  if(v_Color > 8.0) {
-    vec4 color = vec4(0.0);
-    vec2 off1 = vec2(1.3846153846) * direction;
-    vec2 off2 = vec2(3.2307692308) * direction;
-    color += pixel * 0.2270270270;
-    color += texture(image, vec3(uv + (off1 / resolution), 0)) * 0.3162162162;
-    color += texture(image, vec3(uv - (off1 / resolution), 0)) * 0.3162162162;
-    color += texture(image, vec3(uv + (off2 / resolution), 0)) * 0.0702702703;
-    color += texture(image, vec3(uv - (off2 / resolution), 0)) * 0.0702702703;
-    return color;
-  } else {
-    return pixel;
-  }
+vec4 blur9(highp sampler2DArray image, vec3 uv, vec2 resolution, vec2 direction) {
+  vec4 pixel = texture(image, uv);
+  return pixel;
+  // if(v_Color > 8.0) {
+  //   vec4 color = vec4(0.0);
+  //   vec2 off1 = vec2(1.3846153846) * direction;
+  //   vec2 off2 = vec2(3.2307692308) * direction;
+  //   color += pixel * 0.2270270270;
+  //   color += texture(image, vec3(uv + (off1 / resolution), 0)) * 0.3162162162;
+  //   color += texture(image, vec3(uv - (off1 / resolution), 0)) * 0.3162162162;
+  //   color += texture(image, vec3(uv + (off2 / resolution), 0)) * 0.0702702703;
+  //   color += texture(image, vec3(uv - (off2 / resolution), 0)) * 0.0702702703;
+  //   return color;
+  // } else {
+  //   return pixel;
+  // }
 }
 
-vec4 sampler(int pos, vec2 uv) {
+vec4 sampler(int pos, vec3 uv) {
   vec2 resolution = v_Resloution * 2.0;
   vec2 direction = vec2(1, 0);
   if(pos == 0)
@@ -141,12 +142,12 @@ BandlimitedPixelInfo compute_pixel_weights(vec2 uv, vec2 res, vec2 inv_size, flo
 }
 
 vec4 sample_bandlimited_pixel_array(int pos, vec2 uv, BandlimitedPixelInfo info) {
-  vec4 color = sampler(pos, uv);
-  mediump vec4 bandlimited = info.weights.x * sampler(pos, info.uv0);
+  vec4 color = sampler(pos, vec3(uv, 0));
+  mediump vec4 bandlimited = info.weights.x * sampler(pos, vec3(info.uv0, 0));
   if(info.weights.x < 1.0) {
-    bandlimited += info.weights.y * sampler(pos, info.uv1);
-    bandlimited += info.weights.z * sampler(pos, info.uv2);
-    bandlimited += info.weights.w * sampler(pos, info.uv3);
+    bandlimited += info.weights.y * sampler(pos, vec3(info.uv1, 0));
+    bandlimited += info.weights.z * sampler(pos, vec3(info.uv2, 0));
+    bandlimited += info.weights.w * sampler(pos, vec3(info.uv3, 0));
   }
   color = mix(color, bandlimited, info.l);
 
@@ -154,20 +155,23 @@ vec4 sample_bandlimited_pixel_array(int pos, vec2 uv, BandlimitedPixelInfo info)
 }
 
 void main(void) {
-
   vec4 color = sample_bandlimited_pixel_array(v_Image, v_UV, compute_pixel_weights(v_UV, v_Resloution, 1.0 / v_Resloution, 2.0));
-  // vec4 color = my_texture2(v_Image, v_UV);
+  vec4 emmiter = sampler(v_Image, vec3(v_UV, 1));
 
-  if(v_Color > 8.0 && color.a > 0.01) {
-    color.r = 0.07;
-    color.g = 0.07;
-    color.b = 0.07;
-    color.a = 1.0;
+  if(v_Color > 8.0 && color.a > 0.1) {
+    color.r = 1.0;
+    color.g = 0.0;
+    color.b = 0.0;
+    color.a = 0.5;
     o_Shadow = color;
   } else {
-    o_Color = color;
-    if(color.a > 0.01) {
-      o_Shadow = vec4(vec3(0.0), 1.0);
+    if(color.a > 0.5) {
+      o_Color = color;
+      o_Shadow = emmiter.r == emmiter.g && emmiter.g == emmiter.b ? vec4(0.0, 1.0, emmiter.r, 1.0) : vec4(0.0, 1.0, 0.0, 1.0);
+    } else if(emmiter.r == emmiter.g && emmiter.g == emmiter.b && emmiter.r > 0.0) {
+      o_Shadow = vec4(0.0, 0.0, emmiter.r, 0.1);
+    } else {
+      discard;
     }
   }
 }

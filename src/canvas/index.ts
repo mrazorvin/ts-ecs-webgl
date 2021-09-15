@@ -31,6 +31,7 @@ import { SCREEN_MESH } from "./Assets/View/Screen/Screen.mesh";
 import { Shader } from "./Render/Shader";
 import { LightShader, LIGHT_SHADER } from "./Assets/World/Light/Light.shader";
 import { ogre } from "./Assets/Monsters/Ogre";
+import { red_ogre } from "./Assets/Monsters/Red Ogre";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -246,7 +247,12 @@ main_world.system_once(
     let y = 16;
     for (const monster of monsters) {
       const monster_image = await Texture.load_image(monster.sheet_src);
-      const monster_texture = ctx.create_texture(monster_image, Texture.create);
+      const monster_n_image =
+        monster.sheet_n_src !== undefined ? await Texture.load_image(monster.sheet_n_src) : undefined;
+      const monster_texture = ctx.create_texture(monster_image, (gl, image) =>
+        Texture.create(gl, image, monster_n_image)
+      );
+
       const transform = Transform.create(world, {
         parent: camera_entity.ref,
         x: (x += 16),
@@ -526,7 +532,7 @@ function render_to_buffer(world: World, ctx: WebGL, shader: SpriteShader, mesh: 
     sprite[4] = frame.x;
     sprite[5] = frame.y;
     sprite[6] = texture_pos ?? cache_size - 1;
-    sprite[7] = 0;
+    sprite[7] = tag.e_type instanceof Hero ? 1 : 0;
 
     idx++;
   }
@@ -563,10 +569,10 @@ function render_lights(world: World, ctx: WebGL, shadow_ctx: Context) {
     q.run(world, q.id("light") ?? q([Transform, Hero]), (_, transform) => {
       gl.useProgram(light_shader.program);
       const light_transform = new Transform({
-        width: 320,
-        height: 320,
-        x: transform.x + transform.width / 2 - 160,
-        y: transform.y + transform.height / 2 - 160,
+        width: 160,
+        height: 160,
+        x: transform.x + transform.width / 2 - 80,
+        y: transform.y + transform.height / 2 - 80,
         parent: transform.meta.parent,
       });
       light_matrix.set(Transform.view(world, light_transform));

@@ -41,6 +41,8 @@ LocalDamageApplicationSystem.depends(DamageComponent);
 const LocalMovementAndDefenseCalculation = sys(
   [BehaviorManager, ResourceManager, AttributeManager],
   (world, bs_manager, rs_manager, as_manager) => {
+    // access to parent world
+    world.parent 
     let resulted_speed = 0;
     world.query("ApplyDamage", or() ?? { components: [Speed] }, (_, { value }) => {
       resulted_speed += value;

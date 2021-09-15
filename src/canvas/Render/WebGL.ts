@@ -16,7 +16,14 @@ export class WebGL extends Resource {
   static setup(document: Document, selector: string) {
     const target = document.getElementById(selector);
     const canvas = document.createElement("canvas");
-    const gl = canvas.getContext("webgl2", { antialias: false });
+    const gl = canvas.getContext("webgl2", {
+      antialias: false,
+      desynchronized: true,
+      stencil: false,
+      depth: false,
+      alpha: false,
+      preserveDrawingBuffer: true,
+    });
     if (gl == null) {
       const msg = "Can't create WebGL2 rendering context";
       window.alert(msg);

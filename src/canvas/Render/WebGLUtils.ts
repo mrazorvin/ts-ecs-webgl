@@ -4,14 +4,14 @@ import { ShaderGlobals } from "./ShaderGlobal";
 export namespace t {
   export function clear(gl: WebGL2RenderingContext, color?: [number, number, number, number]) {
     if (color) gl.clearColor(...color);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     return gl;
   }
 
   export function blend(gl: WebGL2RenderingContext) {
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ZERO);
 
     return gl;
   }
