@@ -1,7 +1,6 @@
 import { EntityRef, Resource } from "@mr/ecs/World";
 import { main_world } from "./MainWorld";
-import { Transform } from "./Transform/Transform";
-import { world_transform } from "./WorldView";
+import { BaseTransform, Transform } from "./Transform/Transform";
 
 export class Camera extends Resource {
   constructor(public transform: Transform, public entity: EntityRef) {
@@ -17,7 +16,7 @@ export class Camera extends Resource {
 
 // find better way to modify camera stats, for example in some aggregation object
 export const camera_transform = Transform.create(main_world, {
-  parent: world_transform.ref,
+  parent: BaseTransform.World,
   height: 0,
   width: 0,
   x: 0,

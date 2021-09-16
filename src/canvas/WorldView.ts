@@ -1,5 +1,5 @@
 import { main_world } from "./MainWorld";
-import { Transform } from "./Transform/Transform";
+import { BaseTransform, Transform } from "./Transform/Transform";
 
 export const world_transform_component = Transform.create(main_world, {
   x: -1,
@@ -8,6 +8,7 @@ export const world_transform_component = Transform.create(main_world, {
   scale_y: -1,
   height: 0,
   width: 0,
+  parent: BaseTransform.None,
 });
 
 // should be available globally

@@ -17,7 +17,8 @@ export class LightShader extends Shader {
       Transform: WebGLUniformLocation;
       Resolution: WebGLUniformLocation;
       WidthHeight: WebGLUniformLocation;
-      Collisions: WebGLUniformLocation;
+      WorldTransform: WebGLUniformLocation;
+      CameraTransform: WebGLUniformLocation;
     }
   ) {
     super(program);
@@ -30,17 +31,23 @@ export class LightShader extends Shader {
 
     gl.useProgram(program);
     const Transform = gl.getUniformLocation(program, "u_Transform");
-    const Collisions = gl.getUniformLocation(program, "u_Collisions")!;
+    const Resolution = gl.getUniformLocation(program, "u_Resolution");
     const WidthHeight = gl.getUniformLocation(program, "u_WidthHeight")!;
-    const Resolution = gl.getUniformLocation(program, "u_Resolution")!;
+    const WorldTransform = gl.getUniformLocation(program, "u_WorldTransform");
+    const CameraTransform = gl.getUniformLocation(program, "u_CameraTransform");
     gl.useProgram(null);
 
-    if (Transform) {
-      return new LightShader(program, { Transform, WidthHeight, Resolution, Collisions });
+    if (Transform && Resolution && WorldTransform && CameraTransform && WidthHeight) {
+      return new LightShader(program, { Transform, WorldTransform, CameraTransform, Resolution, WidthHeight });
     } else {
       throw new Error(
         `[${LightShader.name} -> create()] -> 
-          all locations must be valid ${JSON.stringify({ Transform, WidthHeight, Resolution, Collisions })}`
+          all locations must be valid ${JSON.stringify({
+            Transform,
+            WorldTransform,
+            CameraTransform,
+            Resolution,
+          })}`
       );
     }
   }

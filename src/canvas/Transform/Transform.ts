@@ -30,12 +30,20 @@ function fast_transform(
   return out;
 }
 
+export enum BaseTransform {
+  None = 0,
+  World = 1,
+  Camera = 2,
+}
+
+export const BASE_TRANSFORM_IDX = 9;
+
 export class Transform extends InitComponent({ use_pool: false }) {
   static create = ComponentFactory(Transform, (_, config) => new Transform(config));
 
   version: number;
   meta: {
-    parent: EntityRef | undefined;
+    parent: EntityRef | BaseTransform;
     last_parent_version: number | undefined;
     view: Float32Array;
   };
@@ -48,6 +56,14 @@ export class Transform extends InitComponent({ use_pool: false }) {
   height: number;
   width: number;
 
+  /**
+   * Version and update information stored in same field:
+   *
+   *  if field value is odd then we need to re-calculate matrix
+   *     after update we need to increase value by 1 to made it even
+   *
+   *  if field value is even then we don't need to re-calculate matrix
+   */
   getView(parent_view: Float32Array | undefined, parent_version: number | undefined): Float32Array {
     const meta = this.meta;
     if ((this.version & 1) === 1 || meta.last_parent_version !== parent_version) {
@@ -63,14 +79,23 @@ export class Transform extends InitComponent({ use_pool: false }) {
         this.scale_x,
         this.scale_y
       ) as Float32Array;
-      return parent_view !== undefined ? (mat3.multiply(view, parent_view, view) as Float32Array) : view;
+
+      const parent = this.meta.parent;
+      if (parent_view !== undefined) {
+        mat3.multiply(view, parent_view, view) as Float32Array;
+        view[BASE_TRANSFORM_IDX] = parent_view[BASE_TRANSFORM_IDX]!;
+        return view;
+      } else if (Number.isInteger(parent)) {
+        view[BASE_TRANSFORM_IDX] = parent as BaseTransform;
+        return view;
+      }
     }
 
     return meta.view;
   }
 
   constructor(config: {
-    parent?: EntityRef | undefined;
+    parent: EntityRef | BaseTransform;
     x: number;
     y: number;
     scale_x?: number;
@@ -82,7 +107,7 @@ export class Transform extends InitComponent({ use_pool: false }) {
     super();
 
     this.meta = {
-      view: new Float32Array(9),
+      view: new Float32Array(10),
       parent: config.parent,
       last_parent_version: undefined,
     };
@@ -127,7 +152,11 @@ export class Transform extends InitComponent({ use_pool: false }) {
 
 export namespace Transform {
   export function view(world: World, transform: Transform): Float32Array {
-    const parent = transform.meta.parent?.entity;
+    if (Number.isInteger(transform.meta.parent)) {
+      return transform.getView(undefined, undefined);
+    }
+
+    const parent = (transform.meta.parent as EntityRef).entity;
     const parent_transform = parent ? Transform.get(parent) : undefined;
 
     const result = transform.getView(

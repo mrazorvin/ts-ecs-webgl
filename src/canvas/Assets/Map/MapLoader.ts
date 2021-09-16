@@ -3,13 +3,12 @@ import { WebGL } from "../../Render/WebGL";
 import * as tiled_map from "./tiled_map.json";
 import * as tiles_properties from "./ground_atlased.json";
 import { Texture } from "../../Render/Texture";
-import { Transform } from "../../Transform/Transform";
+import { BaseTransform, Transform } from "../../Transform/Transform";
 import { Sprite } from "../../Sprite";
 import { SPRITE_SHADER } from "../View/Sprite/Sprite.shader";
 
 // @ts-expect-error
 import * as ground_sprite from "url:./ground_tiled.png";
-import { camera_entity } from "../../Camera";
 import { CollisionShape, CollisionWorld } from "../../CollisionWorld";
 import { SSCDRectangle, SSCDVector } from "@mr/sscd";
 import { static_comp } from "../../Static";
@@ -39,7 +38,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
         height: 32,
         x: column * 32,
         y: row * 32,
-        parent: camera_entity.ref,
+        parent: BaseTransform.Camera,
       });
 
       // TOOD: prettu ugle that we need to use transform in such way

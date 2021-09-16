@@ -6,17 +6,17 @@ import { WebGL } from "./Render/WebGL";
 import { Texture } from "./Render/Texture";
 import { Sprite } from "./Sprite";
 import { t } from "./Render/WebGLUtils";
-import { Transform } from "./Transform/Transform";
+import { BaseTransform, Transform } from "./Transform/Transform";
 import { Context, ContextID } from "./Render/Context";
 import { Screen } from "./Screen";
-
 import { Input } from "./Input";
+
 import { hero, Hero } from "./Hero";
-import { camera, Camera, camera_entity } from "./Camera";
+import { camera, Camera, camera_transform } from "./Camera";
 import { Movement } from "./Modification";
 import { MapLoader } from "./Assets/Map/MapLoader";
 import { main_world } from "./MainWorld";
-import { world_transform, world_transform_component } from "./WorldView";
+import { world_transform_component } from "./WorldView";
 import { CollisionShape, CollisionWorld, LocalCollisionWorld } from "./CollisionWorld";
 import { SSCDRectangle, SSCDShape, SSCDVector } from "@mr/sscd";
 import { Visible, visible } from "./Visible";
@@ -31,7 +31,6 @@ import { SCREEN_MESH } from "./Assets/View/Screen/Screen.mesh";
 import { Shader } from "./Render/Shader";
 import { LightShader, LIGHT_SHADER } from "./Assets/World/Light/Light.shader";
 import { ogre } from "./Assets/Monsters/Ogre";
-import { red_ogre } from "./Assets/Monsters/Red Ogre";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -115,7 +114,7 @@ main_world.system_once(
     const desktop_attack = main_world.entity([
       Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame, 4),
       Transform.create(world, {
-        parent: world_transform.ref,
+        parent: BaseTransform.World,
         x: desktop_position.x,
         y: desktop_position.y,
         height: attack_image.height,
@@ -132,7 +131,7 @@ main_world.system_once(
     const mobile_attack = main_world.entity([
       Sprite.create(world, SPRITE_SHADER, attack_texture.id, attack_frame, UILayer),
       Transform.create(world, {
-        parent: world_transform.ref,
+        parent: BaseTransform.World,
         x: mobile_position.x,
         y: mobile_position.y,
         height: attack_image.height,
@@ -161,7 +160,7 @@ main_world.system_once(
         UILayer
       ),
       Transform.create(world, {
-        parent: world_transform.ref,
+        parent: BaseTransform.World,
         x: 0,
         y: 0,
         height: Math.floor(joystick_handler_image.height / 3),
@@ -188,7 +187,7 @@ main_world.system_once(
         UILayer
       ),
       Transform.create(world, {
-        parent: world_transform.ref,
+        parent: BaseTransform.World,
         x: 0,
         y: 0,
         height: joystick_image.height / 4,
@@ -206,7 +205,7 @@ main_world.system_once(
     const hero_texture = ctx.create_texture(hero_image, (gl, image) => Texture.create(gl, image, hero_n_image));
 
     const transform = Transform.create(world, {
-      parent: camera_entity.ref,
+      parent: BaseTransform.Camera,
       x: 0,
       y: 0,
       height: hero_assets.atlas.grid_height,
@@ -254,7 +253,7 @@ main_world.system_once(
       );
 
       const transform = Transform.create(world, {
-        parent: camera_entity.ref,
+        parent: BaseTransform.Camera,
         x: (x += 16),
         y: (y += 16),
         height: monster.atlas.grid_height,
@@ -420,7 +419,7 @@ interface Tag {
   };
 }
 
-const default_transform = new Transform({ x: 0, y: 0, height: 0, width: 0 });
+const default_transform = new Transform({ x: 0, y: 0, height: 0, width: 0, parent: BaseTransform.None });
 const default_frame = { uv_width: 0, uv_height: 0, x: 0, y: 0 };
 const instanced_data = new Float32Array(9 * 1000);
 const instanced_data_arrays = Array(1000)
@@ -447,8 +446,8 @@ const tagsCache = Array(1000)
     })
   );
 const taggedEntities: Tag[] = [];
-const shadow_matrix = new Float32Array(9);
-const light_matrix = new Float32Array(9);
+const shadow_matrix = new Float32Array(10);
+const light_matrix = new Float32Array(10);
 
 function render_to_buffer(world: World, ctx: WebGL, shader: SpriteShader, mesh: SpriteMesh, entities: Tag[]) {
   const gl = ctx.gl;
@@ -505,15 +504,25 @@ function render_to_buffer(world: World, ctx: WebGL, shader: SpriteShader, mesh: 
     const view = Transform.view(world, tag.transform);
     const frame = tag.frame;
 
-    if (shadow_data !== undefined && shadow_sprite !== undefined) {
+    if (shadow_data !== undefined && shadow_sprite === undefined) {
       shadow_matrix.set(view);
-      mat3.translate(shadow_matrix, shadow_matrix, [tag.width / 4.4, tag.height / 1.65]);
+      mat3.translate(shadow_matrix, shadow_matrix, [tag.width / 4.4, tag.height / 2.65]);
       mat3.scale(shadow_matrix, shadow_matrix, [1 / 2, 1 / 2]);
-      mat3.rotate(shadow_matrix, shadow_matrix, 0.5);
+      mat3.rotate(shadow_matrix, shadow_matrix, 0.1);
 
       shadow_matrix[0] *= 2;
       shadow_matrix[1] += 0.002;
-      shadow_data.set(shadow_matrix);
+
+      shadow_data[0] = shadow_matrix[0]!;
+      shadow_data[1] = shadow_matrix[1]!;
+      shadow_data[2] = shadow_matrix[2]!;
+      shadow_data[3] = shadow_matrix[3]!;
+      shadow_data[4] = shadow_matrix[4]!;
+      shadow_data[5] = shadow_matrix[5]!;
+      shadow_data[6] = shadow_matrix[6]!;
+      shadow_data[7] = shadow_matrix[7]!;
+      shadow_data[8] = shadow_matrix[8]!;
+
       shadow_sprite[0] = tag.width;
       shadow_sprite[1] = tag.height;
       shadow_sprite[2] = frame.uv_width;
@@ -524,7 +533,16 @@ function render_to_buffer(world: World, ctx: WebGL, shader: SpriteShader, mesh: 
       shadow_sprite[7] = 12; // TODO: replace this shit random number
     }
 
-    instance_data.set(view);
+    instance_data[0] = view[0]!;
+    instance_data[1] = view[1]!;
+    instance_data[2] = view[2]!;
+    instance_data[3] = view[3]!;
+    instance_data[4] = view[4]!;
+    instance_data[5] = view[5]!;
+    instance_data[6] = view[6]!;
+    instance_data[7] = view[7]!;
+    instance_data[8] = view[8]!;
+
     sprite[0] = tag.width;
     sprite[1] = tag.height;
     sprite[2] = frame.uv_width;
@@ -556,7 +574,7 @@ function render_to_buffer(world: World, ctx: WebGL, shader: SpriteShader, mesh: 
   samplerArray.length = 0;
 }
 
-function render_lights(world: World, ctx: WebGL, shadow_ctx: Context) {
+function render_lights(world: World, ctx: WebGL, _: Context, world_view: Float32Array, camera_view: Float32Array) {
   const gl = ctx.gl;
 
   const light_ctx = ctx.context.get(LIGHT_CONTEXT);
@@ -576,12 +594,11 @@ function render_lights(world: World, ctx: WebGL, shadow_ctx: Context) {
         parent: transform.meta.parent,
       });
       light_matrix.set(Transform.view(world, light_transform));
-      gl.uniformMatrix3fv(light_shader.location.Transform, false, light_matrix);
       gl.uniform2f(light_shader.location.Resolution, light_ctx.width, light_ctx.height);
       gl.uniform2f(light_shader.location.WidthHeight, light_transform.width, light_transform.height);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D_ARRAY, shadow_ctx.texture);
-      gl.uniform1i(light_shader.location.Collisions, 0);
+      gl.uniformMatrix3fv(light_shader.location.Transform, false, light_matrix.subarray(0, 9));
+      gl.uniformMatrix3fv(light_shader.location.WorldTransform, false, world_view.subarray(0, 9));
+      gl.uniformMatrix3fv(light_shader.location.CameraTransform, false, camera_view.subarray(0, 9));
       Shader.render_mesh(gl, light_mesh);
       gl.useProgram(null);
     });
@@ -614,22 +631,14 @@ main_world.system(
       taggedEntitiesSize += 1;
     };
 
+    const world_view = Transform.view(world, world_transform_component);
+    const camera_view = Transform.view(world, camera_transform);
+
+    render_lights(world, ctx, main_ctx, world_view, camera_view);
+
     t.buffer(ctx.gl, main_ctx);
 
     q.run(world, q.id("render_creature") ?? q([Transform, Sprite, Creature, Visible]), collect_entities);
-    taggedEntities.length = taggedEntitiesSize;
-    gl.useProgram(shader.program);
-    gl.bindVertexArray(mesh.vao);
-    render_to_buffer(world, ctx, shader, mesh, taggedEntities);
-    gl.bindVertexArray(null);
-    gl.useProgram(null);
-
-    // collect light information
-    render_lights(world, ctx, main_ctx);
-    // stop collecting light information
-
-    t.buffer(ctx.gl, main_ctx);
-
     q.run(world, q.id("render_static") ?? q([Transform, Sprite, Static, Visible]), collect_entities);
     q.run(world, q.id("render_hero") ?? q([Transform, Sprite, Hero]), collect_entities);
     q.run(world, q.id("render") ?? q([Transform, Sprite, UI, DesktopUI]), collect_entities);
@@ -644,6 +653,8 @@ main_world.system(
     });
 
     gl.useProgram(shader.program);
+    gl.uniformMatrix3fv(shader.location.WorldTransform, false, world_view.subarray(0, 9));
+    gl.uniformMatrix3fv(shader.location.CameraTransform, false, camera_view.subarray(0, 9));
     gl.bindVertexArray(mesh.vao);
     render_to_buffer(world, ctx, shader, mesh, taggedEntities);
     gl.bindVertexArray(null);
