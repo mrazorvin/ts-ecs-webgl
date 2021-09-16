@@ -14,11 +14,16 @@ void main(void) {
   vec4 color3 = texture(u_Image, vec3(v_UV, 1));
 
   if(color2.a > 0.0) {
-    o_Color = vec4(color1.rgb * AMBIENT * pow((color2.rgb + 1.0), vec3(2.0)), 1.0);
+    // normalize colors brigtness
+    // bright colors will get smaller multiplier than dark colors
+    float strength = (color2.r + color2.g + color2.b) / 3.0;
+    float power = strength + 1.0;
+    float mult = 2.0 - power / 2.0;
+    o_Color = vec4(color1.rgb * AMBIENT * pow((color2.rgb + 1.0), vec3(2.0 * mult)), 1.0);
     if(color3.b > 0.0) {
       float power = color3.b + 1.0;
       float mult = 1.0 - power / 2.0;
-      o_Color = mix(o_Color, o_Color * vec4(pow(color3.b + 1.0, 13.0 * mult)), color2.r);
+      o_Color = mix(o_Color, o_Color * vec4(pow(color3.b + 1.0, 13.0 * mult)), strength);
     }
   } else {
     o_Color = vec4(color1.rgb * AMBIENT, 1.0);
@@ -34,6 +39,6 @@ void main(void) {
   // }
 
   if(color3.r > 0.25) {
-    o_Color = vec4(o_Color.rgb * 0.5, o_Color.a);
+    o_Color = vec4(color1.rgb * AMBIENT, o_Color.a);
   }
 }

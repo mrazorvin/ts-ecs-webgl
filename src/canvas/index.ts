@@ -566,7 +566,7 @@ function render_lights(world: World, ctx: WebGL, shadow_ctx: Context) {
   t.buffer(ctx.gl, light_ctx);
 
   if (light_ctx && light_shader instanceof LightShader && light_mesh) {
-    q.run(world, q.id("light") ?? q([Transform, Hero]), (_, transform) => {
+    q.run(world, q.id("light") ?? q([Transform, Creature]), (_, transform) => {
       gl.useProgram(light_shader.program);
       const light_transform = new Transform({
         width: 160,

@@ -59,7 +59,8 @@ void main(void) {
     o_Color = vec4(0.55, 0.54, 0.54, 1);
     o_Color *= vec4(light_intensity);
     o_Color = o_Color * mix(light_intensity, 1.0, AMBIENT) * 4.0;
+    o_Color = vec4(o_Color.rgb, max(o_Color.r, 0.01));
   } else {
-    o_Color = vec4(0.0);
+    discard;
   }
 }
