@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "dexie": "^3.0.3",
-    "esbuild": "^0.12.25",
-    "preact": "^10.5.14",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v19.3.0"
-  }
-}
