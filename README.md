@@ -1,4 +1,4 @@
 # FAQ
 
-- run game in development mode `NODE_ENV="production" yarn parcel src/canvas/index.html --target web --https`
+- run game in development mode `.\utils\pnpm-win-x64.exe run start`
 - run ava `NODE_ENV="development" yarn ava`
