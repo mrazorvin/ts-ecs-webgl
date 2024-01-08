@@ -3,167 +3,180 @@ import { glMatrix, mat3 } from "gl-matrix";
 import { EntityRef, InitComponent, World } from "../../ecs/World";
 
 function fast_transform(
-  out: number[] | Float32Array,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  rotate: number,
-  scale_x: number,
-  scale_y: number
+	out: number[] | Float32Array,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	rotate: number,
+	scale_x: number,
+	scale_y: number,
 ) {
-  const s = rotate === 0 ? 0 : Math.sin(rotate);
-  const c = rotate === 0 ? 1 : Math.cos(rotate);
-  const center_x = width / 2;
-  const center_y = height / 2;
+	const s = rotate === 0 ? 0 : Math.sin(rotate);
+	const c = rotate === 0 ? 1 : Math.cos(rotate);
+	const center_x = width / 2;
+	const center_y = height / 2;
 
-  out[0] = c * scale_x;
-  out[1] = s * scale_x;
-  out[2] = 0;
-  out[3] = -s * scale_y;
-  out[4] = +c * scale_y;
-  out[5] = 0;
-  out[6] = -center_x * (c * scale_x) - center_y * (-s * scale_y) + (center_x + x);
-  out[7] = -center_x * (s * scale_x) - center_y * (+c * scale_y) + (center_y + y);
-  out[8] = 1;
+	out[0] = c * scale_x;
+	out[1] = s * scale_x;
+	out[2] = 0;
+	out[3] = -s * scale_y;
+	out[4] = +c * scale_y;
+	out[5] = 0;
+	out[6] =
+		-center_x * (c * scale_x) - center_y * (-s * scale_y) + (center_x + x);
+	out[7] =
+		-center_x * (s * scale_x) - center_y * (+c * scale_y) + (center_y + y);
+	out[8] = 1;
 
-  return out;
+	return out;
 }
 
 export enum BaseTransform {
-  None = 0,
-  World = 1,
-  Camera = 2,
+	None = 0,
+	World = 1,
+	Camera = 2,
 }
 
 export const BASE_TRANSFORM_IDX = 9;
 
 export class Transform extends InitComponent({ use_pool: false }) {
-  static create = ComponentFactory(Transform, (_, config) => new Transform(config));
+	static create = ComponentFactory(
+		Transform,
+		(_, config) => new Transform(config),
+	);
 
-  version: number;
-  meta: {
-    parent: EntityRef | BaseTransform;
-    last_parent_version: number | undefined;
-    view: Float32Array;
-  };
+	version: number;
+	meta: {
+		parent: EntityRef | BaseTransform;
+		last_parent_version: number | undefined;
+		view: Float32Array;
+	};
 
-  x: number;
-  y: number;
-  scale_x: number;
-  scale_y: number;
-  rotation: number;
-  height: number;
-  width: number;
+	x: number;
+	y: number;
+	scale_x: number;
+	scale_y: number;
+	rotation: number;
+	height: number;
+	width: number;
 
-  /**
-   * Version and update information stored in same field:
-   *
-   *  if field value is odd then we need to re-calculate matrix
-   *     after update we need to increase value by 1 to made it even
-   *
-   *  if field value is even then we don't need to re-calculate matrix
-   */
-  getView(parent_view: Float32Array | undefined, parent_version: number | undefined): Float32Array {
-    const meta = this.meta;
-    if ((this.version & 1) === 1 || meta.last_parent_version !== parent_version) {
-      this.version += 1;
-      meta.last_parent_version = parent_version;
-      const view = fast_transform(
-        meta.view,
-        this.x,
-        this.y,
-        this.width,
-        this.height,
-        glMatrix.toRadian(this.rotation),
-        this.scale_x,
-        this.scale_y
-      ) as Float32Array;
+	/**
+	 * Version and update information stored in same field:
+	 *
+	 *  if field value is odd then we need to re-calculate matrix
+	 *     after update we need to increase value by 1 to made it even
+	 *
+	 *  if field value is even then we don't need to re-calculate matrix
+	 */
+	getView(
+		parent_view: Float32Array | undefined,
+		parent_version: number | undefined,
+	): Float32Array {
+		const meta = this.meta;
+		if (
+			(this.version & 1) === 1 ||
+			meta.last_parent_version !== parent_version
+		) {
+			this.version += 1;
+			meta.last_parent_version = parent_version;
+			const view = fast_transform(
+				meta.view,
+				this.x,
+				this.y,
+				this.width,
+				this.height,
+				glMatrix.toRadian(this.rotation),
+				this.scale_x,
+				this.scale_y,
+			) as Float32Array;
 
-      const parent = this.meta.parent;
-      if (parent_view !== undefined) {
-        mat3.multiply(view, parent_view, view) as Float32Array;
-        view[BASE_TRANSFORM_IDX] = parent_view[BASE_TRANSFORM_IDX]!;
-        return view;
-      } else if (Number.isInteger(parent)) {
-        view[BASE_TRANSFORM_IDX] = parent as BaseTransform;
-        return view;
-      }
-    }
+			const parent = this.meta.parent;
+			if (parent_view !== undefined) {
+				mat3.multiply(view, parent_view, view) as Float32Array;
+				view[BASE_TRANSFORM_IDX] = parent_view[BASE_TRANSFORM_IDX]!;
+				return view;
+			} else if (Number.isInteger(parent)) {
+				view[BASE_TRANSFORM_IDX] = parent as BaseTransform;
+				return view;
+			}
+		}
 
-    return meta.view;
-  }
+		return meta.view;
+	}
 
-  constructor(config: {
-    parent: EntityRef | BaseTransform;
-    x: number;
-    y: number;
-    scale_x?: number;
-    scale_y?: number;
-    rotation?: number;
-    height: number;
-    width: number;
-  }) {
-    super();
+	constructor(config: {
+		parent: EntityRef | BaseTransform;
+		x: number;
+		y: number;
+		scale_x?: number;
+		scale_y?: number;
+		rotation?: number;
+		height: number;
+		width: number;
+	}) {
+		super();
 
-    this.meta = {
-      view: new Float32Array(10),
-      parent: config.parent,
-      last_parent_version: undefined,
-    };
+		this.meta = {
+			view: new Float32Array(10),
+			parent: config.parent,
+			last_parent_version: undefined,
+		};
 
-    this.version = 1;
-    this.height = config.height;
-    this.width = config.width;
-    this.x = config.x ?? 0;
-    this.y = config.y ?? 0;
-    this.scale_x = config.scale_x ?? 1;
-    this.scale_y = config.scale_y ?? 1;
-    this.rotation = config.rotation ?? 0;
-  }
+		this.version = 1;
+		this.height = config.height;
+		this.width = config.width;
+		this.x = config.x ?? 0;
+		this.y = config.y ?? 0;
+		this.scale_x = config.scale_x ?? 1;
+		this.scale_y = config.scale_y ?? 1;
+		this.rotation = config.rotation ?? 0;
+	}
 
-  scale(x: number | undefined, y: number | undefined) {
-    let change: undefined | number;
-    if (x !== undefined && x !== this.scale_x) change = this.scale_x = x;
-    if (y !== undefined && y !== this.scale_y) change = this.scale_y = y;
-    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
-  }
+	scale(x: number | undefined, y: number | undefined) {
+		let change: undefined | number;
+		if (x !== undefined && x !== this.scale_x) change = this.scale_x = x;
+		if (y !== undefined && y !== this.scale_y) change = this.scale_y = y;
+		if (change !== undefined && (this.version & 1) === 0) this.version += 1;
+	}
 
-  position(x: number | undefined, y: number | undefined) {
-    let change: undefined | number;
-    if (x !== undefined && this.x !== x) change = this.x = x;
-    if (y !== undefined && this.y !== y) change = this.y = y;
-    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
-  }
+	position(x: number | undefined, y: number | undefined) {
+		let change: undefined | number;
+		if (x !== undefined && this.x !== x) change = this.x = x;
+		if (y !== undefined && this.y !== y) change = this.y = y;
+		if (change !== undefined && (this.version & 1) === 0) this.version += 1;
+	}
 
-  dimension(width: number | undefined, height: number | undefined) {
-    let change: undefined | number;
-    if (width !== undefined) change = this.width = width;
-    if (height !== undefined) change = this.height = height;
-    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
-  }
+	dimension(width: number | undefined, height: number | undefined) {
+		let change: undefined | number;
+		if (width !== undefined) change = this.width = width;
+		if (height !== undefined) change = this.height = height;
+		if (change !== undefined && (this.version & 1) === 0) this.version += 1;
+	}
 
-  rotate(angle: number | undefined) {
-    let change: undefined | number;
-    if (angle !== undefined) change = this.rotation = angle;
-    if (change !== undefined && (this.version & 1) === 0) this.version += 1;
-  }
+	rotate(angle: number | undefined) {
+		let change: undefined | number;
+		if (angle !== undefined) change = this.rotation = angle;
+		if (change !== undefined && (this.version & 1) === 0) this.version += 1;
+	}
 }
 
 export namespace Transform {
-  export function view(world: World, transform: Transform): Float32Array {
-    if (Number.isInteger(transform.meta.parent)) {
-      return transform.getView(undefined, undefined);
-    }
+	export function view(world: World, transform: Transform): Float32Array {
+		if (Number.isInteger(transform.meta.parent)) {
+			return transform.getView(undefined, undefined);
+		}
 
-    const parent = (transform.meta.parent as EntityRef).entity;
-    const parent_transform = parent ? Transform.get(parent) : undefined;
+		const parent = (transform.meta.parent as EntityRef).entity;
+		const parent_transform = parent ? Transform.get(parent) : undefined;
 
-    const result = transform.getView(
-      parent_transform !== undefined ? Transform.view(world, parent_transform) : undefined,
-      parent_transform?.version
-    );
+		const result = transform.getView(
+			parent_transform !== undefined
+				? Transform.view(world, parent_transform)
+				: undefined,
+			parent_transform?.version,
+		);
 
-    return result;
-  }
+		return result;
+	}
 }

@@ -11,7 +11,8 @@
       "complexity": {
         "noUselessConstructor": "off",
         "useLiteralKeys": "off",
-        "noStaticOnlyClass": "off"
+        "noStaticOnlyClass": "off",
+        "noThisInStatic": "off"
       },
       "suspicious": {
         "noConfusingLabels": "off",
