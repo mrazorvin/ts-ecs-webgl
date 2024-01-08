@@ -25,9 +25,7 @@ export class PostPassShader extends Shader {
 				t.shader(gl, PostPassFS, "FRAGMENT"),
 				t.shader(gl, PostPassVS, "VERTEX"),
 			],
-			{
-				layout_attributes: ShaderGlobals.Location,
-			},
+			{ layout_attributes: ShaderGlobals.Location2D },
 		);
 
 		gl.useProgram(program);
@@ -36,12 +34,12 @@ export class PostPassShader extends Shader {
 
 		if (Image) {
 			return new PostPassShader(program, { Image });
-		} else {
-			throw new Error(
-				`[${this.name} -> create()] -> 
-          all locations must be valid ${JSON.stringify({ Image })}`,
-			);
 		}
+
+		throw new Error(
+			`[${this.name} -> create()] -> 
+				all locations must be valid ${JSON.stringify({ Image })}`,
+		);
 	}
 
 	dispose(gl: WebGL2RenderingContext) {

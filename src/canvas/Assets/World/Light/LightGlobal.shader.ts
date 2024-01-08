@@ -25,9 +25,7 @@ export class LightGlobalShader extends Shader {
 		const { program } = t.program(
 			gl,
 			[t.shader(gl, LightFS, "FRAGMENT"), t.shader(gl, LightVS, "VERTEX")],
-			{
-				layout_attributes: ShaderGlobals.Location,
-			},
+			{ layout_attributes: ShaderGlobals.Location2D },
 		);
 
 		gl.useProgram(program);
@@ -37,12 +35,12 @@ export class LightGlobalShader extends Shader {
 
 		if (Image && Lights) {
 			return new LightGlobalShader(program, { Image, Lights });
-		} else {
-			throw new Error(
-				`[${this.name} -> create()] -> 
-          all locations must be valid ${JSON.stringify({ Image, Lights })}`,
-			);
 		}
+
+		throw new Error(
+			`[${this.name} -> create()] -> 
+				all locations must be valid ${JSON.stringify({ Image, Lights })}`,
+		);
 	}
 
 	dispose(gl: WebGL2RenderingContext) {

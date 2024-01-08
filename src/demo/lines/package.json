@@ -1,5 +1,5 @@
 {
-  "name": "@mr/template",
+  "name": "@mr/lines",
   "version": "1.0.0",
   "dependencies": {
     "@mr/ecs": "^1",

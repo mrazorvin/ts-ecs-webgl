@@ -686,6 +686,14 @@ function render_to_buffer(
 			idx, // num instances
 		);
 	}
+
+	for (let i = 0; i < cache_size; i++) {
+		gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
+		gl.activeTexture(gl.TEXTURE0 + i);
+	}
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	gl.bindVertexArray(null);
+
 	samplerArray.length = 0;
 }
 
@@ -740,7 +748,8 @@ function render_lights(
 				false,
 				camera_view.subarray(0, 9),
 			);
-			Shader.render_mesh(gl, light_mesh);
+			light_mesh.render(gl);
+
 			gl.useProgram(null);
 		});
 	}
@@ -918,7 +927,8 @@ main_world.system(
 			gl.bindTexture(gl.TEXTURE_2D_ARRAY, light_ctx.texture);
 			gl.uniform1i(shader.location.Lights, 1);
 
-			Shader.render_mesh(gl, mesh);
+			mesh.render(gl);
+
 			gl.useProgram(null);
 		}
 	}),

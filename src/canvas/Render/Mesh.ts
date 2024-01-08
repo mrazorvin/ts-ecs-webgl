@@ -1,148 +1,200 @@
 import { ShaderGlobals } from "./ShaderGlobal";
 
+type RenderMode =
+	| WebGL2RenderingContext["TRIANGLES"]
+	| WebGL2RenderingContext["TRIANGLE_STRIP"];
+
 export abstract class Mesh {
-  mode: WebGL2RenderingContext["TRIANGLES"];
-  vao: WebGLVertexArrayObject;
+	mode: RenderMode;
+	vao: WebGLVertexArrayObject;
 
-  vertex: Mesh.Buffer | null;
-  normal: Mesh.Buffer | null;
-  index: Mesh.Buffer | null;
-  uv: Mesh.Buffer | null;
+	vertex: Mesh.Buffer | null;
+	normal: Mesh.Buffer | null;
+	index: Mesh.Buffer | null;
+	uv: Mesh.Buffer | null;
 
-  id: MeshID;
+	id: MeshID;
 
-  constructor(
-    mode: WebGL2RenderingContext["TRIANGLES"],
-    vao: WebGLVertexArrayObject,
-    buffers: {
-      vertex: Mesh.Buffer | null;
-      normal: Mesh.Buffer | null;
-      index: Mesh.Buffer | null;
-      uv: Mesh.Buffer | null;
-    }
-  ) {
-    this.mode = mode;
-    this.vao = vao;
-    this.index = buffers.index;
-    this.vertex = buffers.vertex;
-    this.normal = buffers.normal;
-    this.uv = buffers.uv;
-    this.id = new MeshID();
-  }
+	constructor(
+		mode: RenderMode,
+		vao: WebGLVertexArrayObject,
+		buffers: {
+			vertex: Mesh.Buffer | null;
+			normal: Mesh.Buffer | null;
+			index: Mesh.Buffer | null;
+			uv: Mesh.Buffer | null;
+		},
+		public settings?: {
+			vertices_per_instaces: number;
+			instances_count: number;
+		},
+	) {
+		this.mode = mode;
+		this.vao = vao;
+		this.index = buffers.index;
+		this.vertex = buffers.vertex;
+		this.normal = buffers.normal;
+		this.uv = buffers.uv;
+		this.id = new MeshID();
+	}
 
-  default_dispose(gl: WebGL2RenderingContext) {
-    const buffers = [this.vertex, this.normal, this.uv];
-    for (const buffer of buffers) {
-      if (buffer === null) continue;
-      const gl_buffer = buffer.buffer;
-      gl.bindBuffer(gl.ARRAY_BUFFER, gl_buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, 1, gl.STATIC_DRAW);
-      gl.deleteBuffer(gl_buffer);
-      gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    }
+	default_dispose(gl: WebGL2RenderingContext) {
+		const buffers = [this.vertex, this.normal, this.uv];
+		for (const buffer of buffers) {
+			if (buffer === null) continue;
+			const gl_buffer = buffer.buffer;
+			gl.bindBuffer(gl.ARRAY_BUFFER, gl_buffer);
+			gl.bufferData(gl.ARRAY_BUFFER, 1, gl.STATIC_DRAW);
+			gl.deleteBuffer(gl_buffer);
+			gl.bindBuffer(gl.ARRAY_BUFFER, null);
+		}
 
-    const gl_buffer = this.index?.buffer;
-    if (gl_buffer !== null && gl_buffer !== undefined) {
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_buffer);
-      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, 1, gl.STATIC_DRAW);
-      gl.deleteBuffer(gl_buffer);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-    }
+		const gl_buffer = this.index?.buffer;
+		if (gl_buffer !== null && gl_buffer !== undefined) {
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl_buffer);
+			gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, 1, gl.STATIC_DRAW);
+			gl.deleteBuffer(gl_buffer);
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+		}
 
-    if (this.vao !== null) {
-      gl.deleteVertexArray(this.vao);
-    }
-  }
+		if (this.vao !== null) {
+			gl.deleteVertexArray(this.vao);
+		}
+	}
 
-  abstract dispose(gl: WebGL2RenderingContext): void;
+	render(gl: WebGL2RenderingContext, fn?: () => unknown) {
+		gl.bindVertexArray(this.vao);
+		fn?.();
+		if (this.index?.count) {
+			gl.drawElementsInstanced(
+				this.mode,
+				this.index.count,
+				gl.UNSIGNED_SHORT,
+				0,
+				this.settings.instances_count,
+			);
+		} else if (this.vertex?.count) {
+			gl.drawArraysInstanced(
+				this.mode,
+				0, // offset
+				this.settings?.vertices_per_instaces ?? 6,
+				this.settings?.instances_count ?? 1,
+			);
+		} else {
+			throw new Error(
+				`[Shader -> render_model()] Can't render model without index and vertex buffer`,
+			);
+		}
+		gl.bindVertexArray(null);
+	}
+
+	abstract dispose(gl: WebGL2RenderingContext): void;
 }
 
 export class MeshID {
-  // @ts-expect-error
-  #type: MeshID;
+	// @ts-expect-error
+	#type: MeshID;
 }
 
 export namespace Mesh {
-  export interface Buffer {
-    count: number;
-    buffer: WebGLBuffer;
-    component_length: number;
-  }
+	export interface Buffer {
+		count: number;
+		buffer: WebGLBuffer;
+		component_length: number;
+	}
 
-  export function attribute_buffer(
-    gl: WebGL2RenderingContext,
-    data: {
-      attribute: ShaderGlobals.Attributes;
-      array: Float32Array;
-      component_length: number;
-    }
-  ): Buffer {
-    const buffer = gl.createBuffer();
-    const count = data.array.length / data.component_length;
+	export function attribute_buffer(
+		gl: WebGL2RenderingContext,
+		data: {
+			attribute: ShaderGlobals.Attributes;
+			array: Float32Array;
+			component_length: number;
+		},
+	): Buffer {
+		const buffer = gl.createBuffer();
+		const count = data.array.length / data.component_length;
 
-    if (buffer == null) {
-      throw new Error(`[WebGLUtils.mesh.attribute_buffer()] can't create buffer`);
-    }
+		if (buffer == null) {
+			throw new Error(
+				`[WebGLUtils.mesh.attribute_buffer()] can't create buffer`,
+			);
+		}
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(ShaderGlobals.Location[data.attribute]);
-    gl.vertexAttribPointer(ShaderGlobals.Location[data.attribute], data.component_length, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
+		gl.enableVertexAttribArray(ShaderGlobals.AllLocations[data.attribute]);
+		gl.vertexAttribPointer(
+			ShaderGlobals.AllLocations[data.attribute],
+			data.component_length,
+			gl.FLOAT,
+			false,
+			0,
+			0,
+		);
 
-    return {
-      count,
-      buffer,
-      component_length: data.component_length,
-    };
-  }
+		return {
+			count,
+			buffer,
+			component_length: data.component_length,
+		};
+	}
 
-  export function divisor_attribute_buffer(
-    gl: WebGL2RenderingContext,
-    ext: ANGLE_instanced_arrays,
-    data: {
-      location: number;
-      array: Float32Array;
-      component_length: number;
-    }
-  ): Buffer {
-    const buffer = gl.createBuffer();
-    const count = data.array.length / data.component_length;
+	export function divisor_attribute_buffer(
+		gl: WebGL2RenderingContext,
+		ext: ANGLE_instanced_arrays,
+		data: {
+			location: number;
+			array: Float32Array;
+			component_length: number;
+		},
+	): Buffer {
+		const buffer = gl.createBuffer();
+		const count = data.array.length / data.component_length;
 
-    if (buffer == null) {
-      throw new Error(`[WebGLUtils.mesh.attribute_buffer()] can't create buffer`);
-    }
+		if (buffer == null) {
+			throw new Error(
+				`[WebGLUtils.mesh.attribute_buffer()] can't create buffer`,
+			);
+		}
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(data.location);
-    gl.vertexAttribPointer(data.location, data.component_length, gl.FLOAT, false, 0, 0);
-    ext.vertexAttribDivisorANGLE(data.location, 1);
+		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+		gl.bufferData(gl.ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
+		gl.enableVertexAttribArray(data.location);
+		gl.vertexAttribPointer(
+			data.location,
+			data.component_length,
+			gl.FLOAT,
+			false,
+			0,
+			0,
+		);
+		ext.vertexAttribDivisorANGLE(data.location, 1);
 
-    return {
-      count,
-      buffer,
-      component_length: data.component_length,
-    };
-  }
+		return {
+			count,
+			buffer,
+			component_length: data.component_length,
+		};
+	}
 
-  export function index_buffer(
-    gl: WebGL2RenderingContext,
-    data: {
-      array: Uint16Array;
-      component_length: number;
-    }
-  ): Buffer {
-    const buffer = gl.createBuffer();
-    const count = data.array.length / data.component_length;
+	export function index_buffer(
+		gl: WebGL2RenderingContext,
+		data: {
+			array: Uint16Array;
+			component_length: number;
+		},
+	): Buffer {
+		const buffer = gl.createBuffer();
+		const count = data.array.length / data.component_length;
 
-    if (buffer == null) {
-      throw new Error(`[WebGLUtils.mesh.index_buffer()] can't create buffer`);
-    }
+		if (buffer == null) {
+			throw new Error(`[WebGLUtils.mesh.index_buffer()] can't create buffer`);
+		}
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.array, gl.STATIC_DRAW);
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 
-    return { count, buffer, component_length: data.component_length };
-  }
+		return { count, buffer, component_length: data.component_length };
+	}
 }

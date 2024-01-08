@@ -22,9 +22,7 @@ export class ScreenShader extends Shader {
 		const { program } = t.program(
 			gl,
 			[t.shader(gl, ScreenFS, "FRAGMENT"), t.shader(gl, ScreenVS, "VERTEX")],
-			{
-				layout_attributes: ShaderGlobals.Location,
-			},
+			{ layout_attributes: ShaderGlobals.Location2D },
 		);
 
 		gl.useProgram(program);
@@ -33,12 +31,12 @@ export class ScreenShader extends Shader {
 
 		if (Image) {
 			return new ScreenShader(program, { Image });
-		} else {
-			throw new Error(
-				`[${this.name} -> create()] -> 
-          all locations must be valid ${JSON.stringify({ Image })}`,
-			);
 		}
+
+		throw new Error(
+			`[${this.name} -> create()] -> 
+          all locations must be valid ${JSON.stringify({ Image })}`,
+		);
 	}
 
 	dispose(gl: WebGL2RenderingContext) {

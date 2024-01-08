@@ -1,7 +1,97 @@
 import { Context } from "./Context";
+import { Mesh } from "./Mesh";
 import { ShaderGlobals } from "./ShaderGlobal";
 
 export namespace t {
+	interface Uniform {
+		type: number;
+		index: WebGLUniformLocation;
+	}
+
+	export class ProgramInfo {
+		private _uniforms: { [key: string]: Uniform } = {};
+		private _mapping: {
+			[key: string]: {
+				fn: (
+					gl: WebGL2RenderingContext,
+					uniform: Uniform,
+					// biome-ignore lint/suspicious/noExplicitAny: this type is know only at runime
+					data: any,
+				) => void;
+				type: new () => unknown;
+				name: string;
+			};
+		};
+
+		constructor(
+			private gl: WebGL2RenderingContext,
+			private _program: WebGLProgram,
+		) {
+			this._mapping = {
+				[gl.FLOAT_MAT3]: {
+					fn: (
+						gl: WebGL2RenderingContext,
+						uniform: Uniform,
+						data: Float32Array,
+					) => {
+						gl.uniformMatrix3fv(uniform.index, false, data);
+					},
+					type: Float32Array,
+					name: "FLOAT_MAT3",
+				},
+				[gl.FLOAT_VEC3]: {
+					fn: (
+						gl: WebGL2RenderingContext,
+						uniform: Uniform,
+						data: Float32Array,
+					) => {
+						gl.uniform3fv(uniform.index, data);
+					},
+					type: Float32Array,
+					name: "FLOAT_VEC3",
+				},
+			};
+		}
+
+		use(
+			data: {
+				uniforms: { [key: string]: unknown };
+				mesh: Mesh;
+			},
+			fn?: () => unknown,
+		) {
+			this.gl.useProgram(this._program);
+			const uniforms = data.uniforms;
+
+			for (const key in this._uniforms) {
+				const uniform = this._uniforms[key]!;
+				const data = uniforms[key];
+				const mapping = this._mapping[uniform?.type!];
+
+				if (data == null) {
+					console.error("All required unirorms", this._uniforms);
+					throw new Error(`uniform: [${key}]  is required`);
+				}
+
+				if (mapping == null) {
+					console.error("All supported unirorms types", this._mapping);
+					throw new Error(`mapping for uniform: [${key}] type not found`);
+				}
+
+				if (!(data instanceof mapping.type)) {
+					console.error("All supported unirorms types", { data, uniform });
+					throw new Error(`data type for uniform: [${key}] is invalid`);
+				}
+
+				mapping.fn(this.gl, uniform, data);
+			}
+
+			data.mesh.render(this.gl, fn);
+
+			this.gl.useProgram(null);
+		}
+	}
+
 	export function clear(
 		gl: WebGL2RenderingContext,
 		color?: [number, number, number, number],
@@ -53,7 +143,9 @@ export namespace t {
 			gl.viewport(0, 0, width, height);
 
 			return { width, height, canvas_w: width, canvas_h: height };
-		} else if (typeof width === "string" && typeof height === "string") {
+		}
+
+		if (typeof width === "string" && typeof height === "string") {
 			canvas.style.width = width;
 			canvas.style.height = height;
 
@@ -69,11 +161,11 @@ export namespace t {
 				canvas_w: rect.width,
 				canvas_h: rect.height,
 			};
-		} else {
-			throw new Error(
-				`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`,
-			);
 		}
+
+		throw new Error(
+			`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`,
+		);
 	}
 
 	export function shader(
@@ -124,10 +216,19 @@ export namespace t {
 			throw new Error(msg);
 		}
 
-    const uniforms: { [key: string]: number } = {};
+		const programInfo = new ProgramInfo(gl, program);
 		const uniformsCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 		for (let i = 0; i < uniformsCount; i++) {
-			console.log(gl.getActiveUniform(program, i));
+			const uniform = gl.getActiveUniform(program, i);
+			if (uniform) {
+				// @ts-expect-error
+				programInfo._uniforms[uniform.name] =
+					// expect error won't affect this line
+					{
+						type: uniform.type,
+						index: gl.getUniformLocation(program, uniform.name)!,
+					};
+			}
 		}
 
 		for (const shader of shaders) {
@@ -135,7 +236,7 @@ export namespace t {
 			gl.detachShader(program, shader);
 		}
 
-		return { program, uniforms } ;
+		return { program, info: programInfo };
 	}
 
 	export function get_standard_attributes_location(
@@ -145,9 +246,9 @@ export namespace t {
 		return {
 			position: gl.getAttribLocation(
 				program,
-				ShaderGlobals.Attributes.Position,
+				ShaderGlobals.Attributes.a_Position,
 			),
-			uv: gl.getAttribLocation(program, ShaderGlobals.Attributes.UV),
+			uv: gl.getAttribLocation(program, ShaderGlobals.Attributes.a_UV),
 		};
 	}
 

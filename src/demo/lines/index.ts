@@ -106,17 +106,26 @@ export class MainShader extends Shader {
 	) {
 		const shader = ctx.shaders.get(SCREEN_SHADER);
 		const mesh = ctx.meshes.get(SCREEN_MESH);
+		const gl = ctx.gl;
 
 		if (mesh instanceof MainMesh && shader instanceof MainShader) {
-			console.log(mesh);
-
-			shader.info.use({
-				uniforms: {
-					u_WorldTransform: world_transform,
-					u_SpriteTransform: sprite_transform,
+			shader.info.use(
+				{
+					uniforms: {
+						u_WorldTransform: world_transform,
+						u_SpriteTransform: sprite_transform,
+					},
+					vao: mesh.vao,
 				},
-				mesh,
-			});
+				() => {
+					gl.drawArraysInstanced(
+						gl.TRIANGLE_STRIP,
+						0, // offset
+						6, // num vertices per instance
+						1, // num instances
+					);
+				},
+			);
 		}
 	}
 
@@ -160,20 +169,12 @@ export class MainMesh extends Mesh {
 		gl.bindVertexArray(null);
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-		const rect = new MainMesh(
-			gl.TRIANGLES,
-			vao,
-			{
-				vertex,
-				normal: null,
-				uv: null,
-				index: null,
-			},
-			{
-				instances_count: 1,
-				vertices_per_instaces: 6,
-			},
-		);
+		const rect = new MainMesh(gl.TRIANGLES, vao, {
+			vertex,
+			normal: null,
+			uv: null,
+			index: null,
+		});
 
 		return rect;
 	}

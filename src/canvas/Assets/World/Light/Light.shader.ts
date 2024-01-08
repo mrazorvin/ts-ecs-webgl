@@ -28,9 +28,7 @@ export class LightShader extends Shader {
 		const { program } = t.program(
 			gl,
 			[t.shader(gl, LightFS, "FRAGMENT"), t.shader(gl, LightVS, "VERTEX")],
-			{
-				layout_attributes: ShaderGlobals.Location,
-			},
+			{ layout_attributes: ShaderGlobals.Location2D },
 		);
 
 		gl.useProgram(program);
@@ -55,17 +53,17 @@ export class LightShader extends Shader {
 				Resolution,
 				WidthHeight,
 			});
-		} else {
-			throw new Error(
-				`[${LightShader.name} -> create()] -> 
+		}
+
+		throw new Error(
+			`[${LightShader.name} -> create()] -> 
           all locations must be valid ${JSON.stringify({
 						Transform,
 						WorldTransform,
 						CameraTransform,
 						Resolution,
 					})}`,
-			);
-		}
+		);
 	}
 
 	dispose(gl: WebGL2RenderingContext) {
