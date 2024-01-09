@@ -62,16 +62,19 @@ export abstract class Mesh {
 		}
 	}
 
-	render(gl: WebGL2RenderingContext, fn?: () => unknown) {
+	render(
+		gl: WebGL2RenderingContext,
+		fn?: (gl: WebGL2RenderingContext) => unknown,
+	) {
 		gl.bindVertexArray(this.vao);
-		fn?.();
+		fn?.(gl);
 		if (this.index?.count) {
 			gl.drawElementsInstanced(
 				this.mode,
 				this.index.count,
 				gl.UNSIGNED_SHORT,
 				0,
-				this.settings.instances_count,
+				this.settings?.instances_count ?? 1,
 			);
 		} else if (this.vertex?.count) {
 			gl.drawArraysInstanced(
@@ -109,6 +112,7 @@ export namespace Mesh {
 			attribute: ShaderGlobals.Attributes;
 			array: Float32Array;
 			component_length: number;
+			stride?: number;
 		},
 	): Buffer {
 		const buffer = gl.createBuffer();
@@ -128,7 +132,7 @@ export namespace Mesh {
 			data.component_length,
 			gl.FLOAT,
 			false,
-			0,
+			data.stride ?? 0,
 			0,
 		);
 

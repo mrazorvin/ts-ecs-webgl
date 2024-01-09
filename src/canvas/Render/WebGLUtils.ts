@@ -58,7 +58,7 @@ export namespace t {
 				uniforms: { [key: string]: unknown };
 				mesh: Mesh;
 			},
-			fn?: () => unknown,
+			fn?: (gl: WebGL2RenderingContext) => unknown,
 		) {
 			this.gl.useProgram(this._program);
 			const uniforms = data.uniforms;
@@ -120,7 +120,7 @@ export namespace t {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, context.frame_buffer);
 		if (context.need_clear) {
 			context.need_clear = false;
-			clear(gl, undefined);
+			clear(gl, [1, 1, 1, 1]);
 		}
 	}
 
