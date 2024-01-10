@@ -1,5 +1,5 @@
 {
-  "name": "@mr/lines",
+  "name": "@mr/transform",
   "version": "1.0.0",
   "dependencies": {
     "@mr/ecs": "^1",

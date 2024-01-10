@@ -25,6 +25,7 @@
     "test": "NODE_ENV='development' vitest"
   },
   "dependencies": {
+    "@biomejs/biome": "^1.5.0",
     "@types/node": "^18",
     "gl-matrix": "^3.4.3",
     "vitest": "^1.1.3"

@@ -39,6 +39,17 @@ export namespace t {
 					type: Float32Array,
 					name: "FLOAT_MAT3",
 				},
+				[gl.FLOAT_MAT4]: {
+					fn: (
+						gl: WebGL2RenderingContext,
+						uniform: Uniform,
+						data: Float32Array,
+					) => {
+						gl.uniformMatrix4fv(uniform.index, false, data);
+					},
+					type: Float32Array,
+					name: "FLOAT_MAT4",
+				},
 				[gl.FLOAT_VEC3]: {
 					fn: (
 						gl: WebGL2RenderingContext,
