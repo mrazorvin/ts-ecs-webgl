@@ -108,7 +108,7 @@ export namespace t {
 		color?: [number, number, number, number],
 	) {
 		if (color) gl.clearColor(...color);
-		gl.clear(gl.COLOR_BUFFER_BIT);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 		return gl;
 	}

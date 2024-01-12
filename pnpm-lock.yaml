@@ -102,6 +102,18 @@ importers:
         specifier: ^1
         version: link:../../sscd
 
+  src/demo/7-quads:
+    dependencies:
+      '@mr/canvas':
+        specifier: ^1
+        version: link:../../canvas
+      '@mr/ecs':
+        specifier: ^1
+        version: link:../../ecs
+      '@mr/sscd':
+        specifier: ^1
+        version: link:../../sscd
+
   src/ecs: {}
 
   src/sscd:
