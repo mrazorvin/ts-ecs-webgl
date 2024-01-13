@@ -114,6 +114,18 @@ importers:
         specifier: ^1
         version: link:../../sscd
 
+  src/demo/8-textures:
+    dependencies:
+      '@mr/canvas':
+        specifier: ^1
+        version: link:../../canvas
+      '@mr/ecs':
+        specifier: ^1
+        version: link:../../ecs
+      '@mr/sscd':
+        specifier: ^1
+        version: link:../../sscd
+
   src/ecs: {}
 
   src/sscd:

@@ -29,33 +29,28 @@ export namespace t {
 		) {
 			this._mapping = {
 				[gl.FLOAT_MAT3]: {
-					fn: (
-						gl: WebGL2RenderingContext,
-						uniform: Uniform,
-						data: Float32Array,
-					) => {
+					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
 						gl.uniformMatrix3fv(uniform.index, false, data);
 					},
 					type: Float32Array,
 					name: "FLOAT_MAT3",
 				},
 				[gl.FLOAT_MAT4]: {
-					fn: (
-						gl: WebGL2RenderingContext,
-						uniform: Uniform,
-						data: Float32Array,
-					) => {
+					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
 						gl.uniformMatrix4fv(uniform.index, false, data);
 					},
 					type: Float32Array,
 					name: "FLOAT_MAT4",
 				},
+				[gl.SAMPLER_2D_ARRAY]: {
+					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: number[]) => {
+						gl.uniform1iv(uniform.index, data);
+					},
+					type: Array,
+					name: "INT",
+				},
 				[gl.FLOAT_VEC3]: {
-					fn: (
-						gl: WebGL2RenderingContext,
-						uniform: Uniform,
-						data: Float32Array,
-					) => {
+					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
 						gl.uniform3fv(uniform.index, data);
 					},
 					type: Float32Array,
@@ -86,7 +81,7 @@ export namespace t {
 
 				if (mapping == null) {
 					console.error("All supported unirorms types", this._mapping);
-					throw new Error(`mapping for uniform: [${key}] type not found`);
+					throw new Error(`mapping for uniform (${uniform?.type}): [${key}] type not found `);
 				}
 
 				if (!(data instanceof mapping.type)) {
@@ -103,10 +98,7 @@ export namespace t {
 		}
 	}
 
-	export function clear(
-		gl: WebGL2RenderingContext,
-		color?: [number, number, number, number],
-	) {
+	export function clear(gl: WebGL2RenderingContext, color?: [number, number, number, number]) {
 		if (color) gl.clearColor(...color);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -120,10 +112,7 @@ export namespace t {
 		return gl;
 	}
 
-	export function buffer(
-		gl: WebGL2RenderingContext,
-		context: Context | undefined,
-	) {
+	export function buffer(gl: WebGL2RenderingContext, context: Context | undefined) {
 		if (context === undefined) {
 			return gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		}
@@ -135,11 +124,7 @@ export namespace t {
 		}
 	}
 
-	export function size(
-		gl: WebGL2RenderingContext,
-		width: number | string,
-		height: number | string,
-	) {
+	export function size(gl: WebGL2RenderingContext, width: number | string, height: number | string) {
 		// @ts-ignore
 		const canvas = gl.canvas as HTMLCanvasElement;
 		const dpr = window.devicePixelRatio;
@@ -174,19 +159,11 @@ export namespace t {
 			};
 		}
 
-		throw new Error(
-			`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`,
-		);
+		throw new Error(`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`);
 	}
 
-	export function shader(
-		gl: WebGL2RenderingContext,
-		src: string,
-		type: "VERTEX" | "FRAGMENT",
-	) {
-		const shader = gl.createShader(
-			type === "VERTEX" ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER,
-		)!;
+	export function shader(gl: WebGL2RenderingContext, src: string, type: "VERTEX" | "FRAGMENT") {
+		const shader = gl.createShader(type === "VERTEX" ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER)!;
 		gl.shaderSource(shader, src);
 		gl.compileShader(shader);
 
@@ -250,33 +227,19 @@ export namespace t {
 		return { program, info: programInfo };
 	}
 
-	export function get_standard_attributes_location(
-		gl: WebGL2RenderingContext,
-		program: WebGLProgram,
-	) {
+	export function get_standard_attributes_location(gl: WebGL2RenderingContext, program: WebGLProgram) {
 		return {
-			position: gl.getAttribLocation(
-				program,
-				ShaderGlobals.Attributes.a_Position,
-			),
+			position: gl.getAttribLocation(program, ShaderGlobals.Attributes.a_Position),
 			uv: gl.getAttribLocation(program, ShaderGlobals.Attributes.a_UV),
 		};
 	}
 
 	export namespace buffer {
-		export function array(
-			gl: WebGL2RenderingContext,
-			array: Float32Array,
-			is_static = true,
-		) {
+		export function array(gl: WebGL2RenderingContext, array: Float32Array, is_static = true) {
 			const buffer = gl.createBuffer();
 
 			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-			gl.bufferData(
-				gl.ARRAY_BUFFER,
-				array,
-				is_static ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW,
-			);
+			gl.bufferData(gl.ARRAY_BUFFER, array, is_static ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW);
 			gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 			return buffer;

@@ -1,5 +1,5 @@
 {
-	"name": "@mr/textures",
+	"name": "@mr/cube",
 	"version": "1.0.0",
 	"dependencies": {
 		"@mr/ecs": "^1",
