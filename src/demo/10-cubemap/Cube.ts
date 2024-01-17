@@ -14,6 +14,8 @@ enum CubeFace {
 	Top = 5,
 }
 
+
+
 export const CUBE_MESH = new MeshID();
 export class CubeMesh extends Mesh {
 	static create(gl: WebGL2RenderingContext, { width = 1, height = 1, depth = 1, x = 0, y = 0, z = 0 }) {
