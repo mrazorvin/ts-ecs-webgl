@@ -3,246 +3,264 @@ import { Mesh } from "./Mesh";
 import { ShaderGlobals } from "./ShaderGlobal";
 
 export namespace t {
-	interface Uniform {
-		type: number;
-		index: WebGLUniformLocation;
-	}
+  interface Uniform {
+    type: number;
+    index: WebGLUniformLocation;
+  }
 
-	export class ProgramInfo {
-		private _uniforms: { [key: string]: Uniform } = {};
-		private _mapping: {
-			[key: string]: {
-				fn: (
-					gl: WebGL2RenderingContext,
-					uniform: Uniform,
-					// biome-ignore lint/suspicious/noExplicitAny: this type is know only at runime
-					data: any,
-				) => void;
-				type: new () => unknown;
-				name: string;
-			};
-		};
+  export class ProgramInfo {
+    private _uniforms: { [key: string]: Uniform } = {};
+    private _mapping: {
+      [key: string]: {
+        fn: (
+          gl: WebGL2RenderingContext,
+          uniform: Uniform,
+          // biome-ignore lint/suspicious/noExplicitAny: this type is know only at runime
+          data: any,
+        ) => void;
+        type: (value: unknown) => boolean;
+        name: string;
+      };
+    };
 
-		constructor(
-			private gl: WebGL2RenderingContext,
-			private _program: WebGLProgram,
-		) {
-			this._mapping = {
-				[gl.FLOAT_MAT3]: {
-					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
-						gl.uniformMatrix3fv(uniform.index, false, data);
-					},
-					type: Float32Array,
-					name: "FLOAT_MAT3",
-				},
-				[gl.FLOAT_MAT4]: {
-					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
-						gl.uniformMatrix4fv(uniform.index, false, data);
-					},
-					type: Float32Array,
-					name: "FLOAT_MAT4",
-				},
-				[gl.SAMPLER_2D_ARRAY]: {
-					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: number[]) => {
-						gl.uniform1iv(uniform.index, data);
-					},
-					type: Array,
-					name: "INT",
-				},
-				[gl.FLOAT_VEC3]: {
-					fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
-						gl.uniform3fv(uniform.index, data);
-					},
-					type: Float32Array,
-					name: "FLOAT_VEC3",
-				},
-			};
-		}
+    constructor(
+      private gl: WebGL2RenderingContext,
+      private _program: WebGLProgram,
+    ) {
+      this._mapping = {
+        [gl.FLOAT_MAT3]: {
+          fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
+            gl.uniformMatrix3fv(uniform.index, false, data);
+          },
+          type: (v) => v instanceof Float32Array,
+          name: "FLOAT_MAT3",
+        },
+        [gl.FLOAT_MAT4]: {
+          fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
+            gl.uniformMatrix4fv(uniform.index, false, data);
+          },
+          type: (v) => v instanceof Float32Array,
+          name: "FLOAT_MAT4",
+        },
+        [gl.SAMPLER_2D_ARRAY]: {
+          fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: number[]) => {
+            gl.uniform1iv(uniform.index, data);
+          },
+          type: (v) => Array.isArray(v),
+          name: "SAMPLER_2D_ARRAY",
+        },
+        [gl.SAMPLER_CUBE]: {
+          fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: number) => {
+            gl.uniform1i(uniform.index, data);
+          },
+          type: (v) => typeof v === "number",
+          name: "SAMPLER_CUBE",
+        },
+        [gl.FLOAT]: {
+          fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: number) => {
+            gl.uniform1f(uniform.index, data);
+          },
+          type: (v) => typeof v === "number",
+          name: "FLOAT",
+        },
+        [gl.FLOAT_VEC3]: {
+          fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
+            gl.uniform3fv(uniform.index, data);
+          },
+          type: (v) => v instanceof Float32Array,
+          name: "FLOAT_VEC3",
+        },
+      };
+    }
 
-		use(
-			data: {
-				uniforms: { [key: string]: unknown };
-				mesh: Mesh;
-			},
-			fn?: (gl: WebGL2RenderingContext) => unknown,
-		) {
-			this.gl.useProgram(this._program);
-			const uniforms = data.uniforms;
+    use(
+      data: {
+        uniforms: { [key: string]: unknown };
+        mesh: Mesh;
+      },
+      fn?: (gl: WebGL2RenderingContext) => unknown,
+    ) {
+      this.gl.useProgram(this._program);
+      const uniforms = data.uniforms;
 
-			for (const key in this._uniforms) {
-				const uniform = this._uniforms[key]!;
-				const data = uniforms[key];
-				const mapping = this._mapping[uniform?.type!];
+      for (const key in this._uniforms) {
+        const uniform = this._uniforms[key]!;
+        const data = uniforms[key];
+        const mapping = this._mapping[uniform?.type!];
 
-				if (data == null) {
-					console.error("All required unirorms", this._uniforms);
-					throw new Error(`uniform: [${key}]  is required`);
-				}
+        if (data === null) {
+          continue;
+        }
 
-				if (mapping == null) {
-					console.error("All supported unirorms types", this._mapping);
-					throw new Error(`mapping for uniform (${uniform?.type}): [${key}] type not found `);
-				}
+        if (data === undefined) {
+          console.error("All required unirorms", this._uniforms);
+          throw new Error(`uniform: [${key}]  is required`);
+        }
 
-				if (!(data instanceof mapping.type)) {
-					console.error("All supported unirorms types", { data, uniform });
-					throw new Error(`data type for uniform: [${key}] is invalid`);
-				}
+        if (mapping == null) {
+          console.error("All supported unirorms types", this._mapping);
+          throw new Error(`mapping for uniform (${uniform?.type}): [${key}] type not found `);
+        }
 
-				mapping.fn(this.gl, uniform, data);
-			}
+        if (!mapping.type(data)) {
+          console.error("All supported unirorms types", { data, uniform });
+          throw new Error(`data type for uniform: [${key}] is invalid`);
+        }
 
-			data.mesh.render(this.gl, fn);
+        mapping.fn(this.gl, uniform, data);
+      }
 
-			this.gl.useProgram(null);
-		}
-	}
+      data.mesh.render(this.gl, fn);
 
-	export function clear(gl: WebGL2RenderingContext, color?: [number, number, number, number]) {
-		if (color) gl.clearColor(...color);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      this.gl.useProgram(null);
+    }
+  }
 
-		return gl;
-	}
+  export function clear(gl: WebGL2RenderingContext, color?: [number, number, number, number]) {
+    if (color) gl.clearColor(...color);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	export function blend(gl: WebGL2RenderingContext) {
-		gl.enable(gl.BLEND);
-		gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ZERO);
+    return gl;
+  }
 
-		return gl;
-	}
+  export function blend(gl: WebGL2RenderingContext) {
+    gl.enable(gl.BLEND);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ZERO);
 
-	export function buffer(gl: WebGL2RenderingContext, context: Context | undefined) {
-		if (context === undefined) {
-			return gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		}
+    return gl;
+  }
 
-		gl.bindFramebuffer(gl.FRAMEBUFFER, context.frame_buffer);
-		if (context.need_clear) {
-			context.need_clear = false;
-			clear(gl, [1, 1, 1, 1]);
-		}
-	}
+  export function buffer(gl: WebGL2RenderingContext, context: Context | undefined) {
+    if (context === undefined) {
+      return gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
 
-	export function size(gl: WebGL2RenderingContext, width: number | string, height: number | string) {
-		// @ts-ignore
-		const canvas = gl.canvas as HTMLCanvasElement;
-		const dpr = window.devicePixelRatio;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, context.frame_buffer);
+    if (context.need_clear) {
+      context.need_clear = false;
+      clear(gl, [1, 1, 1, 1]);
+    }
+  }
 
-		if (typeof width === "number" && typeof height === "number") {
-			canvas.style.width = `${width}px`;
-			canvas.style.height = `${height}px`;
+  export function size(gl: WebGL2RenderingContext, width: number | string, height: number | string) {
+    // @ts-ignore
+    const canvas = gl.canvas as HTMLCanvasElement;
+    const dpr = window.devicePixelRatio;
 
-			canvas.width = width;
-			canvas.height = height;
+    if (typeof width === "number" && typeof height === "number") {
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
 
-			gl.viewport(0, 0, width, height);
+      canvas.width = width;
+      canvas.height = height;
 
-			return { width, height, canvas_w: width, canvas_h: height };
-		}
+      gl.viewport(0, 0, width, height);
 
-		if (typeof width === "string" && typeof height === "string") {
-			canvas.style.width = width;
-			canvas.style.height = height;
+      return { width, height, canvas_w: width, canvas_h: height };
+    }
 
-			const rect = canvas.getBoundingClientRect();
+    if (typeof width === "string" && typeof height === "string") {
+      canvas.style.width = width;
+      canvas.style.height = height;
 
-			canvas.width = rect.width * dpr;
-			canvas.height = rect.height * dpr;
-			gl.viewport(0, 0, rect.width * dpr, rect.height * dpr);
+      const rect = canvas.getBoundingClientRect();
 
-			return {
-				width: canvas.width,
-				height: canvas.height,
-				canvas_w: rect.width,
-				canvas_h: rect.height,
-			};
-		}
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      gl.viewport(0, 0, rect.width * dpr, rect.height * dpr);
 
-		throw new Error(`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`);
-	}
+      return {
+        width: canvas.width,
+        height: canvas.height,
+        canvas_w: rect.width,
+        canvas_h: rect.height,
+      };
+    }
 
-	export function shader(gl: WebGL2RenderingContext, src: string, type: "VERTEX" | "FRAGMENT") {
-		const shader = gl.createShader(type === "VERTEX" ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER)!;
-		gl.shaderSource(shader, src);
-		gl.compileShader(shader);
+    throw new Error(`[WebGLUtils.size()] {width=${width}} and {height=${height}} both must be string or number`);
+  }
 
-		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			const msg = `can't compile shader ${type}`;
-			console.error(msg, src, gl.getShaderInfoLog(shader));
-			throw new Error(msg);
-		}
+  export function shader(gl: WebGL2RenderingContext, src: string, type: "VERTEX" | "FRAGMENT") {
+    const shader = gl.createShader(type === "VERTEX" ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER)!;
+    gl.shaderSource(shader, src);
+    gl.compileShader(shader);
 
-		return shader;
-	}
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      const msg = `can't compile shader ${type}`;
+      console.error(msg, src, gl.getShaderInfoLog(shader));
+      throw new Error(msg);
+    }
 
-	export function program(
-		gl: WebGL2RenderingContext,
-		shaders: WebGLShader[],
-		options: {
-			layout_attributes: { [key: string]: number } | false;
-		},
-	) {
-		const program = gl.createProgram()!;
-		for (const shader of shaders) {
-			gl.attachShader(program, shader);
-		}
+    return shader;
+  }
 
-		if (options.layout_attributes) {
-			for (const attribute_name in options.layout_attributes) {
-				const position = options.layout_attributes[attribute_name]!;
-				gl.bindAttribLocation(program, position, attribute_name);
-			}
-		}
+  export function program(
+    gl: WebGL2RenderingContext,
+    shaders: WebGLShader[],
+    options: {
+      layout_attributes: { [key: string]: number } | false;
+    },
+  ) {
+    const program = gl.createProgram()!;
+    for (const shader of shaders) {
+      gl.attachShader(program, shader);
+    }
 
-		gl.linkProgram(program);
+    if (options.layout_attributes) {
+      for (const attribute_name in options.layout_attributes) {
+        const position = options.layout_attributes[attribute_name]!;
+        gl.bindAttribLocation(program, position, attribute_name);
+      }
+    }
 
-		if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-			const msg = "Can't compile program";
-			window.alert(msg);
-			console.error(msg, gl.getProgramInfoLog(program));
-			throw new Error(msg);
-		}
+    gl.linkProgram(program);
 
-		const programInfo = new ProgramInfo(gl, program);
-		const uniformsCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-		for (let i = 0; i < uniformsCount; i++) {
-			const uniform = gl.getActiveUniform(program, i);
-			if (uniform) {
-				// @ts-expect-error
-				programInfo._uniforms[uniform.name] =
-					// expect error won't affect this line
-					{
-						type: uniform.type,
-						index: gl.getUniformLocation(program, uniform.name)!,
-					};
-			}
-		}
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      const msg = "Can't compile program";
+      window.alert(msg);
+      console.error(msg, gl.getProgramInfoLog(program));
+      throw new Error(msg);
+    }
 
-		for (const shader of shaders) {
-			gl.deleteShader(shader);
-			gl.detachShader(program, shader);
-		}
+    const programInfo = new ProgramInfo(gl, program);
+    const uniformsCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < uniformsCount; i++) {
+      const uniform = gl.getActiveUniform(program, i);
+      if (uniform) {
+        // @ts-expect-error
+        programInfo._uniforms[uniform.name] =
+          // expect error won't affect this line
+          {
+            type: uniform.type,
+            index: gl.getUniformLocation(program, uniform.name)!,
+          };
+      }
+    }
 
-		return { program, info: programInfo };
-	}
+    for (const shader of shaders) {
+      gl.deleteShader(shader);
+      gl.detachShader(program, shader);
+    }
 
-	export function get_standard_attributes_location(gl: WebGL2RenderingContext, program: WebGLProgram) {
-		return {
-			position: gl.getAttribLocation(program, ShaderGlobals.Attributes.a_Position),
-			uv: gl.getAttribLocation(program, ShaderGlobals.Attributes.a_UV),
-		};
-	}
+    return { program, info: programInfo };
+  }
 
-	export namespace buffer {
-		export function array(gl: WebGL2RenderingContext, array: Float32Array, is_static = true) {
-			const buffer = gl.createBuffer();
+  export function get_standard_attributes_location(gl: WebGL2RenderingContext, program: WebGLProgram) {
+    return {
+      position: gl.getAttribLocation(program, ShaderGlobals.Attributes.a_Position),
+      uv: gl.getAttribLocation(program, ShaderGlobals.Attributes.a_UV),
+    };
+  }
 
-			gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-			gl.bufferData(gl.ARRAY_BUFFER, array, is_static ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW);
-			gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  export namespace buffer {
+    export function array(gl: WebGL2RenderingContext, array: Float32Array, is_static = true) {
+      const buffer = gl.createBuffer();
 
-			return buffer;
-		}
-	}
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, array, is_static ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+      return buffer;
+    }
+  }
 }

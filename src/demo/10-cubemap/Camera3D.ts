@@ -24,13 +24,7 @@ export class Camera3D extends Resource {
 	}
 
 	set_perspective(screen: Screen) {
-		Mat4.perspective(
-			this.project_mat4,
-			this.fov,
-			screen.width / screen.height,
-			this.near,
-			this.far,
-		);
+		Mat4.perspective(this.project_mat4, this.fov, screen.width / screen.height, this.near, this.far);
 	}
 
 	pan_x(v: number) {
@@ -92,6 +86,13 @@ export class Camera3D extends Resource {
 
 		Mat4.invert(this.view_ma4, this.transform.mat4.raw);
 		return this.view_ma4;
+	}
+
+	mat4_without_translate() {
+		const mat4 = new Float32Array(this.view_ma4);
+		mat4[12] = mat4[13] = mat4[14] = 0;
+		
+		return mat4;
 	}
 
 	dispose() {}

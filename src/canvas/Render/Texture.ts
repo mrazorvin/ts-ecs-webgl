@@ -15,7 +15,10 @@
 export class Texture {
   id = new TextureID();
 
-  constructor(public image: HTMLImageElement, public texture: WebGLTexture) {
+  constructor(
+    public image: HTMLImageElement,
+    public texture: WebGLTexture,
+  ) {
     if (!image.complete) {
       throw new Error("[new Texture()] can't create texture with unloaded image");
     }
@@ -46,12 +49,41 @@ export namespace Texture {
       const img = new Image();
       img.src = path;
 
-      if (img.complete) return resolve(img);
-      else {
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(img);
+      if (img.complete) {
+        return resolve(img);
       }
+
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(img);
     });
+  }
+
+  export function create_cubemap(gl: WebGL2RenderingContext, images: HTMLImageElement[]) {
+    const texture = gl.createTexture();
+    if (texture == null) {
+      throw new Error("[Texture -> create_cubemap()] WebGL can't allocate mem for texture");
+    }
+
+    if (images.length !== 6) {
+      throw new Error("[Texture -> create_cubemap()] Cubemap must contains excatly 6 images");
+    }
+
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+
+    texture_configuration: {
+      for (let i = 0; i < images.length; i++) {
+        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[i]);
+      }
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+
+    return new Texture(images[0], texture);
   }
 
   export function create(gl: WebGL2RenderingContext, image: HTMLImageElement, normal_image?: HTMLImageElement) {
@@ -83,7 +115,7 @@ export namespace Texture {
         1,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        normal_image
+        normal_image,
       );
     }
     gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
