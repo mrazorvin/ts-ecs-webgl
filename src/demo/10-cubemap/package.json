@@ -1,0 +1,19 @@
+{
+	"name": "@mr/cube",
+	"version": "1.0.0",
+	"dependencies": {
+		"@mr/ecs": "^1",
+		"@mr/sscd": "^1",
+		"@mr/canvas": "^1"
+	},
+	"scripts": {
+		"start": "NODE_ENV='production' parcel ./index.html --target web --https --no-cache"
+	},
+	"targets": {
+		"web": {
+			"distDir": "build",
+			"outputFormat": "global",
+			"scopeHoist": false
+		}
+	}
+}

@@ -66,6 +66,18 @@ importers:
         specifier: ^1
         version: link:../../sscd
 
+  src/demo/10-cubemap:
+    dependencies:
+      '@mr/canvas':
+        specifier: ^1
+        version: link:../../canvas
+      '@mr/ecs':
+        specifier: ^1
+        version: link:../../ecs
+      '@mr/sscd':
+        specifier: ^1
+        version: link:../../sscd
+
   src/demo/3-lines:
     dependencies:
       '@mr/canvas':
@@ -115,6 +127,18 @@ importers:
         version: link:../../sscd
 
   src/demo/8-textures:
+    dependencies:
+      '@mr/canvas':
+        specifier: ^1
+        version: link:../../canvas
+      '@mr/ecs':
+        specifier: ^1
+        version: link:../../ecs
+      '@mr/sscd':
+        specifier: ^1
+        version: link:../../sscd
+
+  src/demo/9-cube:
     dependencies:
       '@mr/canvas':
         specifier: ^1
