@@ -63,11 +63,18 @@ export namespace t {
           type: (v) => typeof v === "number",
           name: "FLOAT",
         },
+        [gl.FLOAT_VEC4]: {
+          fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array | number[]) => {
+            gl.uniform4fv(uniform.index, data);
+          },
+          type: (v) => Array.isArray(v),
+          name: "FLOAT_VEC4",
+        },
         [gl.FLOAT_VEC3]: {
           fn: (gl: WebGL2RenderingContext, uniform: Uniform, data: Float32Array) => {
             gl.uniform3fv(uniform.index, data);
           },
-          type: (v) => v instanceof Float32Array,
+          type: (v) => Array.isArray(v) || v instanceof Float32Array,
           name: "FLOAT_VEC3",
         },
       };

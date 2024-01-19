@@ -12,8 +12,13 @@ import { QUAD_MESH, QUAD_SHADER, QuadMesh, QuadShader } from "./Quad";
 // @ts-expect-error
 import * as quad_texture_png from "url:./UV_Grid_Lrg.jpg";
 import { Texture } from "src/canvas/Render/Texture";
-import { CUBE_MESH, Cube, CubeMesh, CubeShader, CUBE_SHADER } from "./Cube";
+import { CUBE_MESH, CubeMesh } from "./Cube";
+import { Model } from "./Model";
+import { ModelShader, MODEL_SHADER } from "./Model";
 import { Skybox, SkyboxShader, skybox_images } from "./skybox/skybox";
+import { pirate_girl } from "./pirate_girl/pirate_girl";
+import { parseOBJ } from "./parseOBJ";
+import { Debugger, DebuggerMesh, DebuggerShader } from "./Debugger";
 
 const scheduler = new RafScheduler(main_world);
 const gl = WebGL.setup(document, "app");
@@ -64,7 +69,7 @@ main_world.system_once(
     ctx.create_shader(QuadShader.create, { id: QUAD_SHADER });
 
     ctx.create_mesh(CubeMesh.create, { id: CUBE_MESH });
-    ctx.create_shader(CubeShader.create, { id: CUBE_SHADER });
+    ctx.create_shader(ModelShader.create, { id: MODEL_SHADER });
 
     main_world.entity([Transform3D.create(world), Grid.create(world)]);
 
@@ -85,7 +90,36 @@ main_world.system_once(
     skybox_mesh.mesh.enable_blending = true;
     skybox_mesh.mesh.disable_culling = true;
 
-    main_world.entity([Transform3D.create(world), Cube.create(world, cube_texture.id, CUBE_MESH, CUBE_SHADER)]);
+    const PirateGirldMesh = parseOBJ(pirate_girl.obj, true);
+
+    const pirate_girl_mesh = ctx.create_mesh(PirateGirldMesh.create, {});
+    const pirate_girl_texture = ctx.create_texture(await pirate_girl.image, (gl, image) =>
+      Texture.create(gl, image, image),
+    );
+
+    const debbuger_mesh = ctx.create_mesh(DebuggerMesh.create, {
+      color: [1, 1, 1, 1],
+      vertices: pirate_girl_mesh.mesh.vertex?.data as Float32Array,
+    });
+
+    const debbuger_shader = ctx.create_shader(DebuggerShader.create, {});
+
+    main_world.entity([Debugger.create(world, debbuger_mesh.id, debbuger_shader.id)]);
+
+    main_world.entity([
+      Transform3D.create(world)
+        .update((t) => (t.position.y = 0.5))
+        .update((t) => t.scale.set(0.25, 0.25, 0.25)),
+      Model.create(world, pirate_girl_texture.id, pirate_girl_mesh.id, MODEL_SHADER),
+    ]);
+
+    main_world.entity([
+      Transform3D.create(world)
+        .update((t) => (t.position.y = 0.25))
+        .update((t) => t.scale.set(0.5, 0.5, 0.5)),
+      Model.create(world, cube_texture.id, CUBE_MESH, MODEL_SHADER),
+    ]);
+
     main_world.entity([
       Transform3D.create(world),
       Skybox.create(world, skybox_day_images.id, skybox_night_images.id, skybox_mesh.id, skybox_shader.id),
@@ -136,8 +170,9 @@ main_world.system(
     q.run(world, q.id("axes") ?? q([Transform3D, Grid]), (_, transform) => {
       const shader = ctx.shaders.get(GRID_SHADER);
       const mesh = ctx.meshes.get(GRID_MESH);
-      if (mesh instanceof GridMesh && shader instanceof GridShader) {
-        shader.info.use(
+
+      if (mesh instanceof GridMesh && shader) {
+        shader.info?.use(
           {
             uniforms: {
               u_ProjectionTransform: camera.project_mat4,
@@ -153,28 +188,46 @@ main_world.system(
         );
       }
 
-      q.run(world, q.id("cubes") ?? q([Transform3D, Cube]), (_, transform, { texture_id, mesh_id, shader_id }) => {
+      q.run(world, q.id("debugger") ?? q([Debugger]), (_, { mesh_id, shader_id }) => {
+        const shader = ctx.shaders.get(shader_id);
+        const mesh = ctx.meshes.get(mesh_id);
+
+        if (mesh instanceof DebuggerMesh && shader) {
+          shader.info?.use({
+            uniforms: {
+              u_ProjectionTransform: camera.project_mat4,
+              u_CameraTransform: camera.view_ma4,
+              u_Color: mesh.color,
+              u_CameraPos: camera.transform.position.as_array(),
+            },
+            mesh,
+          });
+        }
+      });
+
+      q.run(world, q.id("models") ?? q([Transform3D, Model]), (_, transform, { texture_id, mesh_id, shader_id }) => {
         const shader = ctx.shaders.get(shader_id);
         const mesh = ctx.meshes.get(mesh_id);
         const texutre = ctx.textures.get(texture_id);
-
-        if (mesh instanceof CubeMesh && shader instanceof CubeShader) {
-          shader.info.use(
-            {
-              uniforms: {
-                u_Transform: transform.mat4.raw,
-                u_ProjectionTransform: camera.project_mat4,
-                u_CameraTransform: camera.view_ma4,
-                "u_Image[0]": [0],
-              },
-              mesh,
-            },
-            (gl) => {
-              gl.activeTexture(gl.TEXTURE0);
-              gl.bindTexture(gl.TEXTURE_2D_ARRAY, texutre?.texture!);
-            },
-          );
+        if (!mesh || !shader || !texutre) {
+          return;
         }
+
+        shader.info?.use(
+          {
+            uniforms: {
+              u_Transform: transform.mat4.raw,
+              u_ProjectionTransform: camera.project_mat4,
+              u_CameraTransform: camera.view_ma4,
+              "u_Image[0]": [0],
+            },
+            mesh,
+          },
+          (gl) => {
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D_ARRAY, texutre?.texture!);
+          },
+        );
       });
 
       q.run(
@@ -185,29 +238,30 @@ main_world.system(
           const mesh = ctx.meshes.get(mesh_id);
           const day_texutre = ctx.textures.get(day_texture_id);
           const night_texture = ctx.textures.get(night_texture_id);
-
-          if (mesh instanceof CubeMesh && shader instanceof SkyboxShader) {
-            shader.info.use(
-              {
-                uniforms: {
-                  u_Transform: transform.mat4.raw,
-                  u_ProjectionTransform: camera.project_mat4,
-                  u_CameraTransform: camera.mat4_without_translate(),
-                  u_Time: performance.now(),
-                  u_DayTex: 0,
-                  u_NightTex: 1,
-                },
-                mesh,
-              },
-              (gl) => {
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_CUBE_MAP, day_texutre?.texture!);
-
-                gl.activeTexture(gl.TEXTURE1);
-                gl.bindTexture(gl.TEXTURE_CUBE_MAP, night_texture?.texture!);
-              },
-            );
+          if (!shader || !mesh || !day_texutre || !night_texture) {
+            return;
           }
+
+          shader.info?.use(
+            {
+              uniforms: {
+                u_Transform: transform.mat4.raw,
+                u_ProjectionTransform: camera.project_mat4,
+                u_CameraTransform: camera.mat4_without_translate(),
+                u_Time: performance.now(),
+                u_DayTex: 0,
+                u_NightTex: 1,
+              },
+              mesh,
+            },
+            (gl) => {
+              gl.activeTexture(gl.TEXTURE0);
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, day_texutre.texture);
+
+              gl.activeTexture(gl.TEXTURE1);
+              gl.bindTexture(gl.TEXTURE_CUBE_MAP, night_texture.texture);
+            },
+          );
         },
       );
     });
