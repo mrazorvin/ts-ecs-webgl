@@ -86,8 +86,16 @@ export namespace Texture {
     return new Texture(images[0], texture);
   }
 
-  export function create(gl: WebGL2RenderingContext, image: HTMLImageElement, normal_image?: HTMLImageElement) {
-    const texture = gl.createTexture();
+  export function create(
+    gl: WebGL2RenderingContext,
+    image: HTMLImageElement,
+    {
+      prev_texture: existed_texture = null as WebGLTexture | null,
+      normals_image = null as HTMLImageElement | null,
+      mimap = true,
+    },
+  ) {
+    const texture = existed_texture ?? gl.createTexture();
     if (texture == null) {
       throw new Error(`[Texture -> create()] WebGL can't allocate mem for texture`);
     }
@@ -95,30 +103,43 @@ export namespace Texture {
     // texture arrays
     // https://gamedev.stackexchange.com/questions/147854/unpacking-sprite-sheet-into-2d-texture-array
 
+    // If texture dosen't have norma maps
+    // It's depth === 1 this means it could be accessed via texture(UV);
+    //
+    // If texture HAVE normal maps, then texture should be accessed
+    // via texture(vec3(texture, 1)), and normal map could be acces in first index
+    // via texture(vec3(texture, 0)
+    //
+    // This allows us to crete normal map indedependent shader i.e shader is written with normal map in mind
+    // but when normal map non exists it will be ignored
+    const normals_depth = 1;
+    const texture_depth = normals_image != null ? 2 : 1;
+
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture);
-    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, image.width, image.height, normal_image !== undefined ? 2 : 1);
+    gl.texStorage3D(gl.TEXTURE_2D_ARRAY, 1, gl.RGBA8, image.width, image.height, texture_depth);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, image.width, image.height, 1, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    if (normal_image !== undefined) {
-      console.log("created", normal_image);
+    if (normals_image != null) {
       gl.texSubImage3D(
         gl.TEXTURE_2D_ARRAY,
         0,
         0,
         0,
         1,
-        normal_image.width,
-        normal_image.height,
-        1,
+        normals_image.width,
+        normals_image.height,
+        normals_depth,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        normal_image,
+        normals_image,
       );
     }
-    gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+    if (mimap) {
+      gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+    }
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, null);
     return new Texture(image, texture);
   }

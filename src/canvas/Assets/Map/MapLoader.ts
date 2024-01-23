@@ -19,7 +19,7 @@ const Query = query([WebGL, CollisionWorld]);
 
 export const MapLoader = sys(Query, async (world, ctx, sscd) => {
   const ground_image = await Texture.load_image(ground_sprite);
-  const bg_texture = ctx.create_texture(ground_image, Texture.create).id;
+  const bg_texture = ctx.create_texture(Texture.create, ground_image, {}).id;
 
   // this code must be generic and use less constants
   const rows_amount = tiled_map.height;
@@ -53,7 +53,7 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
             x: meta.rect[0]! / tiles_properties.grid_width,
             y: meta.rect[1]! / tiles_properties.grid_height,
           },
-          TerrainLayer
+          TerrainLayer,
         ),
         transform,
         static_comp,
@@ -64,8 +64,8 @@ export const MapLoader = sys(Query, async (world, ctx, sscd) => {
         entity.ref,
         new SSCDRectangle(
           new SSCDVector(transform.x + transform.width / 2, transform.y + transform.width / 2),
-          new SSCDVector(transform.width, transform.width)
-        )
+          new SSCDVector(transform.width, transform.width),
+        ),
       );
 
       // attach component is slow, add a method that will create attach function

@@ -21,7 +21,7 @@
     }
   },
   "scripts": {
-    "start": "NODE_ENV='production' parcel src/canvas/index.html --target web --https --no-cache --no-hrm",
+    "start": "NODE_ENV='production' parcel src/canvas/index.html --target web --https --no-cache",
     "test": "NODE_ENV='development' vitest"
   },
   "dependencies": {

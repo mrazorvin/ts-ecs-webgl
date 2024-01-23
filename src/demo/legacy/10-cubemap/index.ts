@@ -69,14 +69,14 @@ main_world.system_once(
     main_world.entity([Transform3D.create(world), Grid.create(world)]);
 
     const cube_image = await Texture.load_image(quad_texture_png)!;
-    const cube_texture = ctx.create_texture(cube_image, (gl, image) => Texture.create(gl, image, image));
+    const cube_texture = ctx.create_texture(Texture.create, cube_image, {});
 
     const skybox_day_images = await Promise.all(Object.values(skybox_images.miramar)).then((images) =>
-      ctx.create_texture(images, (gl, images) => Texture.create_cubemap(gl, images)),
+      ctx.create_texture(Texture.create_cubemap, images),
     );
 
     const skybox_night_images = await Promise.all(Object.values(skybox_images.grimmnight)).then((images) =>
-      ctx.create_texture(images, (gl, images) => Texture.create_cubemap(gl, images)),
+      ctx.create_texture(Texture.create_cubemap, images),
     );
 
     const skybox_mesh = ctx.create_mesh(CubeMesh.create, { width: 20, height: 20, depth: 20 });

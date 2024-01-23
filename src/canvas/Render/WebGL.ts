@@ -64,16 +64,12 @@ export class WebGL extends Resource {
     return { id: shader.id, shader };
   }
 
-  create_texture<T extends HTMLImageElement | HTMLImageElement[]>(
-    image: T,
-    factory: (gl: WebGL2RenderingContext, image: T) => Texture,
-    id?: TextureID,
+  create_texture<T extends Array<unknown>>(
+    factory: (gl: WebGL2RenderingContext, ...args: [...T]) => Texture,
+    ...args: T
   ) {
-    const texture = factory(this.gl, image);
-    if (id !== undefined) texture.id = id;
-
+    const texture = factory(this.gl, ...args);
     this.textures.set(texture.id, texture);
-
     return { id: texture.id, texture };
   }
 
